@@ -1,4 +1,4 @@
-import { BadgeIndianRupee, CheckCircle2, Clock3, FileCheck2, Landmark, ShieldCheck } from "lucide-react";
+import { BadgeIndianRupee, CheckCircle2, Clock3, FileCheck2, Landmark, Plus, ShieldCheck } from "lucide-react";
 import { ActionRow } from "../components/ui/ActionRow";
 import { Card } from "../components/ui/Card";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -25,12 +25,19 @@ export function DashboardScreen({ appState, eligibleForAdvance, membershipFee, n
     <>
       <section className="hero-card">
         <div>
-          <p>Available salary advance</p>
+          <p>Available limit</p>
           <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
-          <span>{eligibleForAdvance ? "Ready for a new request" : nextBlocker}</span>
+          <span className="card-line">
+            <i />
+            MobPae • {appState.profile.employeeCode.slice(-4)}
+          </span>
         </div>
         <ShieldCheck size={34} />
       </section>
+      <button className="add-card-button" type="button" onClick={() => onNavigate("advance")}>
+        <Plus size={16} />
+        <span>{eligibleForAdvance ? "Request advance" : nextBlocker}</span>
+      </button>
 
       <OnboardingSteps steps={onboardingSteps} />
       <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
@@ -43,14 +50,14 @@ export function DashboardScreen({ appState, eligibleForAdvance, membershipFee, n
       </section>
 
       <Card>
-        <SectionHeader title="Next actions" eyebrow="MVP flow" icon={<CheckCircle2 size={19} />} />
+        <SectionHeader title="Quick actions" eyebrow="MVP flow" icon={<CheckCircle2 size={19} />} />
         <ActionRow icon={<FileCheck2 size={18} />} title="Finish KYC" description="Upload and verify employee documents." onClick={() => onNavigate("kyc")} />
         <ActionRow icon={<Landmark size={18} />} title="Add bank account" description="Required before disbursal." onClick={() => onNavigate("profile")} />
         <ActionRow icon={<BadgeIndianRupee size={18} />} title="Request salary advance" description="Preview recovery before submitting." onClick={() => onNavigate("advance")} />
       </Card>
 
       <Card>
-        <SectionHeader title="Notifications" eyebrow="Updates" />
+        <SectionHeader title="Recent activity" eyebrow="Updates" />
         <div className="list">
           {appState.notifications.map((notification) => (
             <div className="notification" key={notification}>

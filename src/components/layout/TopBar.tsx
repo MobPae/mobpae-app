@@ -9,6 +9,7 @@ type TopBarProps = {
 export function TopBar({ profile, onLogout }: TopBarProps) {
   return (
     <header className="topbar">
+      <span className="profile-avatar">{profile.name.charAt(0)}</span>
       <div>
         <p className="eyebrow">{profile.employer}</p>
         <h1>Hi, {profile.name.split(" ")[0]}</h1>
