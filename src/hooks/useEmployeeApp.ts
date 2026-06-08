@@ -61,7 +61,7 @@ export function useEmployeeApp() {
   };
 
   const kycComplete = appState.documents.every((document) => document.status === "Verified");
-  const bankComplete = Boolean(appState.bankAccount);
+  const bankComplete = Boolean(appState.bankAccount?.verified);
   const activeRecovery = appState.requests.some((request) => request.recoveryStatus === "Scheduled");
   const membershipFee = Math.max(0, appState.membershipConfig.fee - appState.membershipConfig.couponDiscount);
 
@@ -80,7 +80,8 @@ export function useEmployeeApp() {
   const nextBlocker = useMemo(() => {
     if (!appState.profile.accountActive) return "Employer approval is pending.";
     if (!kycComplete) return "Complete KYC verification.";
-    if (!bankComplete) return "Add your bank account.";
+    if (!appState.bankAccount) return "Add your bank account.";
+    if (!bankComplete) return "Bank account verification is pending.";
     if (!appState.membershipActive) return "Activate membership.";
     if (activeRecovery) return "Payment is already scheduled.";
     return "";
@@ -112,7 +113,7 @@ export function useEmployeeApp() {
     const savedBank = await employeeApi.saveBankAccount(appState.profile.id, bankForm);
     setAppState((current) => ({ ...current, bankAccount: savedBank }));
     setSavingBank(false);
-    setNotice("Bank account saved for salary advance disbursal.");
+    setNotice("Bank account saved. Admin verification is pending.");
   };
 
   const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {

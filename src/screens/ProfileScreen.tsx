@@ -3,6 +3,7 @@ import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SectionHeader } from "../components/ui/SectionHeader";
+import { StatusPill } from "../components/ui/StatusPill";
 import { formatMoney, maskAccountNumber } from "../utils/format";
 import type { AppState, BankAccount } from "../types/app";
 
@@ -47,6 +48,7 @@ export function ProfileScreen({ appState, bankForm, membershipFee, savingBank, o
             <div>
               <strong>{appState.bankAccount.bankName || "Saved bank"}</strong>
               <p>{maskAccountNumber(appState.bankAccount.accountNumber)} • {appState.bankAccount.ifscCode}</p>
+              <StatusPill status={appState.bankAccount.verified ? "Verified" : "Under Review"} />
             </div>
           </div>
         ) : null}

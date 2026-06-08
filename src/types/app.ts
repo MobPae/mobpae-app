@@ -44,6 +44,7 @@ export type BankAccount = {
   bankName: string;
   accountNumber: string;
   ifscCode: string;
+  verified?: boolean;
 };
 
 export type AdvanceRequest = {

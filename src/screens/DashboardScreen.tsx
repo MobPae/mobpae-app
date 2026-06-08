@@ -51,7 +51,7 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
 
       <section className="metric-grid">
         <Metric icon={<FileCheck2 size={18} />} label="KYC status" value={appState.documents.every((item) => item.status === "Verified") ? "Verified" : "Pending"} tone="warn" />
-        <Metric icon={<Landmark size={18} />} label="Bank account" value={appState.bankAccount ? "Added" : "Pending"} tone={appState.bankAccount ? "good" : "warn"} />
+        <Metric icon={<Landmark size={18} />} label="Bank account" value={appState.bankAccount?.verified ? "Verified" : "Pending"} tone={appState.bankAccount?.verified ? "good" : "warn"} />
         <Metric icon={<Clock3 size={18} />} label="Payment status" value={formatHomeStatus(paymentStatus)} />
       </section>
 
