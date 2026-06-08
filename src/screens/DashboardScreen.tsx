@@ -1,4 +1,4 @@
-import { BadgeIndianRupee, CheckCircle2, Clock3, FileCheck2, Landmark, Plus, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeIndianRupee, CheckCircle2, Clock3, FileCheck2, Landmark, ShieldCheck } from "lucide-react";
 import { ActionRow } from "../components/ui/ActionRow";
 import { Card } from "../components/ui/Card";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -25,18 +25,18 @@ export function DashboardScreen({ appState, eligibleForAdvance, membershipFee, n
     <>
       <section className="hero-card">
         <div>
-          <p>Available limit</p>
+          <p>Available salary advance</p>
           <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
-          <span className="card-line">
-            <i />
-            MobPae • {appState.profile.employeeCode.slice(-4)}
-          </span>
+          <span>{eligibleForAdvance ? "Ready to request from this pay cycle" : nextBlocker}</span>
         </div>
-        <ShieldCheck size={34} />
+        <span className="hero-badge">
+          <ShieldCheck size={19} />
+          {appState.membershipActive ? "Member" : "MVP"}
+        </span>
       </section>
-      <button className="add-card-button" type="button" onClick={() => onNavigate("advance")}>
-        <Plus size={16} />
-        <span>{eligibleForAdvance ? "Request advance" : nextBlocker}</span>
+      <button className="hero-action" type="button" onClick={() => onNavigate(eligibleForAdvance ? "advance" : "kyc")}>
+        <span>{eligibleForAdvance ? "Request advance" : "Continue setup"}</span>
+        <ArrowRight size={16} />
       </button>
 
       <OnboardingSteps steps={onboardingSteps} />
