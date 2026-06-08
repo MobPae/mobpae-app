@@ -20,9 +20,9 @@ export const mockState: AppState = {
   },
   dashboard: null,
   documents: [
-    { id: "pan", label: "PAN", status: "Verified", note: "Identity document verified." },
-    { id: "aadhaar", label: "Aadhaar", status: "Under Review", note: "Verification usually completes within one working day." },
-    { id: "salary-slip", label: "Salary Slip", status: "Not Uploaded", note: "Latest monthly salary slip required." }
+    { id: "pan", label: "PAN", documentType: "PAN", status: "Not Uploaded", note: "Upload PAN PDF or image." },
+    { id: "aadhaar", label: "Aadhaar", documentType: "AADHAR", status: "Not Uploaded", note: "Upload Aadhaar PDF or image." },
+    { id: "salary-slip", label: "Salary Slip", documentType: "SALARY_SLIP", status: "Not Uploaded", note: "Upload latest salary slip PDF." }
   ],
   bankAccount: null,
   membershipActive: false,

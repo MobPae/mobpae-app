@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 export type View = "dashboard" | "kyc" | "advance" | "tracking" | "profile";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
+export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
 export type RequestStatus = "Submitted" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
 
 export type EmployeeProfile = {
@@ -33,6 +34,7 @@ export type EmployeeDashboard = {
 export type KycDocument = {
   id: string;
   label: string;
+  documentType?: KycDocumentType;
   status: DocumentStatus;
   note: string;
 };

@@ -1,5 +1,5 @@
 import { mockState } from "../data/mockData";
-import type { AdvanceRequest, AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, RecoveryPreview, RequestStatus } from "../types/app";
+import type { AdvanceRequest, AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, KycDocumentType, RecoveryPreview, RequestStatus } from "../types/app";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const CONFIGURED_EMPLOYEE_ID = import.meta.env.VITE_EMPLOYEE_ID;
@@ -72,9 +72,13 @@ const normalizeKycDocuments = (documents: BackendKycDocument[]): KycDocument[] =
   documents.map((document, index) => ({
     id: document.id ?? `document-${index}`,
     label: document.label ?? document.documentType?.replaceAll("_", " ") ?? "Document",
+    documentType: document.documentType as KycDocumentType | undefined,
     status: normalizeDocumentStatus(document.status),
     note: document.note ?? "Document status synced from backend."
   }));
+
+const createUploadPath = (employeeId: string, documentType: KycDocumentType, file: File) =>
+  `employee-uploads/${employeeId}/${documentType}/${Date.now()}-${file.name}`;
 
 const normalizeRequestStatus = (status?: string): RequestStatus => {
   switch (status) {
@@ -266,6 +270,16 @@ export const employeeApi = {
     } catch {
       return { ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() };
     }
+  },
+
+  async uploadKycDocument(employeeId: string, documentType: KycDocumentType, file: File) {
+    // MVP upload contract: backend stores the submitted file path and does not inspect the PDF.
+    const filePath = createUploadPath(employeeId, documentType, file);
+    const savedDocument = await request<BackendKycDocument>("/kyc-documents", {
+      method: "POST",
+      body: JSON.stringify({ employeeId, documentType, filePath })
+    });
+    return normalizeKycDocuments([savedDocument])[0];
   },
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {

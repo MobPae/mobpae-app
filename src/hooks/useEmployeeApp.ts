@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { emptyBankAccount, mockState } from "../data/mockData";
 import { employeeApi } from "../services/api";
-import type { AppState, BankAccount, RecoveryPreview, View } from "../types/app";
+import type { AppState, BankAccount, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 
@@ -16,6 +16,7 @@ export function useEmployeeApp() {
   const [preview, setPreview] = useState<RecoveryPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
+  const [uploadingKycType, setUploadingKycType] = useState<KycDocumentType | null>(null);
   const [loginError, setLoginError] = useState("");
 
   const loadEmployee = async () => {
@@ -114,13 +115,30 @@ export function useEmployeeApp() {
     setNotice("Bank account saved for salary advance disbursal.");
   };
 
-  const completeDemoKyc = () => {
-    // Temporary action: keeps the flow testable until file upload screens are added.
-    setAppState((current) => ({
-      ...current,
-      documents: current.documents.map((document) => ({ ...document, status: "Verified", note: "Verified for setup flow." }))
-    }));
-    setNotice("KYC marked verified for setup testing.");
+  const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {
+    setUploadingKycType(documentType);
+    try {
+      const savedDocument = await employeeApi.uploadKycDocument(appState.profile.id, documentType, file);
+      setAppState((current) => ({
+        ...current,
+        documents: current.documents.map((document) =>
+          document.documentType === documentType || document.label.toUpperCase().replace("AADHAAR", "AADHAR").replaceAll(" ", "_") === documentType
+            ? {
+                ...document,
+                ...savedDocument,
+                documentType,
+                status: "Under Review",
+                note: "Uploaded. Waiting for admin verification."
+              }
+            : document
+        )
+      }));
+      setNotice("KYC document uploaded for admin verification.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to upload KYC document.");
+    } finally {
+      setUploadingKycType(null);
+    }
   };
 
   const activateMembership = () => {
@@ -135,7 +153,6 @@ export function useEmployeeApp() {
     appState,
     bankComplete,
     bankForm,
-    completeDemoKyc,
     eligibleForAdvance,
     isLoggedIn,
     kycComplete,
@@ -155,6 +172,8 @@ export function useEmployeeApp() {
     setActiveView,
     setAdvanceAmount,
     setBankForm,
+    uploadKycDocument,
+    uploadingKycType,
     activateMembership
   };
 }

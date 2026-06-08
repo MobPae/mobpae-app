@@ -1,16 +1,19 @@
-import { FileUp, RotateCcw } from "lucide-react";
+import { FileUp, UploadCloud } from "lucide-react";
 import { Card } from "../components/ui/Card";
-import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { StatusPill } from "../components/ui/StatusPill";
-import type { KycDocument } from "../types/app";
+import type { KycDocument, KycDocumentType } from "../types/app";
 
 type KycScreenProps = {
   documents: KycDocument[];
-  onCompleteDemoKyc: () => void;
+  onUpload: (documentType: KycDocumentType, file: File) => void;
+  uploadingType: KycDocumentType | null;
 };
 
-export function KycScreen({ documents, onCompleteDemoKyc }: KycScreenProps) {
+const documentTypeFrom = (document: KycDocument): KycDocumentType =>
+  document.documentType ?? (document.label.toUpperCase().replace("AADHAAR", "AADHAR").replaceAll(" ", "_") as KycDocumentType);
+
+export function KycScreen({ documents, onUpload, uploadingType }: KycScreenProps) {
   const verifiedCount = documents.filter((document) => document.status === "Verified").length;
   const progress = Math.round((verifiedCount / documents.length) * 100);
 
@@ -27,13 +30,26 @@ export function KycScreen({ documents, onCompleteDemoKyc }: KycScreenProps) {
               <strong>{document.label}</strong>
               <p>{document.note}</p>
             </div>
-            <StatusPill status={document.status} />
+            <div className="document-actions">
+              <StatusPill status={document.status} />
+              <label className="upload-chip">
+                <UploadCloud size={14} />
+                <span>{uploadingType === documentTypeFrom(document) ? "Uploading" : "Upload"}</span>
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  disabled={uploadingType === documentTypeFrom(document)}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) onUpload(documentTypeFrom(document), file);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
           </article>
         ))}
       </div>
-      <PrimaryButton variant="secondary" icon={<RotateCcw size={17} />} onClick={onCompleteDemoKyc}>
-        Mark KYC verified
-      </PrimaryButton>
     </Card>
   );
 }
