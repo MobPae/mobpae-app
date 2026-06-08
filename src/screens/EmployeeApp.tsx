@@ -26,7 +26,13 @@ export function EmployeeApp() {
         />
       ) : null}
       {app.activeView === "kyc" ? (
-        <KycScreen documents={app.appState.documents} onNavigate={app.setActiveView} onUpload={app.uploadKycDocument} uploadingType={app.uploadingKycType} />
+        <KycScreen
+          bankVerified={Boolean(app.appState.bankAccount?.verified)}
+          documents={app.appState.documents}
+          onNavigate={app.setActiveView}
+          onUpload={app.uploadKycDocument}
+          uploadingType={app.uploadingKycType}
+        />
       ) : null}
       {app.activeView === "advance" ? (
         <AdvanceScreen

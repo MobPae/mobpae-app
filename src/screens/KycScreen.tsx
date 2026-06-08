@@ -6,6 +6,7 @@ import { StatusPill } from "../components/ui/StatusPill";
 import type { KycDocument, KycDocumentType, View } from "../types/app";
 
 type KycScreenProps = {
+  bankVerified: boolean;
   documents: KycDocument[];
   onUpload: (documentType: KycDocumentType, file: File) => void;
   onNavigate: (view: View) => void;
@@ -15,7 +16,7 @@ type KycScreenProps = {
 const documentTypeFrom = (document: KycDocument): KycDocumentType =>
   document.documentType ?? (document.label.toUpperCase().replace("AADHAAR", "AADHAR").replaceAll(" ", "_") as KycDocumentType);
 
-export function KycScreen({ documents, onNavigate, onUpload, uploadingType }: KycScreenProps) {
+export function KycScreen({ bankVerified, documents, onNavigate, onUpload, uploadingType }: KycScreenProps) {
   const verifiedCount = documents.filter((document) => document.status === "Verified").length;
   const progress = Math.round((verifiedCount / documents.length) * 100);
   const kycComplete = documents.length > 0 && verifiedCount === documents.length;
@@ -53,7 +54,7 @@ export function KycScreen({ documents, onNavigate, onUpload, uploadingType }: Ky
           </article>
         ))}
       </div>
-      {kycComplete ? (
+      {kycComplete && !bankVerified ? (
         <div className="next-step-panel">
           <span>
             <Landmark size={18} />
