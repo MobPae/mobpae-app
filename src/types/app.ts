@@ -19,6 +19,7 @@ export type AuthProfile = {
   userId: string;
   email: string;
   role: string;
+  employeeId?: string;
 };
 
 export type EmployeeDashboard = {

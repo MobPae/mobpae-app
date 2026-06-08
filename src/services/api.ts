@@ -119,7 +119,7 @@ export const employeeApi = {
   async loadAppState(): Promise<AppState> {
     try {
       const authData = await request<AuthProfile>("/auth/me");
-      const dashboardResult = await getFirstDashboard(unique([CONFIGURED_EMPLOYEE_ID, authData.userId, mockState.profile.id]));
+      const dashboardResult = await getFirstDashboard(unique([CONFIGURED_EMPLOYEE_ID, authData.employeeId, authData.userId, mockState.profile.id]));
       const employeeId = dashboardResult?.employeeId ?? CONFIGURED_EMPLOYEE_ID ?? mockState.profile.id;
       const dashboardData = dashboardResult?.dashboard ?? null;
 
