@@ -1,5 +1,5 @@
 import { mockState } from "../data/mockData";
-import type { AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, RecoveryPreview } from "../types/app";
+import type { AdvanceRequest, AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, RecoveryPreview, RequestStatus } from "../types/app";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const CONFIGURED_EMPLOYEE_ID = import.meta.env.VITE_EMPLOYEE_ID;
@@ -16,6 +16,33 @@ type BackendKycDocument = {
   documentType?: string;
   status?: string;
   note?: string;
+};
+
+type BackendSalaryRequest = {
+  id: string;
+  amount?: number | string;
+  approvedAmount?: number | string | null;
+  requestedAt?: string;
+  repaymentDate?: string | null;
+  status?: string;
+  remarks?: string | null;
+};
+
+type BackendRepayment = {
+  id: string;
+  principalAmount?: number | string;
+  interestAmount?: number | string;
+  totalAmount?: number | string;
+  dueDate?: string;
+  status?: string;
+  salaryRequest?: BackendSalaryRequest;
+};
+
+type BackendNotification = {
+  id: string;
+  title?: string;
+  message?: string;
+  createdAt?: string;
 };
 
 export class ApiError extends Error {
@@ -48,6 +75,69 @@ const normalizeKycDocuments = (documents: BackendKycDocument[]): KycDocument[] =
     status: normalizeDocumentStatus(document.status),
     note: document.note ?? "Document status synced from backend."
   }));
+
+const normalizeRequestStatus = (status?: string): RequestStatus => {
+  switch (status) {
+    case "SUBMITTED":
+      return "Submitted";
+    case "EMPLOYER_APPROVED":
+      return "Approved";
+    case "READY_FOR_DISBURSAL":
+      return "Under Review";
+    case "DISBURSED":
+      return "Disbursed";
+    case "REPAYMENT_SCHEDULED":
+      return "Payment Scheduled";
+    case "REPAID":
+      return "Paid";
+    case "EMPLOYER_REJECTED":
+      return "Rejected";
+    default:
+      return "Submitted";
+  }
+};
+
+const toAmount = (value: unknown) => Number(value ?? 0);
+const todayIso = () => new Date().toISOString();
+
+const normalizeRequests = (requests: BackendSalaryRequest[], repayments: BackendRepayment[]): AdvanceRequest[] =>
+  requests.map((request) => {
+    const repayment = repayments.find((item) => item.salaryRequest?.id === request.id);
+    const requestedAmount = toAmount(request.amount);
+    const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
+    const requestDate = request.requestedAt ?? todayIso();
+    const recoveryDate = repayment?.dueDate ?? request.repaymentDate ?? requestDate;
+    const status = normalizeRequestStatus(request.status);
+
+    return {
+      id: request.id,
+      requestedAmount,
+      approvedAmount,
+      requestDate,
+      status,
+      remarks: request.remarks ?? "",
+      principalAmount: toAmount(repayment?.principalAmount ?? approvedAmount),
+      interestAmount: toAmount(repayment?.interestAmount),
+      totalRecoveryAmount: toAmount(repayment?.totalAmount ?? approvedAmount),
+      recoveryDate,
+      recoveryStatus: repayment?.status === "PAID" ? "Completed" : "Scheduled",
+      disbursalStatus: request.status === "DISBURSED" || request.status === "REPAYMENT_SCHEDULED" || request.status === "REPAID" ? "Disbursed" : "Pending",
+      timeline: [
+        { status: "Submitted", timestamp: requestDate, description: "Salary advance request submitted.", done: true },
+        { status: "Approved", timestamp: requestDate, description: "Employer approval status synced from backend.", done: ["EMPLOYER_APPROVED", "READY_FOR_DISBURSAL", "DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "") },
+        { status: "Disbursed", timestamp: requestDate, description: "Disbursal status synced from backend.", done: ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "") },
+        { status: "Payment Scheduled", timestamp: recoveryDate, description: "Payroll payment is scheduled.", done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "") },
+        { status: "Paid", timestamp: recoveryDate, description: "Payment completed.", done: repayment?.status === "PAID" || request.status === "REPAID" }
+      ]
+    };
+  });
+
+const buildActivity = (notifications: BackendNotification[], requests: AdvanceRequest[], repayments: BackendRepayment[]) => {
+  const notificationItems = notifications.map((notification) => notification.message ?? notification.title).filter(Boolean) as string[];
+  const requestItems = requests.slice(0, 2).map((request) => `Request ${request.id} is ${request.status}.`);
+  const repaymentItems = repayments.slice(0, 2).map((repayment) => `Payment ${repayment.status?.toLowerCase() ?? "scheduled"} for request ${repayment.salaryRequest?.id ?? repayment.id}.`);
+  return [...notificationItems, ...requestItems, ...repaymentItems].slice(0, 5);
+};
 
 async function getFirstDashboard(employeeIds: string[]) {
   for (const employeeId of employeeIds) {
@@ -127,18 +217,20 @@ export const employeeApi = {
       const employeeId = dashboardResult?.employeeId ?? CONFIGURED_EMPLOYEE_ID ?? mockState.profile.id;
       const dashboardData = dashboardResult?.dashboard ?? null;
 
-      const [kycDocuments, bankAccount, salaryRequests, repayments] = await Promise.allSettled([
+      const [kycDocuments, bankAccount, salaryRequests, repayments, notifications] = await Promise.allSettled([
         request<BackendKycDocument[]>(`/kyc-documents/employee/${employeeId}`),
         request<BankAccount | null>(`/bank-accounts/employee/${employeeId}`),
-        request<unknown[]>(`/salary-requests/employee/${employeeId}`),
-        request<unknown[]>(`/repayments/employee/${employeeId}`)
+        request<BackendSalaryRequest[]>(`/salary-requests/employee/${employeeId}`),
+        request<BackendRepayment[]>(`/repayments/employee/${employeeId}`),
+        request<BackendNotification[]>("/notifications/me")
       ]);
-
-      void salaryRequests;
-      void repayments;
 
       const salaryLimit = Number(dashboardData?.approvedLimit ?? mockState.profile.salaryLimit);
       const kycComplete = Boolean(dashboardData?.kycCompleted);
+      const requestData = salaryRequests.status === "fulfilled" ? salaryRequests.value : [];
+      const repaymentData = repayments.status === "fulfilled" ? repayments.value : [];
+      const normalizedRequests = requestData.length ? normalizeRequests(requestData, repaymentData) : mockState.requests;
+      const notificationData = notifications.status === "fulfilled" ? notifications.value : [];
 
       return {
         ...mockState,
@@ -156,7 +248,9 @@ export const employeeApi = {
             : kycComplete
               ? mockState.documents.map((document) => ({ ...document, status: "Verified" }))
               : mockState.documents,
-        bankAccount: bankAccount.status === "fulfilled" ? bankAccount.value : mockState.bankAccount
+        bankAccount: bankAccount.status === "fulfilled" ? bankAccount.value : mockState.bankAccount,
+        requests: normalizedRequests,
+        notifications: buildActivity(notificationData, normalizedRequests, repaymentData)
       };
     } catch {
       return mockState;

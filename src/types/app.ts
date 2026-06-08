@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type View = "dashboard" | "kyc" | "advance" | "tracking" | "profile";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
-export type RequestStatus = "Submitted" | "Under Review" | "Approved" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
+export type RequestStatus = "Submitted" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
 
 export type EmployeeProfile = {
   id: string;
