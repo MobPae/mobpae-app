@@ -201,10 +201,11 @@ h2 {
   height: 40px;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: #ede9fe;
-  color: #4c1d95;
+  background: linear-gradient(145deg, #4f2ee8, #14b8a6);
+  color: #ffffff;
   font-size: 15px;
   font-weight: 950;
+  box-shadow: 0 12px 26px rgba(79, 46, 232, 0.22);
 }
 
 .top-actions {
@@ -394,6 +395,10 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
+}
+
+.metric-grid .metric:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .metric,
@@ -669,6 +674,7 @@ h2 {
 
 .status-pill.under-review,
 .status-pill.recovery-scheduled,
+.status-pill.payment-scheduled,
 .status-pill.submitted {
   background: #fef0c7;
   color: #b54708;

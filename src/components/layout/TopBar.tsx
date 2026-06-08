@@ -1,4 +1,4 @@
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, UserRound } from "lucide-react";
 import type { EmployeeProfile } from "../../types/app";
 
 type TopBarProps = {
@@ -9,7 +9,9 @@ type TopBarProps = {
 export function TopBar({ profile, onLogout }: TopBarProps) {
   return (
     <header className="topbar">
-      <span className="profile-avatar">{profile.name.charAt(0)}</span>
+      <span className="profile-avatar">
+        <UserRound size={19} />
+      </span>
       <div>
         <p className="eyebrow">{profile.employer}</p>
         <h1>Hi, {profile.name.split(" ")[0]}</h1>

@@ -36,7 +36,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
           <div className="detail">
             <CalendarDays size={18} />
             <div>
-              <p>Recovery date</p>
+              <p>Payment date</p>
               <strong>{formatDate(latestRequest.recoveryDate)}</strong>
             </div>
           </div>

@@ -10,7 +10,7 @@ export function useEmployeeApp() {
   const [activeView, setActiveView] = useState<View>("dashboard");
   const [appState, setAppState] = useState<AppState>(mockState);
   const [loadState, setLoadState] = useState<LoadState>("idle");
-  const [notice, setNotice] = useState("Using local MVP data until your backend returns employee records.");
+  const [notice, setNotice] = useState("Using local data until your backend returns employee records.");
   const [bankForm, setBankForm] = useState<BankAccount>(emptyBankAccount);
   const [advanceAmount, setAdvanceAmount] = useState(5000);
   const [preview, setPreview] = useState<RecoveryPreview | null>(null);
@@ -28,7 +28,7 @@ export function useEmployeeApp() {
       setLoadState("ready");
     } catch {
       setAppState(mockState);
-      setNotice("Backend is unavailable, so the app is showing MVP demo data.");
+      setNotice("Backend is unavailable, so the app is showing local demo data.");
       setLoadState("error");
     }
   };
@@ -64,7 +64,7 @@ export function useEmployeeApp() {
       { label: "Bank", done: bankComplete },
       { label: "Membership", done: appState.membershipActive },
       { label: "Advance", done: appState.requests.length > 0 },
-      { label: "Recovery", done: !activeRecovery }
+      { label: "Payment", done: !activeRecovery }
     ],
     [activeRecovery, appState.membershipActive, appState.profile.accountActive, appState.requests.length, bankComplete, kycComplete]
   );
@@ -74,7 +74,7 @@ export function useEmployeeApp() {
     if (!kycComplete) return "Complete KYC verification.";
     if (!bankComplete) return "Add your bank account.";
     if (!appState.membershipActive) return "Activate membership.";
-    if (activeRecovery) return "Existing recovery is still scheduled.";
+    if (activeRecovery) return "Payment is already scheduled.";
     return "";
   }, [activeRecovery, appState.membershipActive, appState.profile.accountActive, bankComplete, kycComplete]);
 
@@ -108,12 +108,12 @@ export function useEmployeeApp() {
   };
 
   const completeDemoKyc = () => {
-    // MVP action: keeps the flow testable until file upload screens are added.
+    // Temporary action: keeps the flow testable until file upload screens are added.
     setAppState((current) => ({
       ...current,
-      documents: current.documents.map((document) => ({ ...document, status: "Verified", note: "Verified for MVP flow." }))
+      documents: current.documents.map((document) => ({ ...document, status: "Verified", note: "Verified for setup flow." }))
     }));
-    setNotice("KYC marked verified for MVP testing.");
+    setNotice("KYC marked verified for setup testing.");
   };
 
   const activateMembership = () => {

@@ -6,7 +6,7 @@ type OnboardingStepsProps = {
 
 export function OnboardingSteps({ steps }: OnboardingStepsProps) {
   return (
-    <div className="step-strip" aria-label="MVP onboarding progress">
+    <div className="step-strip" aria-label="Onboarding progress">
       {steps.map((step, index) => (
         <div key={step.label} className={`step ${step.done ? "done" : ""}`}>
           <span>{step.done ? <Check size={12} /> : index + 1}</span>

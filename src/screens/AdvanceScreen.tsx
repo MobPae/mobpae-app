@@ -31,11 +31,11 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
           onChange={(event) => onAmountChange(Math.min(limit, Number(event.target.value)))}
         />
         <input className="range" type="range" min={1000} max={limit} step={500} value={amount} onChange={(event) => onAmountChange(Number(event.target.value))} />
-        <InlineAlert message={eligible ? "Eligible for salary advance. Recovery preview is shown below." : nextBlocker} tone={eligible ? "success" : "warning"} />
+        <InlineAlert message={eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker} tone={eligible ? "success" : "warning"} />
       </Card>
 
       <Card>
-        <SectionHeader title="Recovery preview" eyebrow="Payroll deduction" icon={<CalendarClock size={19} />} />
+        <SectionHeader title="Payment preview" eyebrow="Payroll deduction" icon={<CalendarClock size={19} />} />
         {preview ? (
           <div className="preview-grid">
             <div>
@@ -47,16 +47,16 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
               <strong>{formatMoney(preview.interest)}</strong>
             </div>
             <div>
-              <p>Total recovery</p>
+              <p>Total payment</p>
               <strong>{formatMoney(preview.total)}</strong>
             </div>
             <div>
-              <p>Recovery date</p>
+              <p>Payment date</p>
               <strong>{formatDate(preview.recoveryDate)}</strong>
             </div>
           </div>
         ) : (
-          <p className="muted">{previewLoading ? "Calculating preview..." : "Enter an amount to preview recovery."}</p>
+          <p className="muted">{previewLoading ? "Calculating preview..." : "Enter an amount to preview payment."}</p>
         )}
         <PrimaryButton icon={<Send size={17} />} disabled={!eligible || previewLoading}>
           Submit request

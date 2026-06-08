@@ -20,7 +20,6 @@ export function EmployeeApp() {
         <DashboardScreen
           appState={app.appState}
           eligibleForAdvance={app.eligibleForAdvance}
-          membershipFee={app.membershipFee}
           nextBlocker={app.nextBlocker}
           notice={app.notice}
           onNavigate={app.setActiveView}

@@ -32,7 +32,7 @@ export function KycScreen({ documents, onCompleteDemoKyc }: KycScreenProps) {
         ))}
       </div>
       <PrimaryButton variant="secondary" icon={<RotateCcw size={17} />} onClick={onCompleteDemoKyc}>
-        Mark KYC verified for MVP
+        Mark KYC verified
       </PrimaryButton>
     </Card>
   );

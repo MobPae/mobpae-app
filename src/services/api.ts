@@ -1,12 +1,21 @@
 import { mockState } from "../data/mockData";
-import type { AppState, BankAccount, KycDocument, RecoveryPreview } from "../types/app";
+import type { AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, RecoveryPreview } from "../types/app";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const CONFIGURED_EMPLOYEE_ID = import.meta.env.VITE_EMPLOYEE_ID;
 const TOKEN_KEY = "mobpae_employee_token";
 
 type LoginResponse = {
   accessToken?: string;
   token?: string;
+};
+
+type BackendKycDocument = {
+  id?: string;
+  label?: string;
+  documentType?: string;
+  status?: string;
+  note?: string;
 };
 
 export class ApiError extends Error {
@@ -22,6 +31,38 @@ const authHeaders = (): Record<string, string> => {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
+const unique = (values: Array<string | undefined>) => values.filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
+
+const normalizeDocumentStatus = (status?: string): DocumentStatus => {
+  if (status === "VERIFIED" || status === "Verified") return "Verified";
+  if (status === "REJECTED" || status === "Rejected") return "Rejected";
+  if (status === "PENDING" || status === "Under Review") return "Under Review";
+  return "Not Uploaded";
+};
+
+const normalizeKycDocuments = (documents: BackendKycDocument[]): KycDocument[] =>
+  documents.map((document, index) => ({
+    id: document.id ?? `document-${index}`,
+    label: document.label ?? document.documentType?.replaceAll("_", " ") ?? "Document",
+    status: normalizeDocumentStatus(document.status),
+    note: document.note ?? "Document status synced from backend."
+  }));
+
+async function getFirstDashboard(employeeIds: string[]) {
+  for (const employeeId of employeeIds) {
+    try {
+      return {
+        employeeId,
+        dashboard: await request<EmployeeDashboard>(`/dashboard/employees/${employeeId}`)
+      };
+    } catch {
+      // The backend currently needs employeeId, while auth/me returns userId.
+      // Try the next known candidate until the backend exposes an employee self endpoint.
+    }
+  }
+  return null;
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
@@ -77,22 +118,40 @@ export const employeeApi = {
 
   async loadAppState(): Promise<AppState> {
     try {
-      const profile = mockState.profile;
-      const [dashboard, kycDocuments, bankAccount, salaryRequests, repayments] = await Promise.allSettled([
-        request<unknown>(`/dashboard/employees/${profile.id}`),
-        request<KycDocument[]>(`/kyc-documents/employee/${profile.id}`),
-        request<BankAccount | null>(`/bank-accounts/employee/${profile.id}`),
-        request<unknown[]>(`/salary-requests/employee/${profile.id}`),
-        request<unknown[]>(`/repayments/employee/${profile.id}`)
+      const authData = await request<AuthProfile>("/auth/me");
+      const dashboardResult = await getFirstDashboard(unique([CONFIGURED_EMPLOYEE_ID, authData.userId, mockState.profile.id]));
+      const employeeId = dashboardResult?.employeeId ?? CONFIGURED_EMPLOYEE_ID ?? mockState.profile.id;
+      const dashboardData = dashboardResult?.dashboard ?? null;
+
+      const [kycDocuments, bankAccount, salaryRequests, repayments] = await Promise.allSettled([
+        request<BackendKycDocument[]>(`/kyc-documents/employee/${employeeId}`),
+        request<BankAccount | null>(`/bank-accounts/employee/${employeeId}`),
+        request<unknown[]>(`/salary-requests/employee/${employeeId}`),
+        request<unknown[]>(`/repayments/employee/${employeeId}`)
       ]);
 
-      void dashboard;
       void salaryRequests;
       void repayments;
 
+      const salaryLimit = Number(dashboardData?.approvedLimit ?? mockState.profile.salaryLimit);
+      const kycComplete = Boolean(dashboardData?.kycCompleted);
+
       return {
         ...mockState,
-        documents: kycDocuments.status === "fulfilled" && kycDocuments.value.length ? kycDocuments.value : mockState.documents,
+        profile: {
+          ...mockState.profile,
+          id: employeeId,
+          name: dashboardData?.employeeName ?? mockState.profile.name,
+          email: authData?.email ?? mockState.profile.email,
+          salaryLimit
+        },
+        dashboard: dashboardData,
+        documents:
+          kycDocuments.status === "fulfilled" && kycDocuments.value.length
+            ? normalizeKycDocuments(kycDocuments.value)
+            : kycComplete
+              ? mockState.documents.map((document) => ({ ...document, status: "Verified" }))
+              : mockState.documents,
         bankAccount: bankAccount.status === "fulfilled" ? bankAccount.value : mockState.bankAccount
       };
     } catch {

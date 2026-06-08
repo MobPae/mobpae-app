@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type View = "dashboard" | "kyc" | "advance" | "tracking" | "profile";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
-export type RequestStatus = "Submitted" | "Under Review" | "Approved" | "Disbursed" | "Recovery Scheduled" | "Recovered";
+export type RequestStatus = "Submitted" | "Under Review" | "Approved" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
 
 export type EmployeeProfile = {
   id: string;
@@ -13,6 +13,20 @@ export type EmployeeProfile = {
   employer: string;
   accountActive: boolean;
   salaryLimit: number;
+};
+
+export type AuthProfile = {
+  userId: string;
+  email: string;
+  role: string;
+};
+
+export type EmployeeDashboard = {
+  employeeName?: string;
+  kycCompleted?: boolean;
+  approvedLimit?: number;
+  activeRequestStatus?: string | null;
+  activeRepaymentStatus?: string | null;
 };
 
 export type KycDocument = {
@@ -69,6 +83,7 @@ export type RecoveryPreview = {
 
 export type AppState = {
   profile: EmployeeProfile;
+  dashboard: EmployeeDashboard | null;
   documents: KycDocument[];
   bankAccount: BankAccount | null;
   membershipActive: boolean;

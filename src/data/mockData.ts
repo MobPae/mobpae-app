@@ -18,6 +18,7 @@ export const mockState: AppState = {
     accountActive: true,
     salaryLimit: 25000
   },
+  dashboard: null,
   documents: [
     { id: "pan", label: "PAN", status: "Verified", note: "Identity document verified." },
     { id: "aadhaar", label: "Aadhaar", status: "Under Review", note: "Verification usually completes within one working day." },
@@ -30,7 +31,7 @@ export const mockState: AppState = {
     fee: 449,
     couponDiscount: 0,
     validityLabel: "1 year",
-    benefits: ["Access salary advances", "Transparent salary deductions", "Request tracking", "Recovery tracking", "Financial flexibility"]
+    benefits: ["Access salary advances", "Transparent salary deductions", "Request tracking", "Payment tracking", "Financial flexibility"]
   },
   requests: [
     {
@@ -38,8 +39,8 @@ export const mockState: AppState = {
       requestedAmount: 5000,
       approvedAmount: 5000,
       requestDate: "2026-06-20",
-      status: "Recovery Scheduled",
-      remarks: "Approved for payroll-linked recovery.",
+      status: "Payment Scheduled",
+      remarks: "Approved for payroll-linked payment.",
       principalAmount: 5000,
       interestAmount: 39.45,
       totalRecoveryAmount: 5039.45,
@@ -52,8 +53,8 @@ export const mockState: AppState = {
         { status: "Under Review", timestamp: "20 Jun, 10:18 AM", description: "Employer review started.", done: true },
         { status: "Approved", timestamp: "20 Jun, 12:40 PM", description: "Employer approved your request.", done: true },
         { status: "Disbursed", timestamp: "20 Jun, 01:10 PM", description: "MobPae disbursed funds to your bank account.", done: true },
-        { status: "Recovery Scheduled", timestamp: "28 Jun", description: "Payroll deduction is scheduled.", done: true },
-        { status: "Recovered", timestamp: "Pending", description: "Recovery will complete after payroll deduction.", done: false }
+        { status: "Payment Scheduled", timestamp: "28 Jun", description: "Payroll deduction is scheduled.", done: true },
+        { status: "Paid", timestamp: "Pending", description: "Payment will complete after payroll deduction.", done: false }
       ]
     }
   ],
