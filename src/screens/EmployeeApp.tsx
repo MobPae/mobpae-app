@@ -25,7 +25,9 @@ export function EmployeeApp() {
           onNavigate={app.setActiveView}
         />
       ) : null}
-      {app.activeView === "kyc" ? <KycScreen documents={app.appState.documents} onUpload={app.uploadKycDocument} uploadingType={app.uploadingKycType} /> : null}
+      {app.activeView === "kyc" ? (
+        <KycScreen documents={app.appState.documents} onNavigate={app.setActiveView} onUpload={app.uploadKycDocument} uploadingType={app.uploadingKycType} />
+      ) : null}
       {app.activeView === "advance" ? (
         <AdvanceScreen
           amount={app.advanceAmount}
