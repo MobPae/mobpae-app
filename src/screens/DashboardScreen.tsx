@@ -28,6 +28,12 @@ const formatHomeStatus = (status?: string) => {
 export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, notice, onNavigate }: DashboardScreenProps) {
   const latestRequest = appState.requests[0];
   const paymentStatus = appState.dashboard?.activeRepaymentStatus ?? appState.dashboard?.activeRequestStatus ?? latestRequest?.status;
+  const kycComplete = appState.documents.every((item) => item.status === "Verified");
+  let nextSetupView: View = !kycComplete || !appState.bankAccount?.verified || !appState.membershipActive ? "profile" : "advance";
+
+  if (!kycComplete) {
+    nextSetupView = "kyc";
+  }
 
   return (
     <>
@@ -42,7 +48,7 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
           {appState.membershipActive ? "Member" : "Employee"}
         </span>
       </section>
-      <button className="hero-action" type="button" onClick={() => onNavigate(eligibleForAdvance ? "advance" : "kyc")}>
+      <button className="hero-action" type="button" onClick={() => onNavigate(eligibleForAdvance ? "advance" : nextSetupView)}>
         <span>{eligibleForAdvance ? "Request advance" : "Continue setup"}</span>
         <ArrowRight size={16} />
       </button>
