@@ -1,7 +1,7 @@
 import { mockState } from "../data/mockData";
 import type { AppState, BankAccount, KycDocument, RecoveryPreview } from "../types/app";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const TOKEN_KEY = "mobpae_employee_token";
 
 type LoginResponse = {
