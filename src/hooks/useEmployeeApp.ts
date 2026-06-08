@@ -6,7 +6,7 @@ import type { AppState, BankAccount, RecoveryPreview, View } from "../types/app"
 type LoadState = "idle" | "loading" | "ready" | "error";
 
 export function useEmployeeApp() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => employeeApi.hasSession());
   const [activeView, setActiveView] = useState<View>("dashboard");
   const [appState, setAppState] = useState<AppState>(mockState);
   const [loadState, setLoadState] = useState<LoadState>("idle");
@@ -32,6 +32,13 @@ export function useEmployeeApp() {
       setLoadState("error");
     }
   };
+
+  useEffect(() => {
+    if (!employeeApi.hasSession()) return;
+
+    setIsLoggedIn(true);
+    void loadEmployee();
+  }, []);
 
   const login = async (email: string, password: string) => {
     setLoginError("");

@@ -100,6 +100,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 // The backend already owns the real data model. The app falls back to local demo data
 // so product review never lands on a blank screen when a local API is unavailable.
 export const employeeApi = {
+  hasSession() {
+    return Boolean(localStorage.getItem(TOKEN_KEY));
+  },
+
   async login(email: string, password: string) {
     const data = await request<LoginResponse>("/auth/login", {
       method: "POST",
