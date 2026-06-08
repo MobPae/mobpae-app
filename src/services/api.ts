@@ -45,6 +45,16 @@ type BackendNotification = {
   createdAt?: string;
 };
 
+type BackendMembership = {
+  active?: boolean;
+  planName?: string;
+  fee?: number;
+  validityLabel?: string;
+  couponCode?: string;
+  couponDiscount?: number;
+  amountPayable?: number;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -221,12 +231,13 @@ export const employeeApi = {
       const employeeId = dashboardResult?.employeeId ?? CONFIGURED_EMPLOYEE_ID ?? mockState.profile.id;
       const dashboardData = dashboardResult?.dashboard ?? null;
 
-      const [kycDocuments, bankAccount, salaryRequests, repayments, notifications] = await Promise.allSettled([
+      const [kycDocuments, bankAccount, salaryRequests, repayments, notifications, membership] = await Promise.allSettled([
         request<BackendKycDocument[]>(`/kyc-documents/employee/${employeeId}`),
         request<BankAccount | null>(`/bank-accounts/employee/${employeeId}`),
         request<BackendSalaryRequest[]>(`/salary-requests/employee/${employeeId}`),
         request<BackendRepayment[]>(`/repayments/employee/${employeeId}`),
-        request<BackendNotification[]>("/notifications/me")
+        request<BackendNotification[]>("/notifications/me"),
+        request<BackendMembership>(`/membership/employee/${employeeId}`)
       ]);
 
       const salaryLimit = Number(dashboardData?.approvedLimit ?? mockState.profile.salaryLimit);
@@ -235,6 +246,7 @@ export const employeeApi = {
       const repaymentData = repayments.status === "fulfilled" ? repayments.value : [];
       const normalizedRequests = requestData.length ? normalizeRequests(requestData, repaymentData) : mockState.requests;
       const notificationData = notifications.status === "fulfilled" ? notifications.value : [];
+      const membershipData = membership.status === "fulfilled" ? membership.value : null;
 
       return {
         ...mockState,
@@ -246,6 +258,16 @@ export const employeeApi = {
           salaryLimit
         },
         dashboard: dashboardData,
+        membershipActive: membershipData?.active ?? mockState.membershipActive,
+        membershipConfig: {
+          ...mockState.membershipConfig,
+          planName: membershipData?.planName ?? mockState.membershipConfig.planName,
+          fee: Number(membershipData?.fee ?? mockState.membershipConfig.fee),
+          couponCode: membershipData?.couponCode ?? "",
+          couponDiscount: Number(membershipData?.couponDiscount ?? 0),
+          amountPayable: Number(membershipData?.amountPayable ?? membershipData?.fee ?? mockState.membershipConfig.fee),
+          validityLabel: membershipData?.validityLabel ?? mockState.membershipConfig.validityLabel
+        },
         documents:
           kycDocuments.status === "fulfilled" && kycDocuments.value.length
             ? normalizeKycDocuments(kycDocuments.value)
@@ -280,6 +302,20 @@ export const employeeApi = {
       body: JSON.stringify({ employeeId, documentType, filePath })
     });
     return normalizeKycDocuments([savedDocument])[0];
+  },
+
+  async applyMembershipCoupon(employeeId: string, couponCode: string) {
+    return request<BackendMembership>("/membership/apply-coupon", {
+      method: "POST",
+      body: JSON.stringify({ employeeId, couponCode })
+    });
+  },
+
+  async activateMembership(employeeId: string, couponCode?: string) {
+    return request<BackendMembership>("/membership/activate", {
+      method: "POST",
+      body: JSON.stringify({ employeeId, couponCode })
+    });
   },
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {

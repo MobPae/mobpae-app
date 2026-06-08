@@ -17,6 +17,9 @@ export function useEmployeeApp() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [uploadingKycType, setUploadingKycType] = useState<KycDocumentType | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [activatingMembership, setActivatingMembership] = useState(false);
   const [loginError, setLoginError] = useState("");
 
   const loadEmployee = async () => {
@@ -25,6 +28,7 @@ export function useEmployeeApp() {
       const nextState = await employeeApi.loadAppState();
       setAppState(nextState);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
+      setCouponCode(nextState.membershipConfig.couponCode ?? "");
       setNotice("Employee app connected. Live records will show where the backend has data.");
       setLoadState("ready");
     } catch {
@@ -63,7 +67,7 @@ export function useEmployeeApp() {
   const kycComplete = appState.documents.every((document) => document.status === "Verified");
   const bankComplete = Boolean(appState.bankAccount?.verified);
   const activeRecovery = appState.requests.some((request) => request.recoveryStatus === "Scheduled");
-  const membershipFee = Math.max(0, appState.membershipConfig.fee - appState.membershipConfig.couponDiscount);
+  const membershipFee = appState.membershipConfig.amountPayable ?? Math.max(0, appState.membershipConfig.fee - appState.membershipConfig.couponDiscount);
 
   const onboardingSteps = useMemo(
     () => [
@@ -142,15 +146,57 @@ export function useEmployeeApp() {
     }
   };
 
-  const activateMembership = () => {
-    setAppState((current) => ({ ...current, membershipActive: true }));
-    setNotice("Membership activated for this employee account.");
+  const applyMembershipCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setApplyingCoupon(true);
+    try {
+      const result = await employeeApi.applyMembershipCoupon(appState.profile.id, couponCode);
+      setAppState((current) => ({
+        ...current,
+        membershipConfig: {
+          ...current.membershipConfig,
+          couponCode: result.couponCode ?? couponCode.trim().toUpperCase(),
+          couponDiscount: Number(result.couponDiscount ?? 0),
+          amountPayable: Number(result.amountPayable ?? current.membershipConfig.fee)
+        }
+      }));
+      setCouponCode(result.couponCode ?? couponCode.trim().toUpperCase());
+      setNotice("Coupon applied to your membership fee.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to apply coupon.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const activateMembership = async () => {
+    setActivatingMembership(true);
+    try {
+      const result = await employeeApi.activateMembership(appState.profile.id, couponCode);
+      setAppState((current) => ({
+        ...current,
+        membershipActive: Boolean(result.active ?? true),
+        membershipConfig: {
+          ...current.membershipConfig,
+          couponCode: result.couponCode ?? current.membershipConfig.couponCode,
+          couponDiscount: Number(result.couponDiscount ?? current.membershipConfig.couponDiscount),
+          amountPayable: Number(result.amountPayable ?? membershipFee)
+        }
+      }));
+      setNotice("Membership activated for this employee account.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to activate membership.");
+    } finally {
+      setActivatingMembership(false);
+    }
   };
 
   return {
     activeRecovery,
     activeView,
+    activatingMembership,
     advanceAmount,
+    applyingCoupon,
     appState,
     bankComplete,
     bankForm,
@@ -168,13 +214,16 @@ export function useEmployeeApp() {
     onboardingSteps,
     preview,
     previewLoading,
+    couponCode,
     saveBankAccount,
     savingBank,
     setActiveView,
     setAdvanceAmount,
     setBankForm,
+    setCouponCode,
     uploadKycDocument,
     uploadingKycType,
+    applyMembershipCoupon,
     activateMembership
   };
 }

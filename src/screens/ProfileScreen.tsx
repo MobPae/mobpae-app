@@ -1,4 +1,4 @@
-import { BadgeCheck, CreditCard, Landmark, UserRound } from "lucide-react";
+import { BadgeCheck, CreditCard, Landmark, TicketPercent, UserRound } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
@@ -12,13 +12,32 @@ type ProfileScreenProps = {
   bankForm: BankAccount;
   membershipFee: number;
   savingBank: boolean;
+  couponCode: string;
+  applyingCoupon: boolean;
+  activatingMembership: boolean;
+  onApplyCoupon: () => void;
   onActivateMembership: () => void;
   onBankFormChange: (bankAccount: BankAccount) => void;
+  onCouponCodeChange: (couponCode: string) => void;
   onSaveBank: () => void;
 };
 
-export function ProfileScreen({ appState, bankForm, membershipFee, savingBank, onActivateMembership, onBankFormChange, onSaveBank }: ProfileScreenProps) {
+export function ProfileScreen({
+  appState,
+  bankForm,
+  membershipFee,
+  savingBank,
+  couponCode,
+  applyingCoupon,
+  activatingMembership,
+  onApplyCoupon,
+  onActivateMembership,
+  onBankFormChange,
+  onCouponCodeChange,
+  onSaveBank
+}: ProfileScreenProps) {
   const bankReady = bankForm.accountHolderName && bankForm.accountNumber && bankForm.ifscCode;
+  const membershipDiscount = appState.membershipConfig.couponDiscount;
 
   return (
     <>
@@ -65,14 +84,32 @@ export function ProfileScreen({ appState, bankForm, membershipFee, savingBank, o
         <SectionHeader title={appState.membershipConfig.planName} eyebrow="Membership" icon={<BadgeCheck size={19} />} />
         <div className="membership-panel">
           <div>
-            <p>Fee</p>
+            <p>Payable now</p>
             <strong>{formatMoney(membershipFee)}</strong>
             <span>{appState.membershipConfig.validityLabel}</span>
           </div>
-          <PrimaryButton variant={appState.membershipActive ? "secondary" : "primary"} onClick={onActivateMembership} disabled={appState.membershipActive}>
-            {appState.membershipActive ? "Active" : "Activate"}
+          <PrimaryButton variant={appState.membershipActive ? "secondary" : "primary"} onClick={onActivateMembership} disabled={appState.membershipActive || activatingMembership}>
+            {appState.membershipActive ? "Active" : activatingMembership ? "Activating" : "Activate"}
           </PrimaryButton>
         </div>
+        <div className="membership-breakdown">
+          <div>
+            <span>Membership fee</span>
+            <strong>{formatMoney(appState.membershipConfig.fee)}</strong>
+          </div>
+          <div>
+            <span>Coupon deduction</span>
+            <strong className={membershipDiscount ? "success-text" : ""}>-{formatMoney(membershipDiscount)}</strong>
+          </div>
+        </div>
+        {!appState.membershipActive ? (
+          <div className="coupon-row">
+            <Field label="Coupon code" value={couponCode} onChange={(event) => onCouponCodeChange(event.target.value.toUpperCase())} placeholder="WELCOME100" />
+            <PrimaryButton icon={<TicketPercent size={17} />} variant="secondary" disabled={!couponCode.trim() || applyingCoupon} onClick={onApplyCoupon}>
+              {applyingCoupon ? "Applying" : "Apply"}
+            </PrimaryButton>
+          </div>
+        ) : null}
         <div className="benefit-list">
           {appState.membershipConfig.benefits.map((benefit) => (
             <p key={benefit}>

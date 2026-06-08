@@ -30,6 +30,8 @@ export const mockState: AppState = {
     planName: "MobPae Membership",
     fee: 449,
     couponDiscount: 0,
+    couponCode: "",
+    amountPayable: 449,
     validityLabel: "1 year",
     benefits: ["Access salary advances", "Transparent salary deductions", "Request tracking", "Payment tracking", "Financial flexibility"]
   },

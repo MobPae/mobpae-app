@@ -73,6 +73,8 @@ export type MembershipConfig = {
   planName: string;
   fee: number;
   couponDiscount: number;
+  couponCode?: string;
+  amountPayable?: number;
   validityLabel: string;
   benefits: string[];
 };

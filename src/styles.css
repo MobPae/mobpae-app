@@ -794,6 +794,48 @@ h2 {
   font-size: 24px;
 }
 
+.membership-breakdown {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.membership-breakdown div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.membership-breakdown strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.success-text {
+  color: #079455 !important;
+}
+
+.coupon-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.coupon-row .button {
+  width: 102px;
+  min-height: 46px;
+  margin-top: 0;
+}
+
 .benefit-list {
   margin-top: 12px;
 }

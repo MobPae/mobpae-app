@@ -52,8 +52,13 @@ export function EmployeeApp() {
           bankForm={app.bankForm}
           membershipFee={app.membershipFee}
           savingBank={app.savingBank}
+          couponCode={app.couponCode}
+          applyingCoupon={app.applyingCoupon}
+          activatingMembership={app.activatingMembership}
+          onApplyCoupon={app.applyMembershipCoupon}
           onActivateMembership={app.activateMembership}
           onBankFormChange={app.setBankForm}
+          onCouponCodeChange={app.setCouponCode}
           onSaveBank={app.saveBankAccount}
         />
       ) : null}
