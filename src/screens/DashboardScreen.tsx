@@ -4,7 +4,6 @@ import { Card } from "../components/ui/Card";
 import { InlineAlert } from "../components/ui/InlineAlert";
 import { Metric } from "../components/ui/Metric";
 import { SectionHeader } from "../components/ui/SectionHeader";
-import { OnboardingSteps } from "../components/onboarding/OnboardingSteps";
 import { formatMoney } from "../utils/format";
 import type { AppState, View } from "../types/app";
 
@@ -14,11 +13,10 @@ type DashboardScreenProps = {
   membershipFee: number;
   nextBlocker: string;
   notice: string;
-  onboardingSteps: Array<{ label: string; done: boolean }>;
   onNavigate: (view: View) => void;
 };
 
-export function DashboardScreen({ appState, eligibleForAdvance, membershipFee, nextBlocker, notice, onboardingSteps, onNavigate }: DashboardScreenProps) {
+export function DashboardScreen({ appState, eligibleForAdvance, membershipFee, nextBlocker, notice, onNavigate }: DashboardScreenProps) {
   const latestRequest = appState.requests[0];
 
   return (
@@ -39,7 +37,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, membershipFee, n
         <ArrowRight size={16} />
       </button>
 
-      <OnboardingSteps steps={onboardingSteps} />
       <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
 
       <section className="metric-grid">

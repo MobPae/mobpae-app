@@ -11,7 +11,7 @@ export function EmployeeApp() {
   const app = useEmployeeApp();
 
   if (!app.isLoggedIn) {
-    return <LoginScreen loading={app.loadState === "loading"} onLogin={app.login} />;
+    return <LoginScreen error={app.loginError} loading={app.loadState === "loading"} onLogin={app.login} />;
   }
 
   return (
@@ -23,7 +23,6 @@ export function EmployeeApp() {
           membershipFee={app.membershipFee}
           nextBlocker={app.nextBlocker}
           notice={app.notice}
-          onboardingSteps={app.onboardingSteps}
           onNavigate={app.setActiveView}
         />
       ) : null}

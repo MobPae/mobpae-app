@@ -9,6 +9,15 @@ type LoginResponse = {
   token?: string;
 };
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number
+  ) {
+    super(message);
+  }
+}
+
 const authHeaders = (): Record<string, string> => {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -19,13 +28,29 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   headers.set("Content-Type", "application/json");
   Object.entries(authHeaders()).forEach(([key, value]) => headers.set(key, value));
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers
+    });
+  } catch {
+    throw new ApiError("Backend is not reachable. Please confirm the API is running on port 3000.");
+  }
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    let message = `Request failed: ${response.status}`;
+    try {
+      const errorBody = (await response.json()) as { message?: string | string[] };
+      if (Array.isArray(errorBody.message)) {
+        message = errorBody.message.join(" ");
+      } else if (errorBody.message) {
+        message = errorBody.message;
+      }
+    } catch {
+      message = response.status === 0 ? "Backend is not reachable." : message;
+    }
+    throw new ApiError(message, response.status);
   }
 
   return response.json() as Promise<T>;
@@ -35,16 +60,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 // so product review never lands on a blank screen when a local API is unavailable.
 export const employeeApi = {
   async login(email: string, password: string) {
-    try {
-      const data = await request<LoginResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password })
-      });
-      const token = data.accessToken ?? data.token;
-      if (token) localStorage.setItem(TOKEN_KEY, token);
-    } catch {
-      localStorage.setItem(TOKEN_KEY, "demo-token");
+    const data = await request<LoginResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+    const token = data.accessToken ?? data.token;
+    if (!token) {
+      throw new ApiError("Login succeeded but no access token was returned.");
     }
+    localStorage.setItem(TOKEN_KEY, token);
   },
 
   logout() {

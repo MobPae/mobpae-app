@@ -16,6 +16,7 @@ export function useEmployeeApp() {
   const [preview, setPreview] = useState<RecoveryPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const loadEmployee = async () => {
     setLoadState("loading");
@@ -33,10 +34,16 @@ export function useEmployeeApp() {
   };
 
   const login = async (email: string, password: string) => {
+    setLoginError("");
     setLoadState("loading");
-    await employeeApi.login(email, password);
-    setIsLoggedIn(true);
-    await loadEmployee();
+    try {
+      await employeeApi.login(email, password);
+      setIsLoggedIn(true);
+      await loadEmployee();
+    } catch (error) {
+      setLoadState("error");
+      setLoginError(error instanceof Error ? error.message : "Unable to sign in. Please try again.");
+    }
   };
 
   const logout = () => {
@@ -128,6 +135,7 @@ export function useEmployeeApp() {
     loadEmployee,
     loadState,
     login,
+    loginError,
     logout,
     membershipFee,
     nextBlocker,
