@@ -127,7 +127,7 @@ const normalizeRequests = (requests: BackendSalaryRequest[], repayments: Backend
     const requestedAmount = toAmount(request.amount);
     const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
     const requestDate = request.requestedAt ?? todayIso();
-    const recoveryDate = repayment?.dueDate ?? request.repaymentDate ?? requestDate;
+    const recoveryDate = repayment?.dueDate ?? request.repaymentDate ?? "";
     const status = normalizeRequestStatus(request.status);
 
     return {

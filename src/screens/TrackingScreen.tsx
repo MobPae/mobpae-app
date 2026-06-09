@@ -2,7 +2,7 @@ import { CalendarDays, IndianRupee, Route } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { StatusPill } from "../components/ui/StatusPill";
-import { formatDate, formatMoney } from "../utils/format";
+import { formatDate, formatMoney, formatShortDate } from "../utils/format";
 import type { AdvanceRequest } from "../types/app";
 
 type TrackingScreenProps = {
@@ -23,9 +23,9 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
 
   return (
     <>
-      <Card className="request-summary">
+      <Card className="request-summary tracking-summary-card">
         <SectionHeader title={latestRequest.id} eyebrow="Current request" icon={<Route size={19} />} action={<StatusPill status={latestRequest.status} />} />
-        <div className="detail-list">
+        <div className="detail-list tracking-detail-list">
           <div className="detail">
             <IndianRupee size={18} />
             <div>
@@ -43,7 +43,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
         </div>
       </Card>
 
-      <Card>
+      <Card className="tracking-timeline-card">
         <SectionHeader title="Timeline" eyebrow="Request movement" />
         <div className="timeline">
           {latestRequest.timeline.map((item) => (
@@ -52,7 +52,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
               <div>
                 <strong>{item.status}</strong>
                 <p>{item.description}</p>
-                <small>{item.timestamp}</small>
+                <small>{formatShortDate(item.timestamp)}</small>
               </div>
             </article>
           ))}

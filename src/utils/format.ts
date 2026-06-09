@@ -5,11 +5,29 @@ export const formatMoney = (amount: number) =>
     maximumFractionDigits: amount % 1 === 0 ? 0 : 2
   }).format(amount);
 
-export const formatDate = (date: string) =>
-  new Intl.DateTimeFormat("en-IN", {
+export const formatDate = (date?: string) => {
+  if (!date) return "Pending";
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return "Pending";
+
+  return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric"
-  }).format(new Date(date));
+  }).format(parsedDate);
+};
+
+export const formatShortDate = (date?: string) => {
+  if (!date || date === "Pending") return "Pending";
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return date.split(",")[0] || "Pending";
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short"
+  }).format(parsedDate);
+};
 
 export const maskAccountNumber = (accountNumber: string) => (accountNumber ? `**** ${accountNumber.slice(-4)}` : "");

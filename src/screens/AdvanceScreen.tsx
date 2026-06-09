@@ -1,4 +1,4 @@
-import { BadgeIndianRupee, CalendarClock, Send } from "lucide-react";
+import { BadgeIndianRupee, CalendarClock, IndianRupee, Send, Sparkles } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -22,20 +22,32 @@ type AdvanceScreenProps = {
 
 export function AdvanceScreen({ amount, eligible, limit, nextBlocker, notice, preview, previewLoading, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
   const amountReady = amount > 0 && amount <= limit;
+  const quickAmounts = [1000, 3000, 5000, 10000].filter((value) => value <= limit);
 
   return (
     <>
-      <Card>
-        <SectionHeader title="Salary advance" eyebrow="Request" icon={<BadgeIndianRupee size={19} />} />
-        <Field
-          label="Amount"
-          type="number"
-          min={1000}
-          max={limit}
-          value={amount}
-          onChange={(event) => onAmountChange(Math.min(limit, Number(event.target.value)))}
-        />
-        <input className="range" type="range" min={1000} max={limit} step={500} value={amount} onChange={(event) => onAmountChange(Number(event.target.value))} />
+      <Card className="advance-hero-card">
+        <SectionHeader title="How much would you like to withdraw?" eyebrow="Salary advance" icon={<BadgeIndianRupee size={19} />} />
+        <div className="limit-pill">Available limit: {formatMoney(limit)}</div>
+        <div className="advance-amount-display">
+          <IndianRupee size={24} />
+          <strong>{formatMoney(amount).replace("₹", "")}</strong>
+        </div>
+        <Field label="Selected amount" type="text" value={formatMoney(amount)} disabled onChange={() => undefined} />
+        <div className="advance-range-wrap">
+          <input className="range" type="range" min={1000} max={limit} step={500} value={amount} onChange={(event) => onAmountChange(Number(event.target.value))} />
+          <div className="range-labels">
+            <span>{formatMoney(1000)}</span>
+            <span>{formatMoney(limit)}</span>
+          </div>
+        </div>
+        <div className="quick-amounts" aria-label="Quick amount options">
+          {quickAmounts.map((value) => (
+            <button className={value === amount ? "active" : ""} type="button" key={value} onClick={() => onAmountChange(value)}>
+              {formatMoney(value)}
+            </button>
+          ))}
+        </div>
         <InlineAlert message={eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker} tone={eligible ? "success" : "warning"} />
       </Card>
 
@@ -64,6 +76,10 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, notice, pr
           <p className="muted">{previewLoading ? "Calculating preview..." : "Enter an amount to preview payment."}</p>
         )}
         <InlineAlert message={notice} tone={eligible ? "info" : "warning"} />
+        <div className="savings-note">
+          <Sparkles size={15} />
+          <span>Transparent charges before you submit.</span>
+        </div>
         <PrimaryButton icon={<Send size={17} />} disabled={!eligible || !amountReady || previewLoading || submitting} onClick={onSubmit}>
           {submitting ? "Submitting" : "Submit request"}
         </PrimaryButton>
