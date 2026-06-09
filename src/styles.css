@@ -337,34 +337,36 @@ h2 {
   background: #ffffff;
 }
 
-.home-balance-meta {
-  position: relative;
-  z-index: 1;
+.home-salary-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.14);
+  gap: 12px;
+  margin-top: 12px;
 }
 
-.home-balance-meta div {
+.home-salary-row div {
   min-width: 0;
-  background: rgba(17, 24, 39, 0.12);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
   padding: 12px;
+  box-shadow: var(--shadow-card);
 }
 
-.home-balance-meta span {
+.home-salary-row span {
   display: block;
   overflow: hidden;
+  color: var(--muted);
   font-size: 10.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.home-balance-meta strong {
+.home-salary-row strong {
+  display: block;
   overflow: hidden;
   margin: 6px 0 0;
+  color: var(--ink);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.15;
@@ -474,45 +476,6 @@ h2 {
 
 .journey-step.done p {
   color: var(--blue);
-}
-
-.home-request-card {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  margin-top: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
-}
-
-.home-request-card div {
-  min-width: 0;
-  padding: 12px 14px;
-}
-
-.home-request-card div + div {
-  border-left: 1px solid var(--line);
-}
-
-.home-request-card p {
-  color: var(--muted);
-  font-size: 10.5px;
-}
-
-.home-request-card strong {
-  display: block;
-  margin-top: 5px;
-  color: var(--ink);
-  font-size: 16px;
-  font-weight: 740;
-  line-height: 1.15;
-}
-
-.home-request-card div:last-child strong {
-  color: var(--blue);
-  font-size: 14.5px;
 }
 
 .home-section-title {

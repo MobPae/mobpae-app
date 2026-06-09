@@ -83,19 +83,20 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
         <div className="home-progress-track" aria-hidden="true">
           <span style={{ width: `${availablePercent}%` }} />
         </div>
-        <div className="home-balance-meta">
-          <div>
-            <span>Total Salary</span>
-            <strong>{formatMoney(totalSalary)}</strong>
-          </div>
-          <div>
-            <span>Withdrawn</span>
-            <strong>{formatMoney(withdrawnAmount)}</strong>
-          </div>
-          <div>
-            <span>Next payday</span>
-            <strong>{formatShortDate(nextPayday)}</strong>
-          </div>
+      </section>
+
+      <section className="home-salary-row" aria-label="Salary summary">
+        <div>
+          <span>Total Salary</span>
+          <strong>{formatMoney(totalSalary)}</strong>
+        </div>
+        <div>
+          <span>Withdrawn</span>
+          <strong>{formatMoney(withdrawnAmount)}</strong>
+        </div>
+        <div>
+          <span>Next payday</span>
+          <strong>{formatShortDate(nextPayday)}</strong>
         </div>
       </section>
 
@@ -112,17 +113,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
               </div>
             );
           })}
-        </div>
-      </section>
-
-      <section className="home-request-card">
-        <div>
-          <p>Latest request</p>
-          <strong>{latestRequest ? formatMoney(latestRequest.requestedAmount) : "None"}</strong>
-        </div>
-        <div>
-          <p>Status</p>
-          <strong>{formattedStatus}</strong>
         </div>
       </section>
 
