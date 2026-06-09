@@ -1284,6 +1284,11 @@ h2 {
   text-align: left;
 }
 
+button.profile-menu-row {
+  width: 100%;
+  cursor: pointer;
+}
+
 .profile-menu-row .status-pill {
   min-width: 76px;
   max-width: none;

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BadgeCheck, Bell, Building2, ChevronRight, CircleHelp, FileCheck2, Landmark, LogOut, PencilLine, ShieldCheck, TicketPercent, UserRound, X } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
@@ -50,10 +50,13 @@ export function ProfileScreen({
   onUpdateUpi,
   onSaveBank
 }: ProfileScreenProps) {
+  const [bankOpen, setBankOpen] = useState(false);
   const bankReady = bankForm.accountHolderName && bankForm.accountNumber && bankForm.ifscCode;
   const hasBankAccount = Boolean(appState.bankAccount);
   const showBankForm = !hasBankAccount || editingBank;
+  const showBankDetails = bankOpen || editingBank;
   const membershipDiscount = appState.membershipConfig.couponDiscount;
+  const bankStatus = appState.bankAccount ? (appState.bankAccount.verified ? "Verified" : "Under Review") : "Pending";
 
   return (
     <>
@@ -78,15 +81,18 @@ export function ProfileScreen({
 
         <div className="profile-menu-section">
           <p className="profile-menu-title">Bank account</p>
-          {!showBankForm ? (
-            <ProfileMenuRow
-              icon={<Landmark size={17} />}
-              title={appState.bankAccount?.bankName || "Bank account"}
-              detail={`${maskAccountNumber(appState.bankAccount?.accountNumber || "")} • ${appState.bankAccount?.ifscCode || ""}`}
-              status={appState.bankAccount?.verified ? "Verified" : "Under Review"}
-            />
-          ) : null}
-          {hasBankAccount && !editingBank ? (
+          <ProfileMenuRow
+            icon={<Landmark size={17} />}
+            title={appState.bankAccount?.bankName || "Bank account"}
+            detail={
+              appState.bankAccount
+                ? `${maskAccountNumber(appState.bankAccount.accountNumber)} • ${appState.bankAccount.ifscCode}`
+                : "Add account details for salary disbursal"
+            }
+            status={bankStatus}
+            onClick={() => setBankOpen((current) => !current)}
+          />
+          {showBankDetails && hasBankAccount && !editingBank ? (
             <div className="readonly-bank-grid">
               <ReadOnlyField label="Account holder" value={appState.bankAccount?.accountHolderName || "-"} />
               <ReadOnlyField label="Bank name" value={appState.bankAccount?.bankName || "-"} />
@@ -94,7 +100,7 @@ export function ProfileScreen({
               <ReadOnlyField label="IFSC code" value={appState.bankAccount?.ifscCode || "-"} />
             </div>
           ) : null}
-          {showBankForm ? (
+          {showBankDetails && showBankForm ? (
             <div className="setup-form">
               <Field label="Account holder name" value={bankForm.accountHolderName} onChange={(event) => onBankFormChange({ ...bankForm, accountHolderName: event.target.value })} />
               <Field label="Bank name" value={bankForm.bankName} onChange={(event) => onBankFormChange({ ...bankForm, bankName: event.target.value })} />
@@ -102,22 +108,27 @@ export function ProfileScreen({
               <Field label="IFSC code" value={bankForm.ifscCode} onChange={(event) => onBankFormChange({ ...bankForm, ifscCode: event.target.value.toUpperCase() })} />
             </div>
           ) : null}
-          {editingBank ? <InlineAlert message="Changing bank details will reset bank verification. Admin must verify the new account again." tone="warning" /> : null}
-          {showBankForm ? (
+          {showBankDetails && editingBank ? <InlineAlert message="Changing bank details will reset bank verification. Admin must verify the new account again." tone="warning" /> : null}
+          {showBankDetails && showBankForm ? (
             <PrimaryButton icon={<Landmark size={17} />} disabled={!bankReady || savingBank} onClick={onSaveBank}>
               {savingBank ? "Saving bank" : hasBankAccount ? "Replace bank account" : "Save bank account"}
             </PrimaryButton>
-          ) : (
+          ) : showBankDetails ? (
             <PrimaryButton icon={<PencilLine size={17} />} variant="secondary" onClick={onEditBank}>
               Edit bank account
             </PrimaryButton>
-          )}
-          {editingBank ? (
+          ) : null}
+          {showBankDetails && bankOpen && !editingBank ? (
+            <PrimaryButton icon={<X size={17} />} variant="ghost" disabled={savingBank} onClick={() => setBankOpen(false)}>
+              Close bank details
+            </PrimaryButton>
+          ) : null}
+          {showBankDetails && editingBank ? (
             <PrimaryButton icon={<X size={17} />} variant="ghost" disabled={savingBank} onClick={onCancelBankEdit}>
               Cancel edit
             </PrimaryButton>
           ) : null}
-          {hasBankAccount && !editingBank ? (
+          {showBankDetails && hasBankAccount && !editingBank ? (
             <div className="upi-panel">
               <Field label="UPI ID" value={bankForm.upiId ?? ""} onChange={(event) => onBankFormChange({ ...bankForm, upiId: event.target.value })} placeholder="name@bank" />
               <PrimaryButton variant="secondary" disabled={savingBank} onClick={onUpdateUpi}>
@@ -187,9 +198,9 @@ export function ProfileScreen({
   );
 }
 
-function ProfileMenuRow({ icon, title, detail, status }: { icon: ReactNode; title: string; detail?: string; status?: string }) {
-  return (
-    <div className="profile-menu-row">
+function ProfileMenuRow({ icon, title, detail, status, onClick }: { icon: ReactNode; title: string; detail?: string; status?: string; onClick?: () => void }) {
+  const content = (
+    <>
       <span>{icon}</span>
       <div>
         <strong>{title}</strong>
@@ -197,6 +208,20 @@ function ProfileMenuRow({ icon, title, detail, status }: { icon: ReactNode; titl
       </div>
       {status ? <StatusPill status={status} /> : null}
       {status ? null : <ChevronRight size={16} />}
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button className="profile-menu-row" type="button" onClick={onClick}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="profile-menu-row">
+      {content}
     </div>
   );
 }
