@@ -28,6 +28,13 @@ type BackendSalaryRequest = {
   remarks?: string | null;
 };
 
+type BackendRecoveryPreview = Partial<RecoveryPreview> & {
+  principalAmount?: number;
+  interestAmount?: number;
+  totalAmount?: number;
+  dueDate?: string;
+};
+
 type BackendRepayment = {
   id: string;
   principalAmount?: number | string;
@@ -244,7 +251,7 @@ export const employeeApi = {
       const kycComplete = Boolean(dashboardData?.kycCompleted);
       const requestData = salaryRequests.status === "fulfilled" ? salaryRequests.value : [];
       const repaymentData = repayments.status === "fulfilled" ? repayments.value : [];
-      const normalizedRequests = requestData.length ? normalizeRequests(requestData, repaymentData) : mockState.requests;
+      const normalizedRequests = salaryRequests.status === "fulfilled" ? normalizeRequests(requestData, repaymentData) : mockState.requests;
       const notificationData = notifications.status === "fulfilled" ? notifications.value : [];
       const membershipData = membership.status === "fulfilled" ? membership.value : null;
 
@@ -318,18 +325,26 @@ export const employeeApi = {
     });
   },
 
+  async submitSalaryAdvance(employeeId: string, amount: number) {
+    const requestData = await request<BackendSalaryRequest>("/salary-requests", {
+      method: "POST",
+      body: JSON.stringify({ employeeId, amount })
+    });
+    return normalizeRequests([requestData], [])[0];
+  },
+
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {
     try {
-      const preview = await request<Partial<RecoveryPreview>>("/salary-requests/preview", {
+      const preview = await request<BackendRecoveryPreview>("/salary-requests/preview", {
         method: "POST",
         body: JSON.stringify({ amount })
       });
       return {
-        principal: preview.principal ?? amount,
-        interest: preview.interest ?? Number((amount * 0.00789).toFixed(2)),
-        total: preview.total ?? amount + Number((amount * 0.00789).toFixed(2)),
+        principal: preview.principal ?? preview.principalAmount ?? amount,
+        interest: preview.interest ?? preview.interestAmount ?? Number((amount * 0.00789).toFixed(2)),
+        total: preview.total ?? preview.totalAmount ?? amount + Number((amount * 0.00789).toFixed(2)),
         interestDays: preview.interestDays ?? 8,
-        recoveryDate: preview.recoveryDate ?? "2026-06-28"
+        recoveryDate: preview.recoveryDate ?? preview.dueDate ?? "2026-06-28"
       };
     } catch {
       const interest = Number((amount * 0.00789).toFixed(2));

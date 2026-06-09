@@ -12,12 +12,17 @@ type AdvanceScreenProps = {
   eligible: boolean;
   limit: number;
   nextBlocker: string;
+  notice: string;
   preview: RecoveryPreview | null;
   previewLoading: boolean;
+  submitting: boolean;
   onAmountChange: (amount: number) => void;
+  onSubmit: () => void;
 };
 
-export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, previewLoading, onAmountChange }: AdvanceScreenProps) {
+export function AdvanceScreen({ amount, eligible, limit, nextBlocker, notice, preview, previewLoading, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
+  const amountReady = amount > 0 && amount <= limit;
+
   return (
     <>
       <Card>
@@ -58,8 +63,9 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
         ) : (
           <p className="muted">{previewLoading ? "Calculating preview..." : "Enter an amount to preview payment."}</p>
         )}
-        <PrimaryButton icon={<Send size={17} />} disabled={!eligible || previewLoading}>
-          Submit request
+        <InlineAlert message={notice} tone={eligible ? "info" : "warning"} />
+        <PrimaryButton icon={<Send size={17} />} disabled={!eligible || !amountReady || previewLoading || submitting} onClick={onSubmit}>
+          {submitting ? "Submitting" : "Submit request"}
         </PrimaryButton>
       </Card>
     </>

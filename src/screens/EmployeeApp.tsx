@@ -40,9 +40,12 @@ export function EmployeeApp() {
           eligible={app.eligibleForAdvance}
           limit={app.appState.profile.salaryLimit}
           nextBlocker={app.nextBlocker}
+          notice={app.notice}
           preview={app.preview}
           previewLoading={app.previewLoading}
+          submitting={app.submittingAdvance}
           onAmountChange={app.setAdvanceAmount}
+          onSubmit={app.submitSalaryAdvance}
         />
       ) : null}
       {app.activeView === "tracking" ? <TrackingScreen requests={app.appState.requests} /> : null}

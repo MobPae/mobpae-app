@@ -15,6 +15,7 @@ export function useEmployeeApp() {
   const [advanceAmount, setAdvanceAmount] = useState(5000);
   const [preview, setPreview] = useState<RecoveryPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [submittingAdvance, setSubmittingAdvance] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [uploadingKycType, setUploadingKycType] = useState<KycDocumentType | null>(null);
   const [couponCode, setCouponCode] = useState("");
@@ -192,6 +193,30 @@ export function useEmployeeApp() {
     }
   };
 
+  const submitSalaryAdvance = async () => {
+    setSubmittingAdvance(true);
+    try {
+      const savedRequest = await employeeApi.submitSalaryAdvance(appState.profile.id, advanceAmount);
+      setAppState((current) => ({
+        ...current,
+        requests: [savedRequest, ...current.requests],
+        dashboard: current.dashboard
+          ? {
+              ...current.dashboard,
+              activeRequestStatus: "SUBMITTED"
+            }
+          : current.dashboard,
+        notifications: [`Request ${savedRequest.id} submitted for employer approval.`, ...current.notifications].slice(0, 5)
+      }));
+      setNotice("Salary advance request submitted for employer approval.");
+      setActiveView("tracking");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to submit salary advance request.");
+    } finally {
+      setSubmittingAdvance(false);
+    }
+  };
+
   return {
     activeRecovery,
     activeView,
@@ -222,6 +247,8 @@ export function useEmployeeApp() {
     setAdvanceAmount,
     setBankForm,
     setCouponCode,
+    submitSalaryAdvance,
+    submittingAdvance,
     uploadKycDocument,
     uploadingKycType,
     applyMembershipCoupon,
