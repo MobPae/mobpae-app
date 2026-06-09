@@ -491,9 +491,9 @@ h2 {
 }
 
 .home-status-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
   margin-top: 0;
   border: 0;
   border-radius: 0;
@@ -502,20 +502,20 @@ h2 {
 }
 
 .home-status-strip div {
-  display: inline-flex;
-  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 7px;
   min-width: 0;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  padding: 7px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
   box-shadow: none;
 }
 
 .home-status-strip div + div {
-  border-left: 1px solid var(--line);
+  border-left: 0;
 }
 
 .home-status-strip svg {
@@ -524,26 +524,33 @@ h2 {
 }
 
 .home-status-strip span {
-  display: inline;
+  display: block;
   margin-top: 0;
-  color: var(--muted);
-  font-size: 10px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .home-status-strip strong {
-  display: inline;
+  display: inline-flex;
+  grid-column: 1 / -1;
+  justify-self: start;
+  align-items: center;
+  min-height: 24px;
   margin-top: 0;
   overflow: hidden;
-  color: var(--ink);
+  border-radius: 999px;
+  background: #eef2ff;
+  color: var(--muted);
+  padding: 5px 9px;
   font-size: 11px;
-  font-weight: 720;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .home-status-strip .done {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
+  background: transparent;
 }
 
 .home-status-strip .done svg {
@@ -551,12 +558,12 @@ h2 {
 }
 
 .home-status-strip .done strong {
+  background: #dcfce7;
   color: #15803d;
 }
 
 .home-status-strip .active {
-  border-color: var(--line-strong);
-  background: var(--blue-soft);
+  background: transparent;
 }
 
 .home-status-strip .active svg,
@@ -564,8 +571,17 @@ h2 {
   color: var(--blue);
 }
 
+.home-status-strip .active strong {
+  background: var(--blue-soft);
+}
+
 .home-status-strip .pending {
-  background: #ffffff;
+  background: transparent;
+}
+
+.home-status-strip .pending strong {
+  background: #fef3c7;
+  color: var(--amber);
 }
 
 .step-strip {
