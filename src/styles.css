@@ -230,17 +230,15 @@ h2 {
 
 .hero-card {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  display: grid;
   gap: 14px;
-  min-height: 156px;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid #16191f;
-  border-radius: 22px;
+  border-radius: 20px;
   background: linear-gradient(145deg, #101114 0%, #1b2028 62%, #26303b 100%);
   color: #ffffff;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 18px 42px rgba(16, 17, 20, 0.2);
 }
 
@@ -263,12 +261,21 @@ h2 {
 
 .hero-card strong {
   display: block;
-  margin: 8px 0;
+  margin: 6px 0;
   color: #ffffff;
-  font-size: 35px;
+  font-size: 30px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
+}
+
+.hero-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .hero-badge {
@@ -285,6 +292,37 @@ h2 {
   box-shadow: none;
 }
 
+.hero-meta-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hero-meta-grid div {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 11px;
+}
+
+.hero-meta-grid p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+}
+
+.hero-meta-grid strong {
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .hero-action {
   width: 100%;
   min-height: 48px;
@@ -298,6 +336,52 @@ h2 {
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 15px 34px rgba(16, 17, 20, 0.18);
+}
+
+.home-status-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.home-status-strip div {
+  min-width: 0;
+  border: 1px solid #e3e6ec;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 11px;
+  box-shadow: 0 10px 24px rgba(16, 17, 20, 0.045);
+}
+
+.home-status-strip svg {
+  color: #101114;
+}
+
+.home-status-strip span {
+  display: block;
+  margin-top: 8px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.home-status-strip strong {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #101114;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-status-strip .done {
+  border-color: #c8f0de;
+  background: #f2fcf7;
+}
+
+.home-status-strip .done svg {
+  color: #087443;
 }
 
 .step-strip {
@@ -390,6 +474,25 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
+}
+
+.metric-grid.compact {
+  margin-top: 10px;
+}
+
+.metric-grid.compact .metric {
+  min-height: 86px;
+  padding: 12px;
+}
+
+.metric-grid.compact .metric > span {
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+}
+
+.metric-grid.compact .metric p {
+  margin-top: 9px;
 }
 
 .metric-grid .metric:last-child:nth-child(odd) {

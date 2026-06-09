@@ -1,7 +1,6 @@
-import { ArrowRight, Clock3, FileCheck2, Landmark, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeIndianRupee, FileCheck2, Landmark, ShieldCheck } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { InlineAlert } from "../components/ui/InlineAlert";
-import { Metric } from "../components/ui/Metric";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { formatMoney } from "../utils/format";
 import type { AppState, View } from "../types/app";
@@ -28,36 +27,65 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
   const latestRequest = appState.requests[0];
   const paymentStatus = appState.dashboard?.activeRepaymentStatus ?? appState.dashboard?.activeRequestStatus ?? latestRequest?.status;
   const kycComplete = appState.documents.every((item) => item.status === "Verified");
-  let nextSetupView: View = !kycComplete || !appState.bankAccount?.verified || !appState.membershipActive ? "profile" : "advance";
+  const setupComplete = kycComplete && Boolean(appState.bankAccount?.verified) && appState.membershipActive;
+  let nextSetupView: View = setupComplete ? "advance" : "profile";
 
   if (!kycComplete) {
     nextSetupView = "kyc";
   }
 
+  const ctaView: View = eligibleForAdvance ? "advance" : setupComplete ? "tracking" : nextSetupView;
+  const ctaLabel = eligibleForAdvance ? "Request advance" : setupComplete ? "Track request" : "Continue setup";
+  const ctaHint = eligibleForAdvance ? "Ready this cycle" : setupComplete ? formatHomeStatus(paymentStatus) : nextBlocker;
+
   return (
     <>
       <section className="hero-card">
-        <div>
-          <p>Available salary advance</p>
-          <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
-          <span>{eligibleForAdvance ? "Ready to request from this pay cycle" : nextBlocker}</span>
+        <div className="hero-main">
+          <div>
+            <p>Available salary advance</p>
+            <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
+            <span>{ctaHint}</span>
+          </div>
+          <span className="hero-badge">
+            <ShieldCheck size={17} />
+            {appState.membershipActive ? "Member" : "Employee"}
+          </span>
         </div>
-        <span className="hero-badge">
-          <ShieldCheck size={19} />
-          {appState.membershipActive ? "Member" : "Employee"}
-        </span>
+        <div className="hero-meta-grid">
+          <div>
+            <p>Request</p>
+            <strong>{latestRequest ? formatMoney(latestRequest.requestedAmount) : "None"}</strong>
+          </div>
+          <div>
+            <p>Status</p>
+            <strong>{formatHomeStatus(paymentStatus)}</strong>
+          </div>
+        </div>
       </section>
-      <button className="hero-action" type="button" onClick={() => onNavigate(eligibleForAdvance ? "advance" : nextSetupView)}>
-        <span>{eligibleForAdvance ? "Request advance" : "Continue setup"}</span>
+      <button className="hero-action" type="button" onClick={() => onNavigate(ctaView)}>
+        <span>{ctaLabel}</span>
         <ArrowRight size={16} />
       </button>
 
       <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
 
-      <section className="metric-grid">
-        <Metric icon={<FileCheck2 size={18} />} label="KYC status" value={appState.documents.every((item) => item.status === "Verified") ? "Verified" : "Pending"} tone="warn" />
-        <Metric icon={<Landmark size={18} />} label="Bank account" value={appState.bankAccount?.verified ? "Verified" : "Pending"} tone={appState.bankAccount?.verified ? "good" : "warn"} />
-        <Metric icon={<Clock3 size={18} />} label="Payment status" value={formatHomeStatus(paymentStatus)} />
+      <section className="home-status-strip">
+        <div className={kycComplete ? "done" : ""}>
+          <FileCheck2 size={17} />
+          <span>KYC</span>
+          <strong>{kycComplete ? "Verified" : "Pending"}</strong>
+        </div>
+        <div className={appState.bankAccount?.verified ? "done" : ""}>
+          <Landmark size={17} />
+          <span>Bank</span>
+          <strong>{appState.bankAccount?.verified ? "Verified" : "Pending"}</strong>
+        </div>
+        <div className={appState.membershipActive ? "done" : ""}>
+          <BadgeIndianRupee size={17} />
+          <span>Plan</span>
+          <strong>{appState.membershipActive ? "Active" : "Pending"}</strong>
+        </div>
       </section>
 
       <Card>
