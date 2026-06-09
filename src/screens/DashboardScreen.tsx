@@ -1,5 +1,4 @@
 import { ArrowRight, BadgeIndianRupee, CheckCircle2, FileCheck2, Landmark, Send, ShieldCheck, WalletCards } from "lucide-react";
-import { InlineAlert } from "../components/ui/InlineAlert";
 import { formatMoney, formatShortDate } from "../utils/format";
 import type { AppState, View } from "../types/app";
 
@@ -32,7 +31,7 @@ const getNextPayday = () => {
   return payday.toISOString();
 };
 
-export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, notice, onNavigate }: DashboardScreenProps) {
+export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, onNavigate }: DashboardScreenProps) {
   const latestRequest = appState.requests[0];
   const paymentStatus = appState.dashboard?.activeRepaymentStatus ?? appState.dashboard?.activeRequestStatus ?? latestRequest?.status;
   const formattedStatus = formatHomeStatus(paymentStatus);
@@ -84,9 +83,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
           <span style={{ width: `${availablePercent}%` }} />
         </div>
       </section>
-      {withdrawnAmount > 0 && availableAdvance < approvedLimit ? (
-        <p className="home-advance-note">You can withdraw again after the current due is cleared.</p>
-      ) : null}
 
       <section className="home-salary-row" aria-label="Salary summary">
         <div>
@@ -137,8 +133,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
           <strong>{appState.membershipActive ? "Active" : "Pending"}</strong>
         </div>
       </section>
-
-      <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
 
       <button className="hero-action" type="button" onClick={() => onNavigate(ctaView)}>
         <span>{ctaLabel}</span>

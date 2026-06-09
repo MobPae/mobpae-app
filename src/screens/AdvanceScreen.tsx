@@ -21,6 +21,7 @@ type AdvanceScreenProps = {
 export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, previewLoading, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
   const amountReady = amount > 0 && amount <= limit;
   const quickAmounts = [1000, 3000, 5000, 10000].filter((value) => value <= limit);
+  const lowAvailableLimit = limit > 0 && limit < 1000;
 
   return (
     <>
@@ -49,6 +50,7 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
           ))}
         </div>
         <InlineAlert message={eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker} tone={eligible ? "success" : "warning"} />
+        {lowAvailableLimit ? <InlineAlert message="You can withdraw again after the current due is cleared." tone="warning" /> : null}
 
         <div className="advance-calculator">
           <div className="calculator-title">
