@@ -43,7 +43,7 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
       <section className="hero-card">
         <div className="hero-main">
           <div>
-            <p>Available salary advance</p>
+            <p>Available advance</p>
             <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
             <span>{ctaHint}</span>
           </div>
@@ -54,7 +54,7 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
         </div>
         <div className="hero-meta-grid">
           <div>
-            <p>Request</p>
+            <p>Latest request</p>
             <strong>{latestRequest ? formatMoney(latestRequest.requestedAmount) : "None"}</strong>
           </div>
           <div>
@@ -67,8 +67,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
         <span>{ctaLabel}</span>
         <ArrowRight size={16} />
       </button>
-
-      <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
 
       <section className="home-status-strip">
         <div className={kycComplete ? "done" : ""}>
@@ -87,6 +85,8 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
           <strong>{appState.membershipActive ? "Active" : "Pending"}</strong>
         </div>
       </section>
+
+      <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
 
       <Card>
         <SectionHeader title="Recent activity" eyebrow="Updates" />

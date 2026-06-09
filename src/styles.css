@@ -231,39 +231,36 @@ h2 {
 .hero-card {
   position: relative;
   display: grid;
-  gap: 14px;
+  gap: 12px;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid #16191f;
-  border-radius: 20px;
-  background: linear-gradient(145deg, #101114 0%, #1b2028 62%, #26303b 100%);
-  color: #ffffff;
+  border: 1px solid #e3e6ec;
+  border-radius: 22px;
+  background: #ffffff;
+  color: #101114;
   padding: 16px;
-  box-shadow: 0 18px 42px rgba(16, 17, 20, 0.2);
+  box-shadow: 0 14px 36px rgba(16, 17, 20, 0.07);
 }
 
 .hero-card::before {
   content: "";
   position: absolute;
-  right: 20px;
-  bottom: 18px;
-  width: 92px;
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #101114, #19a974);
 }
 
 .hero-card p,
 .hero-card span {
-  color: rgba(255, 255, 255, 0.68);
+  color: #667085;
   font-size: 13px;
 }
 
 .hero-card strong {
   display: block;
   margin: 6px 0;
-  color: #ffffff;
-  font-size: 30px;
+  color: #101114;
+  font-size: 29px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
@@ -284,8 +281,8 @@ h2 {
   align-self: flex-start;
   gap: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: #f1f3f6;
+  color: #101114;
   padding: 9px 11px;
   font-size: 11px;
   font-weight: 900;
@@ -302,33 +299,31 @@ h2 {
 
 .hero-meta-grid div {
   min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid #e3e6ec;
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 11px;
+  background: #f8fafc;
+  padding: 10px;
 }
 
 .hero-meta-grid p {
-  color: rgba(255, 255, 255, 0.6);
+  color: #667085;
   font-size: 11px;
 }
 
 .hero-meta-grid strong {
-  overflow: hidden;
   margin: 4px 0 0;
-  color: #ffffff;
+  color: #101114;
   font-size: 13px;
   line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .hero-action {
   width: 100%;
-  min-height: 48px;
+  min-height: 46px;
   justify-content: center;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 10px;
   border-radius: 16px;
   background: #101114;
   color: white;
@@ -341,16 +336,16 @@ h2 {
 .home-status-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 12px;
+  gap: 7px;
+  margin-top: 10px;
 }
 
 .home-status-strip div {
   min-width: 0;
   border: 1px solid #e3e6ec;
-  border-radius: 16px;
+  border-radius: 15px;
   background: #ffffff;
-  padding: 11px;
+  padding: 10px;
   box-shadow: 0 10px 24px rgba(16, 17, 20, 0.045);
 }
 
@@ -360,7 +355,7 @@ h2 {
 
 .home-status-strip span {
   display: block;
-  margin-top: 8px;
+  margin-top: 7px;
   color: #667085;
   font-size: 11px;
 }
@@ -678,7 +673,7 @@ h2 {
 
 .inline-alert {
   gap: 9px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .inline-alert.info {
