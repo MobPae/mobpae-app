@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BadgeCheck, Bell, Building2, ChevronRight, CircleHelp, CreditCard, FileCheck2, Landmark, LogOut, PencilLine, ShieldCheck, TicketPercent, UserRound, X } from "lucide-react";
+import { BadgeCheck, Bell, Building2, ChevronRight, CircleHelp, FileCheck2, Landmark, LogOut, PencilLine, ShieldCheck, TicketPercent, UserRound, X } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -75,35 +75,17 @@ export function ProfileScreen({
           <ProfileMenuRow icon={<FileCheck2 size={17} />} title="KYC Status" status={appState.documents.every((document) => document.status === "Verified") ? "Verified" : "Pending"} />
           <ProfileMenuRow icon={<BadgeCheck size={17} />} title="Membership" status={appState.membershipActive ? "Active" : "Pending"} />
         </div>
-        <div className="profile-menu-section">
-          <p className="profile-menu-title">Settings</p>
-          <ProfileMenuRow icon={<Bell size={17} />} title="Notifications" />
-          <ProfileMenuRow icon={<ShieldCheck size={17} />} title="Security" status="New" />
-          <ProfileMenuRow icon={<CircleHelp size={17} />} title="Help & Support" />
-          <button className="profile-menu-row danger" type="button" onClick={onLogout}>
-            <span>
-              <LogOut size={17} />
-            </span>
-            <strong>Log out</strong>
-          </button>
-        </div>
-      </Card>
 
-      <Card className="setup-card">
-        <SectionHeader title="Payout setup" eyebrow="Bank" icon={<Landmark size={19} />} />
-        <div className="setup-grid">
-          <div className="setup-status-panel">
-            <div className="setup-status-icon">
-              <CreditCard size={20} />
-            </div>
-            <strong>{appState.bankAccount?.bankName || "Bank account"}</strong>
-            <p>
-              {appState.bankAccount
-                ? `${maskAccountNumber(appState.bankAccount.accountNumber)} • ${appState.bankAccount.ifscCode}`
-                : "Add account details for salary disbursal."}
-            </p>
-            {appState.bankAccount ? <StatusPill status={appState.bankAccount.verified ? "Verified" : "Under Review"} /> : null}
-          </div>
+        <div className="profile-menu-section">
+          <p className="profile-menu-title">Bank account</p>
+          {!showBankForm ? (
+            <ProfileMenuRow
+              icon={<Landmark size={17} />}
+              title={appState.bankAccount?.bankName || "Bank account"}
+              detail={`${maskAccountNumber(appState.bankAccount?.accountNumber || "")} • ${appState.bankAccount?.ifscCode || ""}`}
+              status={appState.bankAccount?.verified ? "Verified" : "Under Review"}
+            />
+          ) : null}
           {hasBankAccount && !editingBank ? (
             <div className="readonly-bank-grid">
               <ReadOnlyField label="Account holder" value={appState.bankAccount?.accountHolderName || "-"} />
@@ -120,32 +102,46 @@ export function ProfileScreen({
               <Field label="IFSC code" value={bankForm.ifscCode} onChange={(event) => onBankFormChange({ ...bankForm, ifscCode: event.target.value.toUpperCase() })} />
             </div>
           ) : null}
-        </div>
-        {editingBank ? <InlineAlert message="Changing bank details will reset bank verification. Admin must verify the new account again." tone="warning" /> : null}
-        {showBankForm ? (
-          <PrimaryButton icon={<Landmark size={17} />} disabled={!bankReady || savingBank} onClick={onSaveBank}>
-            {savingBank ? "Saving bank" : hasBankAccount ? "Replace bank account" : "Save bank account"}
-          </PrimaryButton>
-        ) : (
-          <PrimaryButton icon={<PencilLine size={17} />} variant="secondary" onClick={onEditBank}>
-            Edit bank account
-          </PrimaryButton>
-        )}
-        {editingBank ? (
-          <PrimaryButton icon={<X size={17} />} variant="ghost" disabled={savingBank} onClick={onCancelBankEdit}>
-            Cancel edit
-          </PrimaryButton>
-        ) : null}
-        {hasBankAccount && !editingBank ? (
-          <div className="upi-panel">
-            <Field label="UPI ID" value={bankForm.upiId ?? ""} onChange={(event) => onBankFormChange({ ...bankForm, upiId: event.target.value })} placeholder="name@bank" />
-            <PrimaryButton variant="secondary" disabled={savingBank} onClick={onUpdateUpi}>
-              {savingBank ? "Updating UPI" : "Update UPI ID"}
+          {editingBank ? <InlineAlert message="Changing bank details will reset bank verification. Admin must verify the new account again." tone="warning" /> : null}
+          {showBankForm ? (
+            <PrimaryButton icon={<Landmark size={17} />} disabled={!bankReady || savingBank} onClick={onSaveBank}>
+              {savingBank ? "Saving bank" : hasBankAccount ? "Replace bank account" : "Save bank account"}
             </PrimaryButton>
-          </div>
-        ) : null}
+          ) : (
+            <PrimaryButton icon={<PencilLine size={17} />} variant="secondary" onClick={onEditBank}>
+              Edit bank account
+            </PrimaryButton>
+          )}
+          {editingBank ? (
+            <PrimaryButton icon={<X size={17} />} variant="ghost" disabled={savingBank} onClick={onCancelBankEdit}>
+              Cancel edit
+            </PrimaryButton>
+          ) : null}
+          {hasBankAccount && !editingBank ? (
+            <div className="upi-panel">
+              <Field label="UPI ID" value={bankForm.upiId ?? ""} onChange={(event) => onBankFormChange({ ...bankForm, upiId: event.target.value })} placeholder="name@bank" />
+              <PrimaryButton variant="secondary" disabled={savingBank} onClick={onUpdateUpi}>
+                {savingBank ? "Updating UPI" : "Update UPI ID"}
+              </PrimaryButton>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="profile-menu-section">
+          <p className="profile-menu-title">Settings</p>
+          <ProfileMenuRow icon={<Bell size={17} />} title="Notifications" />
+          <ProfileMenuRow icon={<ShieldCheck size={17} />} title="Security" status="New" />
+          <ProfileMenuRow icon={<CircleHelp size={17} />} title="Help & Support" />
+          <button className="profile-menu-row danger" type="button" onClick={onLogout}>
+            <span>
+              <LogOut size={17} />
+            </span>
+            <strong>Log out</strong>
+          </button>
+        </div>
       </Card>
 
+      {!appState.membershipActive ? (
       <Card className="membership-card">
         <SectionHeader title={appState.membershipConfig.planName} eyebrow="Membership" icon={<BadgeCheck size={19} />} />
         <div className="membership-panel">
@@ -186,6 +182,7 @@ export function ProfileScreen({
           ))}
         </div>
       </Card>
+      ) : null}
     </>
   );
 }
