@@ -1,4 +1,5 @@
-import { BadgeCheck, Building2, CreditCard, Landmark, PencilLine, TicketPercent, UserRound, X } from "lucide-react";
+import type { ReactNode } from "react";
+import { BadgeCheck, Bell, Building2, ChevronRight, CircleHelp, CreditCard, FileCheck2, Landmark, LogOut, PencilLine, ShieldCheck, TicketPercent, UserRound, X } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -24,6 +25,7 @@ type ProfileScreenProps = {
   onCancelBankEdit: () => void;
   onCouponCodeChange: (couponCode: string) => void;
   onEditBank: () => void;
+  onLogout: () => void;
   onSaveBank: () => void;
   onUpdateUpi: () => void;
 };
@@ -44,6 +46,7 @@ export function ProfileScreen({
   onCancelBankEdit,
   onCouponCodeChange,
   onEditBank,
+  onLogout,
   onUpdateUpi,
   onSaveBank
 }: ProfileScreenProps) {
@@ -62,20 +65,27 @@ export function ProfileScreen({
           </span>
           <div>
             <strong>{appState.profile.name}</strong>
-            <p>{appState.profile.employeeCode} • {appState.profile.phone}</p>
+            <p>{appState.profile.email}</p>
           </div>
         </div>
-        <div className="profile-summary-grid">
-          <div>
-            <Building2 size={17} />
-            <p>Employer</p>
-            <strong>{appState.profile.employer}</strong>
-          </div>
-          <div>
-            <BadgeCheck size={17} />
-            <p>Membership</p>
-            <strong>{appState.membershipActive ? "Active" : "Pending"}</strong>
-          </div>
+        <div className="profile-menu-section">
+          <p className="profile-menu-title">Account</p>
+          <ProfileMenuRow icon={<UserRound size={17} />} title="Personal Information" detail={appState.profile.phone} />
+          <ProfileMenuRow icon={<Building2 size={17} />} title="Employer" detail={appState.profile.employer} />
+          <ProfileMenuRow icon={<FileCheck2 size={17} />} title="KYC Status" status={appState.documents.every((document) => document.status === "Verified") ? "Verified" : "Pending"} />
+          <ProfileMenuRow icon={<BadgeCheck size={17} />} title="Membership" status={appState.membershipActive ? "Active" : "Pending"} />
+        </div>
+        <div className="profile-menu-section">
+          <p className="profile-menu-title">Settings</p>
+          <ProfileMenuRow icon={<Bell size={17} />} title="Notifications" />
+          <ProfileMenuRow icon={<ShieldCheck size={17} />} title="Security" status="New" />
+          <ProfileMenuRow icon={<CircleHelp size={17} />} title="Help & Support" />
+          <button className="profile-menu-row danger" type="button" onClick={onLogout}>
+            <span>
+              <LogOut size={17} />
+            </span>
+            <strong>Log out</strong>
+          </button>
         </div>
       </Card>
 
@@ -177,6 +187,20 @@ export function ProfileScreen({
         </div>
       </Card>
     </>
+  );
+}
+
+function ProfileMenuRow({ icon, title, detail, status }: { icon: ReactNode; title: string; detail?: string; status?: string }) {
+  return (
+    <div className="profile-menu-row">
+      <span>{icon}</span>
+      <div>
+        <strong>{title}</strong>
+        {detail ? <p>{detail}</p> : null}
+      </div>
+      {status ? <StatusPill status={status} /> : null}
+      {status ? null : <ChevronRight size={16} />}
+    </div>
   );
 }
 

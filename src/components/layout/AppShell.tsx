@@ -7,15 +7,14 @@ type AppShellProps = {
   activeView: View;
   children: ReactNode;
   profile: EmployeeProfile;
-  onLogout: () => void;
   onNavigate: (view: View) => void;
 };
 
-export function AppShell({ activeView, children, profile, onLogout, onNavigate }: AppShellProps) {
+export function AppShell({ activeView, children, profile, onNavigate }: AppShellProps) {
   return (
     <main className="app-shell">
       <div className="phone-shell">
-        <TopBar profile={profile} onLogout={onLogout} />
+        <TopBar profile={profile} />
         <div className="screen-content">{children}</div>
         <TabBar activeView={activeView} onChange={onNavigate} />
       </div>

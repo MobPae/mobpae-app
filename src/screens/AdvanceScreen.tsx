@@ -1,6 +1,5 @@
-import { BadgeIndianRupee, CalendarClock, IndianRupee, Send, Sparkles } from "lucide-react";
+import { BadgeIndianRupee, CalendarClock, IndianRupee, Send } from "lucide-react";
 import { Card } from "../components/ui/Card";
-import { Field } from "../components/ui/Field";
 import { InlineAlert } from "../components/ui/InlineAlert";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SectionHeader } from "../components/ui/SectionHeader";
@@ -12,7 +11,6 @@ type AdvanceScreenProps = {
   eligible: boolean;
   limit: number;
   nextBlocker: string;
-  notice: string;
   preview: RecoveryPreview | null;
   previewLoading: boolean;
   submitting: boolean;
@@ -20,20 +18,22 @@ type AdvanceScreenProps = {
   onSubmit: () => void;
 };
 
-export function AdvanceScreen({ amount, eligible, limit, nextBlocker, notice, preview, previewLoading, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
+export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, previewLoading, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
   const amountReady = amount > 0 && amount <= limit;
   const quickAmounts = [1000, 3000, 5000, 10000].filter((value) => value <= limit);
 
   return (
     <>
-      <Card className="advance-hero-card">
+      <Card className="advance-request-card">
         <SectionHeader title="How much would you like to withdraw?" eyebrow="Salary advance" icon={<BadgeIndianRupee size={19} />} />
-        <div className="limit-pill">Available limit: {formatMoney(limit)}</div>
+        <div className="advance-limit-row">
+          <span>Available limit</span>
+          <strong>{formatMoney(limit)}</strong>
+        </div>
         <div className="advance-amount-display">
-          <IndianRupee size={24} />
+          <IndianRupee size={23} />
           <strong>{formatMoney(amount).replace("₹", "")}</strong>
         </div>
-        <Field label="Selected amount" type="text" value={formatMoney(amount)} disabled onChange={() => undefined} />
         <div className="advance-range-wrap">
           <input className="range" type="range" min={1000} max={limit} step={500} value={amount} onChange={(event) => onAmountChange(Number(event.target.value))} />
           <div className="range-labels">
@@ -49,41 +49,36 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, notice, pr
           ))}
         </div>
         <InlineAlert message={eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker} tone={eligible ? "success" : "warning"} />
-      </Card>
 
-      <Card>
-        <SectionHeader title="Payment preview" eyebrow="Payroll deduction" icon={<CalendarClock size={19} />} />
-        {preview ? (
-          <div className="preview-grid">
-            <div>
-              <p>Principal</p>
-              <strong>{formatMoney(preview.principal)}</strong>
-            </div>
-            <div>
-              <p>Interest</p>
-              <strong>{formatMoney(preview.interest)}</strong>
-            </div>
-            <div>
-              <p>Total payment</p>
-              <strong>{formatMoney(preview.total)}</strong>
-            </div>
-            <div>
-              <p>Payment date</p>
-              <strong>{formatDate(preview.recoveryDate)}</strong>
-            </div>
+        <div className="advance-calculator">
+          <div className="calculator-title">
+            <CalendarClock size={17} />
+            <strong>Interest calculator</strong>
           </div>
-        ) : (
-          <p className="muted">{previewLoading ? "Calculating preview..." : "Enter an amount to preview payment."}</p>
-        )}
-        <InlineAlert message={notice} tone={eligible ? "info" : "warning"} />
-        <div className="savings-note">
-          <Sparkles size={15} />
-          <span>Transparent charges before you submit.</span>
+          {preview ? (
+            <div>
+              <DetailLine label="Tenure" value={`${preview.interestDays} days`} />
+              <DetailLine label="Interest" value={formatMoney(preview.interest)} />
+              <DetailLine label="Total payment" value={formatMoney(preview.total)} />
+              <DetailLine label="Payment date" value={formatDate(preview.recoveryDate)} />
+            </div>
+          ) : (
+            <p className="muted">{previewLoading ? "Calculating preview..." : "Move the slider to preview payment."}</p>
+          )}
         </div>
         <PrimaryButton icon={<Send size={17} />} disabled={!eligible || !amountReady || previewLoading || submitting} onClick={onSubmit}>
-          {submitting ? "Submitting" : "Submit request"}
+          {submitting ? "Submitting" : "Continue"}
         </PrimaryButton>
       </Card>
     </>
+  );
+}
+
+function DetailLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="calculator-line">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }

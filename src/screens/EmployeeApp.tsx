@@ -15,7 +15,7 @@ export function EmployeeApp() {
   }
 
   return (
-    <AppShell activeView={app.activeView} profile={app.appState.profile} onLogout={app.logout} onNavigate={app.setActiveView}>
+    <AppShell activeView={app.activeView} profile={app.appState.profile} onNavigate={app.setActiveView}>
       {app.activeView === "dashboard" ? (
         <DashboardScreen
           appState={app.appState}
@@ -40,7 +40,6 @@ export function EmployeeApp() {
           eligible={app.eligibleForAdvance}
           limit={app.appState.profile.salaryLimit}
           nextBlocker={app.nextBlocker}
-          notice={app.notice}
           preview={app.preview}
           previewLoading={app.previewLoading}
           submitting={app.submittingAdvance}
@@ -68,6 +67,7 @@ export function EmployeeApp() {
           onEditBank={app.startBankEdit}
           onSaveBank={app.saveBankAccount}
           onUpdateUpi={app.updateUpiId}
+          onLogout={app.logout}
         />
       ) : null}
     </AppShell>

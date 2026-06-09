@@ -1,7 +1,6 @@
-import { CalendarDays, IndianRupee, Route } from "lucide-react";
+import { BadgeCheck, CalendarDays, IndianRupee, Route } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { SectionHeader } from "../components/ui/SectionHeader";
-import { StatusPill } from "../components/ui/StatusPill";
 import { formatDate, formatMoney, formatShortDate } from "../utils/format";
 import type { AdvanceRequest } from "../types/app";
 
@@ -24,16 +23,25 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
   return (
     <>
       <Card className="request-summary tracking-summary-card">
-        <SectionHeader title={latestRequest.id} eyebrow="Current request" icon={<Route size={19} />} action={<StatusPill status={latestRequest.status} />} />
-        <div className="detail-list tracking-detail-list">
-          <div className="detail">
+        <SectionHeader title={latestRequest.id} eyebrow="Current request" icon={<Route size={19} />} />
+        <div className="track-status-hero">
+          <span>
+            <BadgeCheck size={22} />
+          </span>
+          <div>
+            <p>Status</p>
+            <strong>{latestRequest.status}</strong>
+          </div>
+        </div>
+        <div className="track-detail-grid">
+          <div>
             <IndianRupee size={18} />
             <div>
               <p>Approved amount</p>
               <strong>{formatMoney(latestRequest.approvedAmount)}</strong>
             </div>
           </div>
-          <div className="detail">
+          <div>
             <CalendarDays size={18} />
             <div>
               <p>Payment date</p>
@@ -44,7 +52,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
       </Card>
 
       <Card className="tracking-timeline-card">
-        <SectionHeader title="Timeline" eyebrow="Request movement" />
+        <SectionHeader title="Activity" eyebrow="Request movement" />
         <div className="timeline">
           {latestRequest.timeline.map((item) => (
             <article className={`timeline-item ${item.done ? "done" : ""}`} key={item.status}>
