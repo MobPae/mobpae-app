@@ -397,6 +397,80 @@ h2 {
   box-shadow: var(--shadow-card);
 }
 
+.home-payment-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f4ff 100%);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.home-payment-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-payment-title span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.home-payment-title span svg {
+  color: var(--blue);
+}
+
+.home-payment-title strong {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  padding: 6px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.home-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-payment-grid div {
+  min-width: 0;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.home-payment-grid span {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-payment-grid strong {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .journey-card {
   margin-top: 24px;
 }

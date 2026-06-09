@@ -138,6 +138,28 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, onN
         <span>{ctaLabel}</span>
         <ArrowRight size={16} />
       </button>
+
+      {latestRequest ? (
+        <section className="home-payment-panel">
+          <div className="home-payment-title">
+            <span>
+              <WalletCards size={16} />
+              Payment snapshot
+            </span>
+            <strong>{formattedStatus}</strong>
+          </div>
+          <div className="home-payment-grid">
+            <div>
+              <span>Scheduled payment</span>
+              <strong>{formatMoney(latestRequest.totalRecoveryAmount || latestRequest.approvedAmount)}</strong>
+            </div>
+            <div>
+              <span>Payment date</span>
+              <strong>{formatShortDate(latestRequest.recoveryDate)}</strong>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }
