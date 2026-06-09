@@ -84,6 +84,9 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
           <span style={{ width: `${availablePercent}%` }} />
         </div>
       </section>
+      {withdrawnAmount > 0 && availableAdvance < approvedLimit ? (
+        <p className="home-advance-note">You can withdraw again after the current due is cleared.</p>
+      ) : null}
 
       <section className="home-salary-row" aria-label="Salary summary">
         <div>
