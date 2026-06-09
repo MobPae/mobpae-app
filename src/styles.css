@@ -252,7 +252,7 @@ h2 {
 .home-balance {
   position: relative;
   display: grid;
-  gap: 0;
+  gap: 16px;
   min-height: 0;
   overflow: hidden;
   border: 0;
@@ -264,7 +264,14 @@ h2 {
 }
 
 .home-balance::before {
-  display: none;
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -48px;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.13);
 }
 
 .home-balance p,
@@ -288,8 +295,13 @@ h2 {
   z-index: 1;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
+}
+
+.home-balance-summary {
+  position: relative;
+  z-index: 1;
 }
 
 .home-membership-chip {
@@ -306,6 +318,58 @@ h2 {
   font-size: 12px;
   font-weight: 500;
   box-shadow: none;
+}
+
+.home-progress-track {
+  position: relative;
+  z-index: 1;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.home-progress-track span {
+  display: block;
+  height: 100%;
+  min-width: 8px;
+  border-radius: inherit;
+  background: #ffffff;
+}
+
+.home-balance-meta {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.home-balance-meta div {
+  min-width: 0;
+  background: rgba(17, 24, 39, 0.12);
+  padding: 12px;
+}
+
+.home-balance-meta span {
+  display: block;
+  overflow: hidden;
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-balance-meta strong {
+  overflow: hidden;
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hero-action {
@@ -459,20 +523,21 @@ h2 {
 .home-status-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
+  gap: 12px;
   margin-top: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .home-status-strip div {
   min-width: 0;
-  border: 0;
-  background: transparent;
-  padding: 11px 10px;
-  box-shadow: none;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  padding: 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .home-status-strip div + div {
@@ -502,11 +567,30 @@ h2 {
 }
 
 .home-status-strip .done {
-  background: transparent;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
 }
 
 .home-status-strip .done svg {
+  color: #15803d;
+}
+
+.home-status-strip .done strong {
+  color: #15803d;
+}
+
+.home-status-strip .active {
+  border-color: var(--line-strong);
+  background: var(--blue-soft);
+}
+
+.home-status-strip .active svg,
+.home-status-strip .active strong {
   color: var(--blue);
+}
+
+.home-status-strip .pending {
+  background: #ffffff;
 }
 
 .step-strip {

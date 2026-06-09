@@ -1,6 +1,6 @@
 import { ArrowRight, BadgeIndianRupee, CheckCircle2, FileCheck2, Landmark, Send, ShieldCheck, WalletCards } from "lucide-react";
 import { InlineAlert } from "../components/ui/InlineAlert";
-import { formatMoney } from "../utils/format";
+import { formatMoney, formatShortDate } from "../utils/format";
 import type { AppState, View } from "../types/app";
 
 type DashboardScreenProps = {
@@ -21,12 +21,29 @@ const formatHomeStatus = (status?: string) => {
     .replace("Recovery Scheduled", "Payment Scheduled");
 };
 
+const getNextPayday = () => {
+  const today = new Date();
+  const payday = new Date(today.getFullYear(), today.getMonth(), 28);
+
+  if (payday.getTime() < today.getTime()) {
+    payday.setMonth(payday.getMonth() + 1);
+  }
+
+  return payday.toISOString();
+};
+
 export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, notice, onNavigate }: DashboardScreenProps) {
   const latestRequest = appState.requests[0];
   const paymentStatus = appState.dashboard?.activeRepaymentStatus ?? appState.dashboard?.activeRequestStatus ?? latestRequest?.status;
   const formattedStatus = formatHomeStatus(paymentStatus);
   const kycComplete = appState.documents.every((item) => item.status === "Verified");
   const setupComplete = kycComplete && Boolean(appState.bankAccount?.verified) && appState.membershipActive;
+  const withdrawnAmount = Number(appState.dashboard?.activeRequestAmount ?? latestRequest?.requestedAmount ?? 0);
+  const availableAdvance = Number(appState.dashboard?.availableAdvance ?? appState.profile.salaryLimit);
+  const approvedLimit = Number(appState.dashboard?.approvedLimit ?? availableAdvance + withdrawnAmount);
+  const totalSalary = Number(appState.dashboard?.salaryInHand ?? approvedLimit);
+  const nextPayday = latestRequest?.recoveryDate || getNextPayday();
+  const availablePercent = approvedLimit > 0 ? Math.max(0, Math.min(100, (availableAdvance / approvedLimit) * 100)) : 0;
   let nextSetupView: View = setupComplete ? "advance" : "profile";
 
   if (!kycComplete) {
@@ -53,15 +70,32 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
     <>
       <section className="home-balance">
         <div className="home-balance-top">
-          <div>
-            <p>Available advance</p>
-            <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
-            <span>{ctaHint}</span>
-          </div>
           <span className="home-membership-chip">
             <ShieldCheck size={17} />
             {appState.membershipActive ? "Member" : "Employee"}
           </span>
+        </div>
+        <div className="home-balance-summary">
+          <p>Available to withdraw</p>
+          <strong>{formatMoney(availableAdvance)}</strong>
+          <span>of {formatMoney(approvedLimit)} limit</span>
+        </div>
+        <div className="home-progress-track" aria-hidden="true">
+          <span style={{ width: `${availablePercent}%` }} />
+        </div>
+        <div className="home-balance-meta">
+          <div>
+            <span>Total Salary</span>
+            <strong>{formatMoney(totalSalary)}</strong>
+          </div>
+          <div>
+            <span>Withdrawn</span>
+            <strong>{formatMoney(withdrawnAmount)}</strong>
+          </div>
+          <div>
+            <span>Next payday</span>
+            <strong>{formatShortDate(nextPayday)}</strong>
+          </div>
         </div>
       </section>
 
@@ -94,17 +128,17 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
 
       <h2 className="home-section-title">Setup status</h2>
       <section className="home-status-strip">
-        <div className={kycComplete ? "done" : ""}>
+        <div className={kycComplete ? "done" : "pending"}>
           <FileCheck2 size={17} />
           <span>KYC</span>
           <strong>{kycComplete ? "Verified" : "Pending"}</strong>
         </div>
-        <div className={appState.bankAccount?.verified ? "done" : ""}>
+        <div className={appState.bankAccount?.verified ? "done" : "pending"}>
           <Landmark size={17} />
           <span>Bank</span>
           <strong>{appState.bankAccount?.verified ? "Verified" : "Pending"}</strong>
         </div>
-        <div className={appState.membershipActive ? "done" : ""}>
+        <div className={appState.membershipActive ? "active" : "pending"}>
           <BadgeIndianRupee size={17} />
           <span>Plan</span>
           <strong>{appState.membershipActive ? "Active" : "Pending"}</strong>

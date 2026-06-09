@@ -27,6 +27,7 @@ export type EmployeeDashboard = {
   employeeName?: string;
   kycCompleted?: boolean;
   approvedLimit?: number;
+  salaryInHand?: number;
   activeRequestAmount?: number;
   availableAdvance?: number;
   activeRequestStatus?: string | null;
