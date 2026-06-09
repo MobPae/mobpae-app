@@ -184,6 +184,7 @@ export function useEmployeeApp() {
         }
       }));
       setNotice("Membership activated for this employee account.");
+      setActiveView("dashboard");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to activate membership.");
     } finally {

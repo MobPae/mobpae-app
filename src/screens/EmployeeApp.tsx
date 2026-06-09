@@ -51,6 +51,7 @@ export function EmployeeApp() {
           appState={app.appState}
           bankForm={app.bankForm}
           membershipFee={app.membershipFee}
+          notice={app.notice}
           savingBank={app.savingBank}
           couponCode={app.couponCode}
           applyingCoupon={app.applyingCoupon}

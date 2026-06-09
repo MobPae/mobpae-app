@@ -1,6 +1,7 @@
 import { BadgeCheck, CreditCard, Landmark, TicketPercent, UserRound } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
+import { InlineAlert } from "../components/ui/InlineAlert";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { StatusPill } from "../components/ui/StatusPill";
@@ -11,6 +12,7 @@ type ProfileScreenProps = {
   appState: AppState;
   bankForm: BankAccount;
   membershipFee: number;
+  notice: string;
   savingBank: boolean;
   couponCode: string;
   applyingCoupon: boolean;
@@ -26,6 +28,7 @@ export function ProfileScreen({
   appState,
   bankForm,
   membershipFee,
+  notice,
   savingBank,
   couponCode,
   applyingCoupon,
@@ -92,6 +95,7 @@ export function ProfileScreen({
             {appState.membershipActive ? "Active" : activatingMembership ? "Activating" : "Activate"}
           </PrimaryButton>
         </div>
+        <InlineAlert message={notice} tone={appState.membershipActive ? "success" : "warning"} />
         <div className="membership-breakdown">
           <div>
             <span>Membership fee</span>
