@@ -12,6 +12,7 @@ export function useEmployeeApp() {
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [notice, setNotice] = useState("Using local data until your backend returns employee records.");
   const [bankForm, setBankForm] = useState<BankAccount>(emptyBankAccount);
+  const [editingBank, setEditingBank] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState(5000);
   const [preview, setPreview] = useState<RecoveryPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -29,6 +30,7 @@ export function useEmployeeApp() {
       const nextState = await employeeApi.loadAppState();
       setAppState(nextState);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
+      setEditingBank(false);
       setCouponCode(nextState.membershipConfig.couponCode ?? "");
       setNotice("Employee app connected. Live records will show where the backend has data.");
       setLoadState("ready");
@@ -118,7 +120,27 @@ export function useEmployeeApp() {
     const savedBank = await employeeApi.saveBankAccount(appState.profile.id, bankForm);
     setAppState((current) => ({ ...current, bankAccount: savedBank }));
     setSavingBank(false);
-    setNotice("Bank account saved. Admin verification is pending.");
+    setEditingBank(false);
+    setNotice(savedBank.verified ? "Payout details updated." : "Bank account saved. Admin verification is pending.");
+  };
+
+  const startBankEdit = () => {
+    setBankForm(appState.bankAccount ? { ...appState.bankAccount, accountNumber: "" } : emptyBankAccount);
+    setEditingBank(true);
+  };
+
+  const cancelBankEdit = () => {
+    setBankForm(appState.bankAccount ?? emptyBankAccount);
+    setEditingBank(false);
+  };
+
+  const updateUpiId = async () => {
+    setSavingBank(true);
+    const savedBank = await employeeApi.updateUpiId(appState.profile.id, bankForm.upiId ?? "");
+    setAppState((current) => ({ ...current, bankAccount: savedBank }));
+    setBankForm(savedBank);
+    setSavingBank(false);
+    setNotice("UPI ID updated.");
   };
 
   const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {
@@ -226,6 +248,8 @@ export function useEmployeeApp() {
     appState,
     bankComplete,
     bankForm,
+    cancelBankEdit,
+    editingBank,
     eligibleForAdvance,
     isLoggedIn,
     kycComplete,
@@ -247,8 +271,10 @@ export function useEmployeeApp() {
     setAdvanceAmount,
     setBankForm,
     setCouponCode,
+    startBankEdit,
     submitSalaryAdvance,
     submittingAdvance,
+    updateUpiId,
     uploadKycDocument,
     uploadingKycType,
     applyMembershipCoupon,

@@ -4,7 +4,8 @@ export const emptyBankAccount: BankAccount = {
   accountHolderName: "",
   bankName: "",
   accountNumber: "",
-  ifscCode: ""
+  ifscCode: "",
+  upiId: ""
 };
 
 export const mockState: AppState = {

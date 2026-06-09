@@ -53,6 +53,7 @@ export function EmployeeApp() {
         <ProfileScreen
           appState={app.appState}
           bankForm={app.bankForm}
+          editingBank={app.editingBank}
           membershipFee={app.membershipFee}
           notice={app.notice}
           savingBank={app.savingBank}
@@ -62,8 +63,11 @@ export function EmployeeApp() {
           onApplyCoupon={app.applyMembershipCoupon}
           onActivateMembership={app.activateMembership}
           onBankFormChange={app.setBankForm}
+          onCancelBankEdit={app.cancelBankEdit}
           onCouponCodeChange={app.setCouponCode}
+          onEditBank={app.startBankEdit}
           onSaveBank={app.saveBankAccount}
+          onUpdateUpi={app.updateUpiId}
         />
       ) : null}
     </AppShell>

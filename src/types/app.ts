@@ -46,6 +46,7 @@ export type BankAccount = {
   bankName: string;
   accountNumber: string;
   ifscCode: string;
+  upiId?: string;
   verified?: boolean;
 };
 

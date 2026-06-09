@@ -1,4 +1,4 @@
-import { mockState } from "../data/mockData";
+import { emptyBankAccount, mockState } from "../data/mockData";
 import type { AdvanceRequest, AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, KycDocumentType, RecoveryPreview, RequestStatus } from "../types/app";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
@@ -298,6 +298,17 @@ export const employeeApi = {
       });
     } catch {
       return { ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() };
+    }
+  },
+
+  async updateUpiId(employeeId: string, upiId: string) {
+    try {
+      return await request<BankAccount>(`/bank-accounts/employee/${employeeId}/upi`, {
+        method: "POST",
+        body: JSON.stringify({ upiId })
+      });
+    } catch {
+      return { ...(mockState.bankAccount ?? emptyBankAccount), upiId };
     }
   },
 

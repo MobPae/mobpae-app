@@ -1,4 +1,4 @@
-import { BadgeCheck, Building2, CreditCard, Landmark, TicketPercent, UserRound } from "lucide-react";
+import { BadgeCheck, Building2, CreditCard, Landmark, PencilLine, TicketPercent, UserRound, X } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -11,6 +11,7 @@ import type { AppState, BankAccount } from "../types/app";
 type ProfileScreenProps = {
   appState: AppState;
   bankForm: BankAccount;
+  editingBank: boolean;
   membershipFee: number;
   notice: string;
   savingBank: boolean;
@@ -20,13 +21,17 @@ type ProfileScreenProps = {
   onApplyCoupon: () => void;
   onActivateMembership: () => void;
   onBankFormChange: (bankAccount: BankAccount) => void;
+  onCancelBankEdit: () => void;
   onCouponCodeChange: (couponCode: string) => void;
+  onEditBank: () => void;
   onSaveBank: () => void;
+  onUpdateUpi: () => void;
 };
 
 export function ProfileScreen({
   appState,
   bankForm,
+  editingBank,
   membershipFee,
   notice,
   savingBank,
@@ -36,10 +41,15 @@ export function ProfileScreen({
   onApplyCoupon,
   onActivateMembership,
   onBankFormChange,
+  onCancelBankEdit,
   onCouponCodeChange,
+  onEditBank,
+  onUpdateUpi,
   onSaveBank
 }: ProfileScreenProps) {
   const bankReady = bankForm.accountHolderName && bankForm.accountNumber && bankForm.ifscCode;
+  const hasBankAccount = Boolean(appState.bankAccount);
+  const showBankForm = !hasBankAccount || editingBank;
   const membershipDiscount = appState.membershipConfig.couponDiscount;
 
   return (
@@ -84,16 +94,46 @@ export function ProfileScreen({
             </p>
             {appState.bankAccount ? <StatusPill status={appState.bankAccount.verified ? "Verified" : "Under Review"} /> : null}
           </div>
-          <div className="setup-form">
-            <Field label="Account holder name" value={bankForm.accountHolderName} onChange={(event) => onBankFormChange({ ...bankForm, accountHolderName: event.target.value })} />
-            <Field label="Bank name" value={bankForm.bankName} onChange={(event) => onBankFormChange({ ...bankForm, bankName: event.target.value })} />
-            <Field label="Account number" value={bankForm.accountNumber} onChange={(event) => onBankFormChange({ ...bankForm, accountNumber: event.target.value })} />
-            <Field label="IFSC code" value={bankForm.ifscCode} onChange={(event) => onBankFormChange({ ...bankForm, ifscCode: event.target.value.toUpperCase() })} />
-          </div>
+          {hasBankAccount && !editingBank ? (
+            <div className="readonly-bank-grid">
+              <ReadOnlyField label="Account holder" value={appState.bankAccount?.accountHolderName || "-"} />
+              <ReadOnlyField label="Bank name" value={appState.bankAccount?.bankName || "-"} />
+              <ReadOnlyField label="Account number" value={maskAccountNumber(appState.bankAccount?.accountNumber || "")} />
+              <ReadOnlyField label="IFSC code" value={appState.bankAccount?.ifscCode || "-"} />
+            </div>
+          ) : null}
+          {showBankForm ? (
+            <div className="setup-form">
+              <Field label="Account holder name" value={bankForm.accountHolderName} onChange={(event) => onBankFormChange({ ...bankForm, accountHolderName: event.target.value })} />
+              <Field label="Bank name" value={bankForm.bankName} onChange={(event) => onBankFormChange({ ...bankForm, bankName: event.target.value })} />
+              <Field label="Account number" value={bankForm.accountNumber} onChange={(event) => onBankFormChange({ ...bankForm, accountNumber: event.target.value })} />
+              <Field label="IFSC code" value={bankForm.ifscCode} onChange={(event) => onBankFormChange({ ...bankForm, ifscCode: event.target.value.toUpperCase() })} />
+            </div>
+          ) : null}
         </div>
-        <PrimaryButton icon={<Landmark size={17} />} disabled={!bankReady || savingBank} onClick={onSaveBank}>
-          {savingBank ? "Saving bank" : "Save bank account"}
-        </PrimaryButton>
+        {editingBank ? <InlineAlert message="Changing bank details will reset bank verification. Admin must verify the new account again." tone="warning" /> : null}
+        {showBankForm ? (
+          <PrimaryButton icon={<Landmark size={17} />} disabled={!bankReady || savingBank} onClick={onSaveBank}>
+            {savingBank ? "Saving bank" : hasBankAccount ? "Replace bank account" : "Save bank account"}
+          </PrimaryButton>
+        ) : (
+          <PrimaryButton icon={<PencilLine size={17} />} variant="secondary" onClick={onEditBank}>
+            Edit bank account
+          </PrimaryButton>
+        )}
+        {editingBank ? (
+          <PrimaryButton icon={<X size={17} />} variant="ghost" disabled={savingBank} onClick={onCancelBankEdit}>
+            Cancel edit
+          </PrimaryButton>
+        ) : null}
+        {hasBankAccount && !editingBank ? (
+          <div className="upi-panel">
+            <Field label="UPI ID" value={bankForm.upiId ?? ""} onChange={(event) => onBankFormChange({ ...bankForm, upiId: event.target.value })} placeholder="name@bank" />
+            <PrimaryButton variant="secondary" disabled={savingBank} onClick={onUpdateUpi}>
+              {savingBank ? "Updating UPI" : "Update UPI ID"}
+            </PrimaryButton>
+          </div>
+        ) : null}
       </Card>
 
       <Card className="membership-card">
@@ -137,5 +177,14 @@ export function ProfileScreen({
         </div>
       </Card>
     </>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="readonly-field">
+      <p>{label}</p>
+      <strong>{value}</strong>
+    </div>
   );
 }

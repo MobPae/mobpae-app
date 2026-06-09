@@ -1067,6 +1067,47 @@ h2 {
   margin-top: 0;
 }
 
+.readonly-bank-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.readonly-field {
+  min-width: 0;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #f8fbff;
+  padding: 11px;
+}
+
+.readonly-field p {
+  color: #667085;
+  font-size: 11px;
+}
+
+.readonly-field strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upi-panel {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  border-top: 1px solid #e3edff;
+  padding-top: 12px;
+}
+
+.upi-panel .button {
+  margin-top: 0;
+}
+
 .detail svg {
   color: #0f3cbe;
 }
