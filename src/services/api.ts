@@ -247,7 +247,7 @@ export const employeeApi = {
         request<BackendMembership>(`/membership/employee/${employeeId}`)
       ]);
 
-      const salaryLimit = Number(dashboardData?.approvedLimit ?? mockState.profile.salaryLimit);
+      const salaryLimit = Number(dashboardData?.availableAdvance ?? dashboardData?.approvedLimit ?? mockState.profile.salaryLimit);
       const kycComplete = Boolean(dashboardData?.kycCompleted);
       const requestData = salaryRequests.status === "fulfilled" ? salaryRequests.value : [];
       const repaymentData = repayments.status === "fulfilled" ? repayments.value : [];

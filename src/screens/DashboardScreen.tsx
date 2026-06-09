@@ -25,9 +25,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
   const latestRequest = appState.requests[0];
   const paymentStatus = appState.dashboard?.activeRepaymentStatus ?? appState.dashboard?.activeRequestStatus ?? latestRequest?.status;
   const formattedStatus = formatHomeStatus(paymentStatus);
-  const activeRequestStatuses = ["Submitted", "Approved", "Under Review", "Disbursed", "Payment Scheduled"];
-  const activeRequestAmount = latestRequest && activeRequestStatuses.includes(formatHomeStatus(latestRequest.status)) ? latestRequest.requestedAmount : 0;
-  const availableAdvance = Math.max(0, appState.profile.salaryLimit - activeRequestAmount);
   const kycComplete = appState.documents.every((item) => item.status === "Verified");
   const setupComplete = kycComplete && Boolean(appState.bankAccount?.verified) && appState.membershipActive;
   let nextSetupView: View = setupComplete ? "advance" : "profile";
@@ -58,7 +55,7 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
         <div className="home-balance-top">
           <div>
             <p>Available advance</p>
-            <strong>{formatMoney(availableAdvance)}</strong>
+            <strong>{formatMoney(appState.profile.salaryLimit)}</strong>
             <span>{ctaHint}</span>
           </div>
           <span className="home-membership-chip">
