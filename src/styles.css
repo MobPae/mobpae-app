@@ -252,14 +252,14 @@ h2 {
 .home-balance {
   position: relative;
   display: grid;
-  gap: 16px;
+  gap: 12px;
   min-height: 0;
   overflow: hidden;
   border: 0;
   border-radius: var(--radius-card);
   background: var(--brand-gradient);
   color: #ffffff;
-  padding: 24px;
+  padding: 18px 20px 20px;
   box-shadow: var(--shadow-card);
 }
 
@@ -267,9 +267,9 @@ h2 {
   content: "";
   position: absolute;
   right: 0;
-  top: -48px;
-  width: 132px;
-  height: 132px;
+  top: -40px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.13);
 }
@@ -282,16 +282,18 @@ h2 {
 
 .home-balance strong {
   display: block;
-  margin: 6px 0;
+  margin: 5px 0;
   color: #ffffff;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0;
 }
 
 .home-balance-top {
-  position: relative;
+  position: absolute;
+  top: 20px;
+  right: 20px;
   z-index: 1;
   display: flex;
   align-items: flex-start;
@@ -312,18 +314,23 @@ h2 {
   align-self: flex-start;
   gap: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--blue-deep);
+  padding: 7px 12px;
   font-size: 12px;
-  font-weight: 500;
-  box-shadow: none;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(91, 52, 255, 0.24);
+}
+
+.home-balance .home-membership-chip {
+  color: var(--blue-deep);
 }
 
 .home-progress-track {
   position: relative;
   z-index: 1;
-  height: 7px;
+  height: 6px;
   overflow: hidden;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
@@ -484,9 +491,9 @@ h2 {
 }
 
 .home-status-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 0;
   border: 0;
   border-radius: 0;
@@ -495,12 +502,16 @@ h2 {
 }
 
 .home-status-strip div {
+  display: inline-flex;
+  flex: 0 0 auto;
   min-width: 0;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 999px;
   background: var(--surface);
-  padding: 12px;
-  box-shadow: var(--shadow-card);
+  padding: 7px 10px;
+  box-shadow: none;
 }
 
 .home-status-strip div + div {
@@ -508,22 +519,23 @@ h2 {
 }
 
 .home-status-strip svg {
+  flex: 0 0 auto;
   color: var(--blue);
 }
 
 .home-status-strip span {
-  display: block;
-  margin-top: 7px;
+  display: inline;
+  margin-top: 0;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: 10px;
 }
 
 .home-status-strip strong {
-  display: block;
-  margin-top: 2px;
+  display: inline;
+  margin-top: 0;
   overflow: hidden;
   color: var(--ink);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 720;
   text-overflow: ellipsis;
   white-space: nowrap;
