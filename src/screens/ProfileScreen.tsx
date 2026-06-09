@@ -1,4 +1,4 @@
-import { BadgeCheck, CreditCard, Landmark, TicketPercent, UserRound } from "lucide-react";
+import { BadgeCheck, Building2, CreditCard, Landmark, TicketPercent, UserRound } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { InlineAlert } from "../components/ui/InlineAlert";
@@ -44,46 +44,59 @@ export function ProfileScreen({
 
   return (
     <>
-      <Card>
-        <SectionHeader title="Employee profile" eyebrow="Account" icon={<UserRound size={19} />} />
-        <div className="detail-list">
-          <div className="detail">
-            <p>Name</p>
+      <Card className="profile-card">
+        <SectionHeader title="Profile" eyebrow="Employee" icon={<UserRound size={19} />} />
+        <div className="profile-identity">
+          <span>
+            <UserRound size={19} />
+          </span>
+          <div>
             <strong>{appState.profile.name}</strong>
+            <p>{appState.profile.employeeCode} • {appState.profile.phone}</p>
           </div>
-          <div className="detail">
-            <p>Employee code</p>
-            <strong>{appState.profile.employeeCode}</strong>
+        </div>
+        <div className="profile-summary-grid">
+          <div>
+            <Building2 size={17} />
+            <p>Employer</p>
+            <strong>{appState.profile.employer}</strong>
           </div>
-          <div className="detail">
-            <p>Phone</p>
-            <strong>{appState.profile.phone}</strong>
+          <div>
+            <BadgeCheck size={17} />
+            <p>Membership</p>
+            <strong>{appState.membershipActive ? "Active" : "Pending"}</strong>
           </div>
         </div>
       </Card>
 
-      <Card>
-        <SectionHeader title="Bank account" eyebrow="Disbursal" icon={<Landmark size={19} />} />
-        {appState.bankAccount ? (
-          <div className="saved-bank">
-            <CreditCard size={20} />
-            <div>
-              <strong>{appState.bankAccount.bankName || "Saved bank"}</strong>
-              <p>{maskAccountNumber(appState.bankAccount.accountNumber)} • {appState.bankAccount.ifscCode}</p>
-              <StatusPill status={appState.bankAccount.verified ? "Verified" : "Under Review"} />
+      <Card className="setup-card">
+        <SectionHeader title="Payout setup" eyebrow="Bank" icon={<Landmark size={19} />} />
+        <div className="setup-grid">
+          <div className="setup-status-panel">
+            <div className="setup-status-icon">
+              <CreditCard size={20} />
             </div>
+            <strong>{appState.bankAccount?.bankName || "Bank account"}</strong>
+            <p>
+              {appState.bankAccount
+                ? `${maskAccountNumber(appState.bankAccount.accountNumber)} • ${appState.bankAccount.ifscCode}`
+                : "Add account details for salary disbursal."}
+            </p>
+            {appState.bankAccount ? <StatusPill status={appState.bankAccount.verified ? "Verified" : "Under Review"} /> : null}
           </div>
-        ) : null}
-        <Field label="Account holder name" value={bankForm.accountHolderName} onChange={(event) => onBankFormChange({ ...bankForm, accountHolderName: event.target.value })} />
-        <Field label="Bank name" value={bankForm.bankName} onChange={(event) => onBankFormChange({ ...bankForm, bankName: event.target.value })} />
-        <Field label="Account number" value={bankForm.accountNumber} onChange={(event) => onBankFormChange({ ...bankForm, accountNumber: event.target.value })} />
-        <Field label="IFSC code" value={bankForm.ifscCode} onChange={(event) => onBankFormChange({ ...bankForm, ifscCode: event.target.value.toUpperCase() })} />
+          <div className="setup-form">
+            <Field label="Account holder name" value={bankForm.accountHolderName} onChange={(event) => onBankFormChange({ ...bankForm, accountHolderName: event.target.value })} />
+            <Field label="Bank name" value={bankForm.bankName} onChange={(event) => onBankFormChange({ ...bankForm, bankName: event.target.value })} />
+            <Field label="Account number" value={bankForm.accountNumber} onChange={(event) => onBankFormChange({ ...bankForm, accountNumber: event.target.value })} />
+            <Field label="IFSC code" value={bankForm.ifscCode} onChange={(event) => onBankFormChange({ ...bankForm, ifscCode: event.target.value.toUpperCase() })} />
+          </div>
+        </div>
         <PrimaryButton icon={<Landmark size={17} />} disabled={!bankReady || savingBank} onClick={onSaveBank}>
           {savingBank ? "Saving bank" : "Save bank account"}
         </PrimaryButton>
       </Card>
 
-      <Card>
+      <Card className="membership-card">
         <SectionHeader title={appState.membershipConfig.planName} eyebrow="Membership" icon={<BadgeCheck size={19} />} />
         <div className="membership-panel">
           <div>

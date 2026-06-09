@@ -1,5 +1,4 @@
-import { ArrowRight, BadgeIndianRupee, CheckCircle2, Clock3, FileCheck2, Landmark, ShieldCheck } from "lucide-react";
-import { ActionRow } from "../components/ui/ActionRow";
+import { ArrowRight, Clock3, FileCheck2, Landmark, ShieldCheck } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { InlineAlert } from "../components/ui/InlineAlert";
 import { Metric } from "../components/ui/Metric";
@@ -60,13 +59,6 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
         <Metric icon={<Landmark size={18} />} label="Bank account" value={appState.bankAccount?.verified ? "Verified" : "Pending"} tone={appState.bankAccount?.verified ? "good" : "warn"} />
         <Metric icon={<Clock3 size={18} />} label="Payment status" value={formatHomeStatus(paymentStatus)} />
       </section>
-
-      <Card>
-        <SectionHeader title="Quick actions" icon={<CheckCircle2 size={19} />} />
-        <ActionRow icon={<FileCheck2 size={18} />} title="Finish KYC" description="Upload and verify employee documents." onClick={() => onNavigate("kyc")} />
-        <ActionRow icon={<Landmark size={18} />} title="Add bank account" description="Required before disbursal." onClick={() => onNavigate("profile")} />
-        <ActionRow icon={<BadgeIndianRupee size={18} />} title="Request salary advance" description="Preview payment before submitting." onClick={() => onNavigate("advance")} />
-      </Card>
 
       <Card>
         <SectionHeader title="Recent activity" eyebrow="Updates" />
