@@ -1,7 +1,5 @@
-import { ArrowRight, BadgeIndianRupee, CheckCircle2, Clock3, FileCheck2, Landmark, Send, ShieldCheck, WalletCards } from "lucide-react";
-import { Card } from "../components/ui/Card";
+import { ArrowRight, BadgeIndianRupee, CheckCircle2, FileCheck2, Landmark, Send, ShieldCheck, WalletCards } from "lucide-react";
 import { InlineAlert } from "../components/ui/InlineAlert";
-import { SectionHeader } from "../components/ui/SectionHeader";
 import { formatMoney } from "../utils/format";
 import type { AppState, View } from "../types/app";
 
@@ -42,13 +40,13 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
 
   if (["Approved", "Under Review", "Disbursed", "Payment Scheduled", "Paid"].includes(formattedStatus)) completedStatuses.push("Employer");
   if (["Under Review", "Disbursed", "Payment Scheduled", "Paid"].includes(formattedStatus)) completedStatuses.push("Admin");
-  if (["Disbursed", "Payment Scheduled", "Paid"].includes(formattedStatus)) completedStatuses.push("Disbursed");
+  if (["Disbursed", "Payment Scheduled", "Paid"].includes(formattedStatus)) completedStatuses.push("Disbursal");
 
   const journey = [
-    { label: "Submitted", icon: <Send size={15} /> },
-    { label: "Employer", icon: <CheckCircle2 size={15} /> },
-    { label: "Admin", icon: <ShieldCheck size={15} /> },
-    { label: "Disbursed", icon: <WalletCards size={15} /> }
+    { label: "Submitted", caption: latestRequest ? "Sent for review" : "Not started", icon: <Send size={14} /> },
+    { label: "Employer", caption: "Approval", icon: <CheckCircle2 size={14} /> },
+    { label: "Admin", caption: "Approval", icon: <ShieldCheck size={14} /> },
+    { label: "Disbursal", caption: "Payout", icon: <WalletCards size={14} /> }
   ];
 
   return (
@@ -65,20 +63,10 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
             {appState.membershipActive ? "Member" : "Employee"}
           </span>
         </div>
-        <div className="home-balance-grid">
-          <div>
-            <p>Latest request</p>
-            <strong>{latestRequest ? formatMoney(latestRequest.requestedAmount) : "None"}</strong>
-          </div>
-          <div>
-            <p>Status</p>
-            <strong>{formatHomeStatus(paymentStatus)}</strong>
-          </div>
-        </div>
       </section>
 
-      <Card className="journey-card">
-        <SectionHeader title="Request journey" eyebrow="Current flow" icon={<Clock3 size={19} />} />
+      <section className="journey-card">
+        <h2>Your request journey</h2>
         <div className="journey-track">
           {journey.map((step) => {
             const done = completedStatuses.includes(step.label);
@@ -86,17 +74,25 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
               <div className={`journey-step ${done ? "done" : ""}`} key={step.label}>
                 <span>{step.icon}</span>
                 <p>{step.label}</p>
+                <small>{step.caption}</small>
               </div>
             );
           })}
         </div>
-      </Card>
+      </section>
 
-      <button className="hero-action" type="button" onClick={() => onNavigate(ctaView)}>
-        <span>{ctaLabel}</span>
-        <ArrowRight size={16} />
-      </button>
+      <section className="home-request-card">
+        <div>
+          <p>Latest request</p>
+          <strong>{latestRequest ? formatMoney(latestRequest.requestedAmount) : "None"}</strong>
+        </div>
+        <div>
+          <p>Status</p>
+          <strong>{formattedStatus}</strong>
+        </div>
+      </section>
 
+      <h2 className="home-section-title">Setup status</h2>
       <section className="home-status-strip">
         <div className={kycComplete ? "done" : ""}>
           <FileCheck2 size={17} />
@@ -117,17 +113,10 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, not
 
       <InlineAlert message={notice} tone={eligibleForAdvance ? "success" : "warning"} />
 
-      <Card>
-        <SectionHeader title="Recent activity" eyebrow="Updates" />
-        <div className="list">
-          {appState.notifications.map((notification) => (
-            <div className="notification" key={notification}>
-              <span />
-              <p>{notification}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <button className="hero-action" type="button" onClick={() => onNavigate(ctaView)}>
+        <span>{ctaLabel}</span>
+        <ArrowRight size={16} />
+      </button>
     </>
   );
 }

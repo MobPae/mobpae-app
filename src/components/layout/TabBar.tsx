@@ -1,4 +1,4 @@
-import { BadgeIndianRupee, FileCheck2, Home, Landmark, UserRound } from "lucide-react";
+import { BadgeIndianRupee, Home, Landmark, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import type { View } from "../../types/app";
 
@@ -9,7 +9,6 @@ type TabBarProps = {
 
 const tabs = [
   { id: "dashboard", label: "Home", icon: <Home size={19} /> },
-  { id: "kyc", label: "KYC", icon: <FileCheck2 size={19} /> },
   { id: "advance", label: "Advance", icon: <BadgeIndianRupee size={19} /> },
   { id: "tracking", label: "Track", icon: <Landmark size={19} /> },
   { id: "profile", label: "Profile", icon: <UserRound size={19} /> }
