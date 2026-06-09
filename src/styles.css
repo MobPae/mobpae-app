@@ -234,32 +234,28 @@ h2 {
   gap: 0;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid #bfdbfe;
-  border-radius: 16px;
-  background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
-  color: #0f172a;
+  border: 0;
+  border-radius: 18px;
+  background: #0f3cbe;
+  color: #ffffff;
   padding: 18px 16px;
-  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.22);
 }
 
 .home-balance::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 4px;
-  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  display: none;
 }
 
 .home-balance p,
 .home-balance span {
-  color: #667085;
+  color: rgba(255, 255, 255, 0.72);
   font-size: 13px;
 }
 
 .home-balance strong {
   display: block;
   margin: 6px 0;
-  color: #0f172a;
+  color: #ffffff;
   font-size: 27px;
   font-weight: 800;
   line-height: 1;
@@ -283,8 +279,8 @@ h2 {
   align-self: flex-start;
   gap: 6px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   padding: 9px 11px;
   font-size: 11px;
   font-weight: 900;
