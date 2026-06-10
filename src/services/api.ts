@@ -1,8 +1,7 @@
 import { emptyBankAccount, mockState } from "../data/mockData";
-import type { AdvanceRequest, AppState, AuthProfile, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, KycDocumentType, RecoveryPreview, RequestStatus } from "../types/app";
+import type { AdvanceRequest, AppState, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, KycDocumentType, RecoveryPreview, RequestStatus } from "../types/app";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
-const CONFIGURED_EMPLOYEE_ID = import.meta.env.VITE_EMPLOYEE_ID;
 const TOKEN_KEY = "mobpae_employee_token";
 
 type LoginResponse = {
@@ -73,6 +72,22 @@ type BackendMembership = {
   amountPayable?: number;
 };
 
+type BackendEmployeeMe = EmployeeDashboard & {
+  id?: string;
+  employeeId?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  employeeCode?: string;
+  employer?: string;
+  employerName?: string;
+  companyName?: string;
+  accountActive?: boolean;
+  salaryLimit?: number;
+  dashboard?: EmployeeDashboard;
+  employee?: Partial<BackendEmployeeMe>;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -86,8 +101,6 @@ const authHeaders = (): Record<string, string> => {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
-
-const unique = (values: Array<string | undefined>) => values.filter((value, index, array): value is string => Boolean(value) && array.indexOf(value) === index);
 
 const normalizeDocumentStatus = (status?: string): DocumentStatus => {
   if (status === "VERIFIED" || status === "Verified") return "Verified";
@@ -180,20 +193,33 @@ const buildActivity = (notifications: BackendNotification[], requests: AdvanceRe
   return [...notificationItems, ...requestItems, ...repaymentItems].slice(0, 5);
 };
 
-async function getFirstDashboard(employeeIds: string[]) {
-  for (const employeeId of employeeIds) {
-    try {
-      return {
-        employeeId,
-        dashboard: await request<EmployeeDashboard>(`/dashboard/employees/${employeeId}`)
-      };
-    } catch {
-      // The backend currently needs employeeId, while auth/me returns userId.
-      // Try the next known candidate until the backend exposes an employee self endpoint.
-    }
+const unwrapArray = <T>(value: T[] | { data?: T[]; items?: T[]; documents?: T[]; requests?: T[]; repayments?: T[]; notifications?: T[] } | null | undefined, key: "documents" | "requests" | "repayments" | "notifications"): T[] => {
+  if (Array.isArray(value)) return value;
+  return value?.[key] ?? value?.data ?? value?.items ?? [];
+};
+
+const unwrapObject = <T>(value: T | { data?: T; membership?: T; bankAccount?: T; account?: T } | null | undefined, keys: Array<"membership" | "bankAccount" | "account">): T | null => {
+  if (!value) return null;
+  if (typeof value !== "object") return value as T;
+  const record = value as Record<string, T | undefined>;
+  for (const key of keys) {
+    if (record[key]) return record[key] as T;
   }
-  return null;
-}
+  if (record.data) return record.data as T;
+  return value as T;
+};
+
+const normalizeEmployeeMe = (employeeMe: BackendEmployeeMe) => {
+  const employee = employeeMe.employee ?? employeeMe;
+  const dashboard = employeeMe.dashboard ?? employeeMe;
+  const employeeId = employee.id ?? employee.employeeId ?? employeeMe.id ?? employeeMe.employeeId ?? mockState.profile.id;
+
+  return {
+    employee,
+    dashboard,
+    employeeId
+  };
+};
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
@@ -253,35 +279,40 @@ export const employeeApi = {
 
   async loadAppState(): Promise<AppState> {
     try {
-      const authData = await request<AuthProfile>("/auth/me");
-      const dashboardResult = await getFirstDashboard(unique([CONFIGURED_EMPLOYEE_ID, authData.employeeId, authData.userId, mockState.profile.id]));
-      const employeeId = dashboardResult?.employeeId ?? CONFIGURED_EMPLOYEE_ID ?? mockState.profile.id;
-      const dashboardData = dashboardResult?.dashboard ?? null;
+      const employeeMe = await request<BackendEmployeeMe>("/employees/me");
+      const { employee, dashboard, employeeId } = normalizeEmployeeMe(employeeMe);
 
       const [kycDocuments, bankAccount, salaryRequests, repayments, notifications, membership] = await Promise.allSettled([
-        request<BackendKycDocument[]>(`/kyc-documents/employee/${employeeId}`),
-        request<BankAccount | null>(`/bank-accounts/employee/${employeeId}`),
-        request<BackendSalaryRequest[]>(`/salary-requests/employee/${employeeId}`),
-        request<BackendRepayment[]>(`/repayments/employee/${employeeId}`),
-        request<BackendNotification[]>("/notifications/me"),
-        request<BackendMembership>(`/membership/employee/${employeeId}`)
+        request<BackendKycDocument[] | { documents?: BackendKycDocument[]; data?: BackendKycDocument[]; items?: BackendKycDocument[] }>("/kyc"),
+        request<BankAccount | { bankAccount?: BankAccount; account?: BankAccount; data?: BankAccount } | null>("/bank-account"),
+        request<BackendSalaryRequest[] | { requests?: BackendSalaryRequest[]; data?: BackendSalaryRequest[]; items?: BackendSalaryRequest[] }>("/salary-requests/my"),
+        request<BackendRepayment[] | { repayments?: BackendRepayment[]; data?: BackendRepayment[]; items?: BackendRepayment[] }>("/repayments/my"),
+        request<BackendNotification[] | { notifications?: BackendNotification[]; data?: BackendNotification[]; items?: BackendNotification[] }>("/notifications"),
+        request<BackendMembership | { membership?: BackendMembership; data?: BackendMembership }>("/membership/me")
       ]);
 
-      const salaryLimit = Number(dashboardData?.availableAdvance ?? dashboardData?.approvedLimit ?? mockState.profile.salaryLimit);
+      const dashboardData = dashboard;
+      const salaryLimit = Number(dashboardData?.availableAdvance ?? dashboardData?.approvedLimit ?? employee.salaryLimit ?? mockState.profile.salaryLimit);
       const kycComplete = Boolean(dashboardData?.kycCompleted);
-      const requestData = salaryRequests.status === "fulfilled" ? salaryRequests.value : [];
-      const repaymentData = repayments.status === "fulfilled" ? repayments.value : [];
+      const requestData = salaryRequests.status === "fulfilled" ? unwrapArray(salaryRequests.value, "requests") : [];
+      const repaymentData = repayments.status === "fulfilled" ? unwrapArray(repayments.value, "repayments") : [];
       const normalizedRequests = salaryRequests.status === "fulfilled" ? normalizeRequests(requestData, repaymentData) : mockState.requests;
-      const notificationData = notifications.status === "fulfilled" ? notifications.value : [];
-      const membershipData = membership.status === "fulfilled" ? membership.value : null;
+      const notificationData = notifications.status === "fulfilled" ? unwrapArray(notifications.value, "notifications") : [];
+      const membershipData = membership.status === "fulfilled" ? unwrapObject<BackendMembership>(membership.value, ["membership"]) : null;
+      const bankAccountData = bankAccount.status === "fulfilled" ? unwrapObject<BankAccount>(bankAccount.value, ["bankAccount", "account"]) : null;
+      const kycData = kycDocuments.status === "fulfilled" ? unwrapArray(kycDocuments.value, "documents") : [];
 
       return {
         ...mockState,
         profile: {
           ...mockState.profile,
           id: employeeId,
-          name: dashboardData?.employeeName ?? mockState.profile.name,
-          email: authData?.email ?? mockState.profile.email,
+          name: employee.name ?? dashboardData?.employeeName ?? mockState.profile.name,
+          email: employee.email ?? mockState.profile.email,
+          phone: employee.phone ?? mockState.profile.phone,
+          employeeCode: employee.employeeCode ?? mockState.profile.employeeCode,
+          employer: employee.employer ?? employee.employerName ?? employee.companyName ?? mockState.profile.employer,
+          accountActive: employee.accountActive ?? mockState.profile.accountActive,
           salaryLimit
         },
         dashboard: dashboardData,
@@ -296,12 +327,12 @@ export const employeeApi = {
           validityLabel: membershipData?.validityLabel ?? mockState.membershipConfig.validityLabel
         },
         documents:
-          kycDocuments.status === "fulfilled" && kycDocuments.value.length
-            ? normalizeKycDocuments(kycDocuments.value)
+          kycData.length
+            ? normalizeKycDocuments(kycData)
             : kycComplete
               ? mockState.documents.map((document) => ({ ...document, status: "Verified" }))
               : mockState.documents,
-        bankAccount: bankAccount.status === "fulfilled" ? bankAccount.value : mockState.bankAccount,
+        bankAccount: bankAccountData ?? mockState.bankAccount,
         requests: normalizedRequests,
         notifications: buildActivity(notificationData, normalizedRequests, repaymentData)
       };
@@ -312,9 +343,9 @@ export const employeeApi = {
 
   async saveBankAccount(employeeId: string, bankAccount: BankAccount) {
     try {
-      return await request<BankAccount>("/bank-accounts", {
+      return await request<BankAccount>("/bank-account", {
         method: "POST",
-        body: JSON.stringify({ employeeId, ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() })
+        body: JSON.stringify({ ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() })
       });
     } catch {
       return { ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() };
@@ -323,7 +354,7 @@ export const employeeApi = {
 
   async updateUpiId(employeeId: string, upiId: string) {
     try {
-      return await request<BankAccount>(`/bank-accounts/employee/${employeeId}/upi`, {
+      return await request<BankAccount>("/bank-account/upi", {
         method: "POST",
         body: JSON.stringify({ upiId })
       });
@@ -335,9 +366,9 @@ export const employeeApi = {
   async uploadKycDocument(employeeId: string, documentType: KycDocumentType, file: File) {
     // MVP upload contract: backend stores the submitted file path and does not inspect the PDF.
     const filePath = createUploadPath(employeeId, documentType, file);
-    const savedDocument = await request<BackendKycDocument>("/kyc-documents", {
+    const savedDocument = await request<BackendKycDocument>("/kyc", {
       method: "POST",
-      body: JSON.stringify({ employeeId, documentType, filePath })
+      body: JSON.stringify({ documentType, filePath })
     });
     return normalizeKycDocuments([savedDocument])[0];
   },
@@ -345,21 +376,21 @@ export const employeeApi = {
   async applyMembershipCoupon(employeeId: string, couponCode: string) {
     return request<BackendMembership>("/membership/apply-coupon", {
       method: "POST",
-      body: JSON.stringify({ employeeId, couponCode })
+      body: JSON.stringify({ couponCode })
     });
   },
 
   async activateMembership(employeeId: string, couponCode?: string) {
     return request<BackendMembership>("/membership/activate", {
       method: "POST",
-      body: JSON.stringify({ employeeId, couponCode })
+      body: JSON.stringify({ couponCode })
     });
   },
 
   async submitSalaryAdvance(employeeId: string, amount: number) {
     const requestData = await request<BackendSalaryRequest>("/salary-requests", {
       method: "POST",
-      body: JSON.stringify({ employeeId, amount })
+      body: JSON.stringify({ amount })
     });
     return normalizeRequests([requestData], [])[0];
   },
