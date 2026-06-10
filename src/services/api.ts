@@ -1,5 +1,15 @@
 import { emptyBankAccount, mockState } from "../data/mockData";
-import type { AdvanceRequest, AppState, BankAccount, DocumentStatus, EmployeeDashboard, KycDocument, KycDocumentType, RecoveryPreview, RequestStatus } from "../types/app";
+import type {
+  AdvanceRequest,
+  AppState,
+  BankAccount,
+  DocumentStatus,
+  EmployeeDashboard,
+  KycDocument,
+  KycDocumentType,
+  RecoveryPreview,
+  RequestStatus,
+} from "../types/app";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const TOKEN_KEY = "mobpae_employee_token";
@@ -79,7 +89,14 @@ type BackendEmployeeMe = EmployeeDashboard & {
   email?: string;
   phone?: string;
   employeeCode?: string;
-  employer?: string;
+  employer?:
+    | string
+    | {
+        companyName?: string;
+        companyCode?: string;
+        contactPerson?: string;
+        email?: string;
+      };
   employerName?: string;
   companyName?: string;
   accountActive?: boolean;
@@ -89,10 +106,7 @@ type BackendEmployeeMe = EmployeeDashboard & {
 };
 
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status?: number
-  ) {
+  constructor(message: string, readonly status?: number) {
     super(message);
   }
 }
@@ -109,16 +123,25 @@ const normalizeDocumentStatus = (status?: string): DocumentStatus => {
   return "Not Uploaded";
 };
 
-const normalizeKycDocuments = (documents: BackendKycDocument[]): KycDocument[] =>
+const normalizeKycDocuments = (
+  documents: BackendKycDocument[]
+): KycDocument[] =>
   documents.map((document, index) => ({
     id: document.id ?? `document-${index}`,
-    label: document.label ?? document.documentType?.replaceAll("_", " ") ?? "Document",
+    label:
+      document.label ??
+      document.documentType?.replaceAll("_", " ") ??
+      "Document",
     documentType: document.documentType as KycDocumentType | undefined,
     status: normalizeDocumentStatus(document.status),
-    note: document.note ?? "Document status synced from backend."
+    note: document.note ?? "Document status synced from backend.",
   }));
 
-const createUploadPath = (employeeId: string, documentType: KycDocumentType, file: File) =>
+const createUploadPath = (
+  employeeId: string,
+  documentType: KycDocumentType,
+  file: File
+) =>
   `employee-uploads/${employeeId}/${documentType}/${Date.now()}-${file.name}`;
 
 const normalizeRequestStatus = (status?: string): RequestStatus => {
@@ -144,22 +167,47 @@ const normalizeRequestStatus = (status?: string): RequestStatus => {
 
 const toAmount = (value: unknown) => Number(value ?? 0);
 const todayIso = () => new Date().toISOString();
-const getRequestRepayment = (request: BackendSalaryRequest, repayments: BackendRepayment[], requestCount: number) =>
+const getRequestRepayment = (
+  request: BackendSalaryRequest,
+  repayments: BackendRepayment[],
+  requestCount: number
+) =>
   request.repayment ??
-  repayments.find((item) => item.salaryRequest?.id === request.id || item.salaryRequestId === request.id) ??
+  repayments.find(
+    (item) =>
+      item.salaryRequest?.id === request.id ||
+      item.salaryRequestId === request.id
+  ) ??
   (requestCount === 1 && repayments.length === 1 ? repayments[0] : undefined);
 
-const normalizeRequests = (requests: BackendSalaryRequest[], repayments: BackendRepayment[]): AdvanceRequest[] =>
+const normalizeRequests = (
+  requests: BackendSalaryRequest[],
+  repayments: BackendRepayment[]
+): AdvanceRequest[] =>
   requests.map((request) => {
     const repayment = getRequestRepayment(request, repayments, requests.length);
     const requestedAmount = toAmount(request.amount);
     const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
     const requestDate = request.requestedAt ?? request.createdAt ?? todayIso();
-    const recoveryDate = repayment?.dueDate ?? request.repaymentDate ?? request.dueDate ?? request.recoveryDate ?? "";
+    const recoveryDate =
+      repayment?.dueDate ??
+      request.repaymentDate ??
+      request.dueDate ??
+      request.recoveryDate ??
+      "";
     const status = normalizeRequestStatus(request.status);
-    const principalAmount = toAmount(repayment?.principalAmount ?? request.principalAmount ?? approvedAmount);
-    const interestAmount = toAmount(repayment?.interestAmount ?? request.interestAmount);
-    const totalRecoveryAmount = toAmount(repayment?.totalAmount ?? request.totalAmount ?? request.totalRecoveryAmount ?? principalAmount + interestAmount);
+    const principalAmount = toAmount(
+      repayment?.principalAmount ?? request.principalAmount ?? approvedAmount
+    );
+    const interestAmount = toAmount(
+      repayment?.interestAmount ?? request.interestAmount
+    );
+    const totalRecoveryAmount = toAmount(
+      repayment?.totalAmount ??
+        request.totalAmount ??
+        request.totalRecoveryAmount ??
+        principalAmount + interestAmount
+    );
     const interestDays = repayment?.interestDays ?? request.interestDays;
 
     return {
@@ -172,33 +220,110 @@ const normalizeRequests = (requests: BackendSalaryRequest[], repayments: Backend
       principalAmount,
       interestAmount,
       totalRecoveryAmount,
-      interestDays: interestDays === undefined ? undefined : Number(interestDays),
+      interestDays:
+        interestDays === undefined ? undefined : Number(interestDays),
       recoveryDate,
       recoveryStatus: repayment?.status === "PAID" ? "Completed" : "Scheduled",
-      disbursalStatus: request.status === "DISBURSED" || request.status === "REPAYMENT_SCHEDULED" || request.status === "REPAID" ? "Disbursed" : "Pending",
+      disbursalStatus:
+        request.status === "DISBURSED" ||
+        request.status === "REPAYMENT_SCHEDULED" ||
+        request.status === "REPAID"
+          ? "Disbursed"
+          : "Pending",
       timeline: [
-        { status: "Submitted", timestamp: requestDate, description: "Salary advance request submitted.", done: true },
-        { status: "Approved", timestamp: requestDate, description: "Employer approval status synced from backend.", done: ["EMPLOYER_APPROVED", "READY_FOR_DISBURSAL", "DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "") },
-        { status: "Disbursed", timestamp: requestDate, description: "Disbursal status synced from backend.", done: ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "") },
-        { status: "Payment Scheduled", timestamp: recoveryDate, description: "Payroll payment is scheduled.", done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "") },
-        { status: "Paid", timestamp: recoveryDate, description: "Payment completed.", done: repayment?.status === "PAID" || request.status === "REPAID" }
-      ]
+        {
+          status: "Submitted",
+          timestamp: requestDate,
+          description: "Salary advance request submitted.",
+          done: true,
+        },
+        {
+          status: "Approved",
+          timestamp: requestDate,
+          description: "Employer approval status synced from backend.",
+          done: [
+            "EMPLOYER_APPROVED",
+            "READY_FOR_DISBURSAL",
+            "DISBURSED",
+            "REPAYMENT_SCHEDULED",
+            "REPAID",
+          ].includes(request.status ?? ""),
+        },
+        {
+          status: "Disbursed",
+          timestamp: requestDate,
+          description: "Disbursal status synced from backend.",
+          done: ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(
+            request.status ?? ""
+          ),
+        },
+        {
+          status: "Payment Scheduled",
+          timestamp: recoveryDate,
+          description: "Payroll payment is scheduled.",
+          done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(
+            request.status ?? ""
+          ),
+        },
+        {
+          status: "Paid",
+          timestamp: recoveryDate,
+          description: "Payment completed.",
+          done: repayment?.status === "PAID" || request.status === "REPAID",
+        },
+      ],
     };
   });
 
-const buildActivity = (notifications: BackendNotification[], requests: AdvanceRequest[], repayments: BackendRepayment[]) => {
-  const notificationItems = notifications.map((notification) => notification.message ?? notification.title).filter(Boolean) as string[];
-  const requestItems = requests.slice(0, 2).map((request) => `Request ${request.id} is ${request.status}.`);
-  const repaymentItems = repayments.slice(0, 2).map((repayment) => `Payment ${repayment.status?.toLowerCase() ?? "scheduled"} for request ${repayment.salaryRequest?.id ?? repayment.id}.`);
+const buildActivity = (
+  notifications: BackendNotification[],
+  requests: AdvanceRequest[],
+  repayments: BackendRepayment[]
+) => {
+  const notificationItems = notifications
+    .map((notification) => notification.message ?? notification.title)
+    .filter(Boolean) as string[];
+  const requestItems = requests
+    .slice(0, 2)
+    .map((request) => `Request ${request.id} is ${request.status}.`);
+  const repaymentItems = repayments
+    .slice(0, 2)
+    .map(
+      (repayment) =>
+        `Payment ${
+          repayment.status?.toLowerCase() ?? "scheduled"
+        } for request ${repayment.salaryRequest?.id ?? repayment.id}.`
+    );
   return [...notificationItems, ...requestItems, ...repaymentItems].slice(0, 5);
 };
 
-const unwrapArray = <T>(value: T[] | { data?: T[]; items?: T[]; documents?: T[]; requests?: T[]; repayments?: T[]; notifications?: T[] } | null | undefined, key: "documents" | "requests" | "repayments" | "notifications"): T[] => {
+const unwrapArray = <T>(
+  value:
+    | T[]
+    | {
+        data?: T[];
+        items?: T[];
+        documents?: T[];
+        requests?: T[];
+        repayments?: T[];
+        notifications?: T[];
+      }
+    | null
+    | undefined,
+  key: "documents" | "requests" | "repayments" | "notifications"
+): T[] => {
   if (Array.isArray(value)) return value;
   return value?.[key] ?? value?.data ?? value?.items ?? [];
 };
 
-const unwrapObject = <T>(value: T | { data?: T; membership?: T; bankAccount?: T; account?: T } | null | undefined, keys: Array<"membership" | "bankAccount" | "account">): T | null => {
+const unwrapObject = <T>(
+  value:
+    | T
+    | { data?: T; membership?: T; bankAccount?: T; account?: T }
+    | null
+    | undefined,
+  keys: Array<"membership" | "bankAccount" | "account">
+): T | null => {
   if (!value) return null;
   if (typeof value !== "object") return value as T;
   const record = value as Record<string, T | undefined>;
@@ -212,34 +337,55 @@ const unwrapObject = <T>(value: T | { data?: T; membership?: T; bankAccount?: T;
 const normalizeEmployeeMe = (employeeMe: BackendEmployeeMe) => {
   const employee = employeeMe.employee ?? employeeMe;
   const dashboard = employeeMe.dashboard ?? employeeMe;
-  const employeeId = employee.id ?? employee.employeeId ?? employeeMe.id ?? employeeMe.employeeId ?? mockState.profile.id;
+  const employeeId =
+    employee.id ??
+    employee.employeeId ??
+    employeeMe.id ??
+    employeeMe.employeeId ??
+    mockState.profile.id;
 
   return {
     employee,
     dashboard,
-    employeeId
+    employeeId,
   };
+};
+
+const getEmployerName = (employee: Partial<BackendEmployeeMe>) => {
+  if (typeof employee.employer === "string") return employee.employer;
+  return (
+    employee.employer?.companyName ??
+    employee.employerName ??
+    employee.companyName ??
+    mockState.profile.employer
+  );
 };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
-  Object.entries(authHeaders()).forEach(([key, value]) => headers.set(key, value));
+  Object.entries(authHeaders()).forEach(([key, value]) =>
+    headers.set(key, value)
+  );
 
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
-      headers
+      headers,
     });
   } catch {
-    throw new ApiError("Backend is not reachable. Please confirm the API is running on port 3000.");
+    throw new ApiError(
+      "Backend is not reachable. Please confirm the API is running on port 3000."
+    );
   }
 
   if (!response.ok) {
     let message = `Request failed: ${response.status}`;
     try {
-      const errorBody = (await response.json()) as { message?: string | string[] };
+      const errorBody = (await response.json()) as {
+        message?: string | string[];
+      };
       if (Array.isArray(errorBody.message)) {
         message = errorBody.message.join(" ");
       } else if (errorBody.message) {
@@ -264,7 +410,7 @@ export const employeeApi = {
   async login(email: string, password: string) {
     const data = await request<LoginResponse>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
     const token = data.accessToken ?? data.token;
     if (!token) {
@@ -280,61 +426,154 @@ export const employeeApi = {
   async loadAppState(): Promise<AppState> {
     try {
       const employeeMe = await request<BackendEmployeeMe>("/employees/me");
-      const { employee, dashboard, employeeId } = normalizeEmployeeMe(employeeMe);
+      const { employee, dashboard, employeeId } =
+        normalizeEmployeeMe(employeeMe);
 
-      const [kycDocuments, bankAccount, salaryRequests, repayments, notifications, membership] = await Promise.allSettled([
-        request<BackendKycDocument[] | { documents?: BackendKycDocument[]; data?: BackendKycDocument[]; items?: BackendKycDocument[] }>("/kyc"),
-        request<BankAccount | { bankAccount?: BankAccount; account?: BankAccount; data?: BankAccount } | null>("/bank-account"),
-        request<BackendSalaryRequest[] | { requests?: BackendSalaryRequest[]; data?: BackendSalaryRequest[]; items?: BackendSalaryRequest[] }>("/salary-requests/my"),
-        request<BackendRepayment[] | { repayments?: BackendRepayment[]; data?: BackendRepayment[]; items?: BackendRepayment[] }>("/repayments/my"),
-        request<BackendNotification[] | { notifications?: BackendNotification[]; data?: BackendNotification[]; items?: BackendNotification[] }>("/notifications"),
-        request<BackendMembership | { membership?: BackendMembership; data?: BackendMembership }>("/membership/me")
+      const [
+        kycDocuments,
+        bankAccount,
+        salaryRequests,
+        repayments,
+        notifications,
+        membership,
+      ] = await Promise.allSettled([
+        request<
+          | BackendKycDocument[]
+          | {
+              documents?: BackendKycDocument[];
+              data?: BackendKycDocument[];
+              items?: BackendKycDocument[];
+            }
+        >("/kyc-documents/my"),
+        request<
+          | BankAccount
+          | {
+              bankAccount?: BankAccount;
+              account?: BankAccount;
+              data?: BankAccount;
+            }
+          | null
+        >("/bank-accounts/my"),
+        request<
+          | BackendSalaryRequest[]
+          | {
+              requests?: BackendSalaryRequest[];
+              data?: BackendSalaryRequest[];
+              items?: BackendSalaryRequest[];
+            }
+        >("/salary-requests/my"),
+        request<
+          | BackendRepayment[]
+          | {
+              repayments?: BackendRepayment[];
+              data?: BackendRepayment[];
+              items?: BackendRepayment[];
+            }
+        >("/repayments/my"),
+        request<
+          | BackendNotification[]
+          | {
+              notifications?: BackendNotification[];
+              data?: BackendNotification[];
+              items?: BackendNotification[];
+            }
+        >("/notifications/me"),
+        request<
+          | BackendMembership
+          | { membership?: BackendMembership; data?: BackendMembership }
+        >("/membership/me"),
       ]);
 
       const dashboardData = dashboard;
-      const salaryLimit = Number(dashboardData?.availableAdvance ?? dashboardData?.approvedLimit ?? employee.salaryLimit ?? mockState.profile.salaryLimit);
+      const salaryLimit = Number(
+        dashboardData?.availableAdvance ??
+          dashboardData?.approvedLimit ??
+          employee.salaryLimit ??
+          mockState.profile.salaryLimit
+      );
       const kycComplete = Boolean(dashboardData?.kycCompleted);
-      const requestData = salaryRequests.status === "fulfilled" ? unwrapArray(salaryRequests.value, "requests") : [];
-      const repaymentData = repayments.status === "fulfilled" ? unwrapArray(repayments.value, "repayments") : [];
-      const normalizedRequests = salaryRequests.status === "fulfilled" ? normalizeRequests(requestData, repaymentData) : mockState.requests;
-      const notificationData = notifications.status === "fulfilled" ? unwrapArray(notifications.value, "notifications") : [];
-      const membershipData = membership.status === "fulfilled" ? unwrapObject<BackendMembership>(membership.value, ["membership"]) : null;
-      const bankAccountData = bankAccount.status === "fulfilled" ? unwrapObject<BankAccount>(bankAccount.value, ["bankAccount", "account"]) : null;
-      const kycData = kycDocuments.status === "fulfilled" ? unwrapArray(kycDocuments.value, "documents") : [];
+      const requestData =
+        salaryRequests.status === "fulfilled"
+          ? unwrapArray(salaryRequests.value, "requests")
+          : [];
+      const repaymentData =
+        repayments.status === "fulfilled"
+          ? unwrapArray(repayments.value, "repayments")
+          : [];
+      const normalizedRequests =
+        salaryRequests.status === "fulfilled"
+          ? normalizeRequests(requestData, repaymentData)
+          : mockState.requests;
+      const notificationData =
+        notifications.status === "fulfilled"
+          ? unwrapArray(notifications.value, "notifications")
+          : [];
+      const membershipData =
+        membership.status === "fulfilled"
+          ? unwrapObject<BackendMembership>(membership.value, ["membership"])
+          : null;
+      const bankAccountData =
+        bankAccount.status === "fulfilled"
+          ? unwrapObject<BankAccount>(bankAccount.value, [
+              "bankAccount",
+              "account",
+            ])
+          : null;
+      const kycData =
+        kycDocuments.status === "fulfilled"
+          ? unwrapArray(kycDocuments.value, "documents")
+          : [];
 
       return {
         ...mockState,
         profile: {
           ...mockState.profile,
           id: employeeId,
-          name: employee.name ?? dashboardData?.employeeName ?? mockState.profile.name,
+          name:
+            employee.name ??
+            dashboardData?.employeeName ??
+            mockState.profile.name,
           email: employee.email ?? mockState.profile.email,
           phone: employee.phone ?? mockState.profile.phone,
           employeeCode: employee.employeeCode ?? mockState.profile.employeeCode,
-          employer: employee.employer ?? employee.employerName ?? employee.companyName ?? mockState.profile.employer,
-          accountActive: employee.accountActive ?? mockState.profile.accountActive,
-          salaryLimit
+          employer: getEmployerName(employee),
+          accountActive:
+            employee.accountActive ?? mockState.profile.accountActive,
+          salaryLimit,
         },
         dashboard: dashboardData,
         membershipActive: membershipData?.active ?? mockState.membershipActive,
         membershipConfig: {
           ...mockState.membershipConfig,
-          planName: membershipData?.planName ?? mockState.membershipConfig.planName,
+          planName:
+            membershipData?.planName ?? mockState.membershipConfig.planName,
           fee: Number(membershipData?.fee ?? mockState.membershipConfig.fee),
           couponCode: membershipData?.couponCode ?? "",
           couponDiscount: Number(membershipData?.couponDiscount ?? 0),
-          amountPayable: Number(membershipData?.amountPayable ?? membershipData?.fee ?? mockState.membershipConfig.fee),
-          validityLabel: membershipData?.validityLabel ?? mockState.membershipConfig.validityLabel
+          amountPayable: Number(
+            membershipData?.amountPayable ??
+              membershipData?.fee ??
+              mockState.membershipConfig.fee
+          ),
+          validityLabel:
+            membershipData?.validityLabel ??
+            mockState.membershipConfig.validityLabel,
         },
-        documents:
-          kycData.length
-            ? normalizeKycDocuments(kycData)
-            : kycComplete
-              ? mockState.documents.map((document) => ({ ...document, status: "Verified" }))
-              : mockState.documents,
+        documents: kycData.length
+          ? normalizeKycDocuments(kycData)
+          : kycComplete
+          ? mockState.documents.map((document) => ({
+              ...document,
+              status: "Verified",
+            }))
+          : mockState.documents,
         bankAccount: bankAccountData ?? mockState.bankAccount,
         requests: normalizedRequests,
-        notifications: buildActivity(notificationData, normalizedRequests, repaymentData)
+        notifications: buildActivity(
+          notificationData,
+          normalizedRequests,
+          repaymentData
+        ),
       };
     } catch {
       return mockState;
@@ -343,9 +582,12 @@ export const employeeApi = {
 
   async saveBankAccount(employeeId: string, bankAccount: BankAccount) {
     try {
-      return await request<BankAccount>("/bank-account", {
+      return await request<BankAccount>("/bank-accounts/my", {
         method: "POST",
-        body: JSON.stringify({ ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() })
+        body: JSON.stringify({
+          ...bankAccount,
+          ifscCode: bankAccount.ifscCode.toUpperCase(),
+        }),
       });
     } catch {
       return { ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() };
@@ -356,61 +598,86 @@ export const employeeApi = {
     try {
       return await request<BankAccount>("/bank-account/upi", {
         method: "POST",
-        body: JSON.stringify({ upiId })
+        body: JSON.stringify({ upiId }),
       });
     } catch {
       return { ...(mockState.bankAccount ?? emptyBankAccount), upiId };
     }
   },
 
-  async uploadKycDocument(employeeId: string, documentType: KycDocumentType, file: File) {
+  async uploadKycDocument(
+    employeeId: string,
+    documentType: KycDocumentType,
+    file: File
+  ) {
     // MVP upload contract: backend stores the submitted file path and does not inspect the PDF.
     const filePath = createUploadPath(employeeId, documentType, file);
-    const savedDocument = await request<BackendKycDocument>("/kyc", {
-      method: "POST",
-      body: JSON.stringify({ documentType, filePath })
-    });
+    const savedDocument = await request<BackendKycDocument>(
+      "/kyc-documents/my",
+      {
+        method: "POST",
+        body: JSON.stringify({ documentType, filePath }),
+      }
+    );
     return normalizeKycDocuments([savedDocument])[0];
   },
 
   async applyMembershipCoupon(employeeId: string, couponCode: string) {
     return request<BackendMembership>("/membership/apply-coupon", {
       method: "POST",
-      body: JSON.stringify({ couponCode })
+      body: JSON.stringify({ couponCode }),
     });
   },
 
   async activateMembership(employeeId: string, couponCode?: string) {
     return request<BackendMembership>("/membership/activate", {
       method: "POST",
-      body: JSON.stringify({ couponCode })
+      body: JSON.stringify({ couponCode }),
     });
   },
 
   async submitSalaryAdvance(employeeId: string, amount: number) {
-    const requestData = await request<BackendSalaryRequest>("/salary-requests", {
-      method: "POST",
-      body: JSON.stringify({ amount })
-    });
+    const requestData = await request<BackendSalaryRequest>(
+      "/salary-requests",
+      {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      }
+    );
     return normalizeRequests([requestData], [])[0];
   },
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {
     try {
-      const preview = await request<BackendRecoveryPreview>("/salary-requests/preview", {
-        method: "POST",
-        body: JSON.stringify({ amount })
-      });
+      const preview = await request<BackendRecoveryPreview>(
+        "/salary-requests/preview",
+        {
+          method: "POST",
+          body: JSON.stringify({ amount }),
+        }
+      );
       return {
         principal: preview.principal ?? preview.principalAmount ?? amount,
-        interest: preview.interest ?? preview.interestAmount ?? Number((amount * 0.00789).toFixed(2)),
-        total: preview.total ?? preview.totalAmount ?? amount + Number((amount * 0.00789).toFixed(2)),
+        interest:
+          preview.interest ??
+          preview.interestAmount ??
+          Number((amount * 0.00789).toFixed(2)),
+        total:
+          preview.total ??
+          preview.totalAmount ??
+          amount + Number((amount * 0.00789).toFixed(2)),
         interestDays: preview.interestDays ?? 8,
-        recoveryDate: preview.recoveryDate ?? preview.dueDate ?? "2026-06-28"
+        recoveryDate: preview.recoveryDate ?? preview.dueDate ?? "2026-06-28",
       };
     } catch {
       const interest = Number((amount * 0.00789).toFixed(2));
-      return { principal: amount, interest, total: amount + interest, interestDays: 8, recoveryDate: "2026-06-28" };
+      return {
+        principal: amount,
+        interest,
+        total: amount + interest,
+        interestDays: 8,
+        recoveryDate: "2026-06-28",
+      };
     }
-  }
+  },
 };
