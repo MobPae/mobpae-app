@@ -31,6 +31,8 @@ const getNextPayday = () => {
   return payday.toISOString();
 };
 
+const formatTransactionId = (id: string) => (id.length > 18 ? `${id.slice(0, 8)}...${id.slice(-4)}` : id);
+
 export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, onNavigate }: DashboardScreenProps) {
   const latestRequest = appState.requests[0];
   const paymentStatus = appState.dashboard?.activeRepaymentStatus ?? appState.dashboard?.activeRequestStatus ?? latestRequest?.status;
@@ -156,7 +158,7 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, onN
               <BadgeIndianRupee size={17} />
             </span>
             <div>
-              <strong>{latestRequest.id}</strong>
+              <strong>{formatTransactionId(latestRequest.id)}</strong>
               <p>{formattedStatus} • {formatShortDate(latestRequest.recoveryDate || latestRequest.requestDate)}</p>
             </div>
             <strong>{formatMoney(latestRequest.totalRecoveryAmount || latestRequest.approvedAmount || latestRequest.requestedAmount)}</strong>

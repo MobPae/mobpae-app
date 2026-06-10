@@ -4,7 +4,7 @@ import { InlineAlert } from "../components/ui/InlineAlert";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { formatDate, formatMoney } from "../utils/format";
-import type { RecoveryPreview } from "../types/app";
+import type { AdvanceRequest, RecoveryPreview } from "../types/app";
 
 type AdvanceScreenProps = {
   amount: number;
@@ -13,17 +13,27 @@ type AdvanceScreenProps = {
   nextBlocker: string;
   preview: RecoveryPreview | null;
   previewLoading: boolean;
+  currentRequest?: AdvanceRequest;
   submitting: boolean;
   onAmountChange: (amount: number) => void;
   onSubmit: () => void;
 };
 
-export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, previewLoading, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
+const getTenureDays = (request?: AdvanceRequest) => {
+  if (!request?.requestDate || !request.recoveryDate) return 0;
+  const startDate = new Date(request.requestDate);
+  const endDate = new Date(request.recoveryDate);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return 0;
+  return Math.max(0, Math.ceil((endDate.getTime() - startDate.getTime()) / 86_400_000));
+};
+
+export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, previewLoading, currentRequest, submitting, onAmountChange, onSubmit }: AdvanceScreenProps) {
   const amountReady = amount > 0 && amount <= limit;
   const quickAmounts = [1000, 3000, 5000, 10000].filter((value) => value <= limit);
   const lowAvailableLimit = limit > 0 && limit < 1000;
   const displayAmount = Math.min(amount, limit);
   const alertMessage = lowAvailableLimit ? "Your available limit is currently on hold. You can withdraw again after the current due is cleared." : eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker;
+  const currentTenureDays = getTenureDays(currentRequest);
 
   return (
     <>
@@ -65,9 +75,17 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
         <div className="advance-calculator">
           <div className="calculator-title">
             <CalendarClock size={17} />
-            <strong>Interest calculator</strong>
+            <strong>{currentRequest ? "Current advance" : "Interest calculator"}</strong>
           </div>
-          {preview ? (
+          {currentRequest ? (
+            <div>
+              <DetailLine label="Amount" value={formatMoney(currentRequest.principalAmount || currentRequest.approvedAmount || currentRequest.requestedAmount)} />
+              <DetailLine label="Tenure" value={currentTenureDays ? `${currentTenureDays} days` : "Scheduled"} />
+              <DetailLine label="Interest" value={formatMoney(currentRequest.interestAmount)} />
+              <DetailLine label="Total payment" value={formatMoney(currentRequest.totalRecoveryAmount || currentRequest.approvedAmount)} />
+              <DetailLine label="Payment date" value={formatDate(currentRequest.recoveryDate)} />
+            </div>
+          ) : preview ? (
             <div>
               <DetailLine label="Advance amount" value={formatMoney(preview.principal)} />
               <DetailLine label="Tenure" value={`${preview.interestDays} days`} />

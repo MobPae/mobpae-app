@@ -415,13 +415,14 @@ h2 {
 }
 
 .hero-action {
-  width: 100%;
-  min-height: 48px;
+  width: fit-content;
+  min-width: 180px;
+  min-height: 42px;
   justify-content: center;
   gap: 8px;
-  margin-top: 22px;
+  margin: 22px auto 0;
   border: 1px solid var(--blue);
-  border-radius: var(--radius-button);
+  border-radius: 999px;
   background: var(--brand-gradient);
   color: #ffffff;
   font-size: 14px;
@@ -499,6 +500,7 @@ h2 {
 }
 
 .home-transaction-row strong {
+  display: block;
   overflow: hidden;
   color: var(--ink);
   font-size: 13px;
@@ -517,9 +519,12 @@ h2 {
 }
 
 .home-transaction-row > strong {
+  display: block;
+  max-width: 82px;
   overflow: hidden;
   color: var(--blue);
   font-size: 12px;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

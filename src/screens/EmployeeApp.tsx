@@ -56,6 +56,7 @@ export function EmployeeApp() {
           nextBlocker={app.nextBlocker}
           preview={app.preview}
           previewLoading={app.previewLoading}
+          currentRequest={app.appState.requests[0]}
           submitting={app.submittingAdvance}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
