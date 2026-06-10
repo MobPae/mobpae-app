@@ -97,7 +97,18 @@ export function useEmployeeApp() {
   const eligibleForAdvance = !nextBlocker;
 
   useEffect(() => {
+    const limit = appState.profile.salaryLimit;
+    if (limit <= 0) return;
+    setAdvanceAmount((currentAmount) => Math.min(Math.max(currentAmount, Math.min(1000, limit)), limit));
+  }, [appState.profile.salaryLimit]);
+
+  useEffect(() => {
     if (!isLoggedIn) return;
+    if (advanceAmount < 1000 || advanceAmount > appState.profile.salaryLimit) {
+      setPreview(null);
+      setPreviewLoading(false);
+      return;
+    }
     let cancelled = false;
 
     const runPreview = async () => {
@@ -113,7 +124,7 @@ export function useEmployeeApp() {
     return () => {
       cancelled = true;
     };
-  }, [advanceAmount, isLoggedIn]);
+  }, [advanceAmount, appState.profile.salaryLimit, isLoggedIn]);
 
   const saveBankAccount = async () => {
     setSavingBank(true);

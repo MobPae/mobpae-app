@@ -14,6 +14,20 @@ export function EmployeeApp() {
     return <LoginScreen error={app.loginError} loading={app.loadState === "loading"} onLogin={app.login} />;
   }
 
+  if (app.loadState === "idle" || app.loadState === "loading") {
+    return (
+      <main className="app-shell">
+        <div className="phone-shell">
+          <div className="employee-loading">
+            <span />
+            <strong>Loading your MobPae account</strong>
+            <p>Syncing salary, requests, KYC, bank, and membership details.</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <AppShell activeView={app.activeView} profile={app.appState.profile} onNavigate={app.setActiveView}>
       {app.activeView === "dashboard" ? (

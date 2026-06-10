@@ -103,6 +103,39 @@ h2 {
   background: linear-gradient(180deg, rgba(108, 76, 255, 0.08), transparent);
 }
 
+.employee-loading {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 100%;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+.employee-loading span {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: var(--brand-gradient);
+  box-shadow: var(--shadow-card);
+}
+
+.employee-loading strong {
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.employee-loading p {
+  max-width: 260px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .login-card {
   border-radius: var(--radius-card);
   padding: 24px;
@@ -383,39 +416,39 @@ h2 {
 
 .hero-action {
   width: 100%;
-  min-height: 56px;
+  min-height: 48px;
   justify-content: center;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 22px;
   border: 1px solid var(--blue);
   border-radius: var(--radius-button);
   background: var(--brand-gradient);
   color: #ffffff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-card);
 }
 
-.home-payment-panel {
+.home-transactions-panel {
   display: grid;
   gap: 12px;
   margin-top: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
-  background: linear-gradient(180deg, #ffffff 0%, #f7f4ff 100%);
-  padding: 16px;
+  background: #ffffff;
+  padding: 14px;
   box-shadow: var(--shadow-card);
 }
 
-.home-payment-title {
+.home-transactions-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.home-payment-title span {
+.home-transactions-title span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -424,49 +457,69 @@ h2 {
   font-weight: 700;
 }
 
-.home-payment-title span svg {
+.home-transactions-title span svg {
   color: var(--blue);
 }
 
-.home-payment-title strong {
-  flex: 0 0 auto;
+.home-transactions-title button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border-radius: 999px;
-  background: var(--blue-soft);
+  background: transparent;
   color: var(--blue);
-  padding: 6px 10px;
-  font-size: 10.5px;
+  padding: 6px 0;
+  font-size: 11px;
   font-weight: 700;
+  cursor: pointer;
 }
 
-.home-payment-grid {
+.home-transaction-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
-}
-
-.home-payment-grid div {
-  min-width: 0;
-  border-radius: 16px;
-  background: #ffffff;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8f9fc 0%, #f6f3ff 100%);
   padding: 12px;
 }
 
-.home-payment-grid span {
-  display: block;
+.home-transaction-row > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.home-transaction-row div {
+  min-width: 0;
+}
+
+.home-transaction-row strong {
   overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-transaction-row p {
+  overflow: hidden;
+  margin-top: 3px;
   color: var(--muted);
   font-size: 10.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.home-payment-grid strong {
-  display: block;
-  margin-top: 6px;
+.home-transaction-row > strong {
   overflow: hidden;
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 700;
+  color: var(--blue);
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -894,6 +947,16 @@ h2 {
   overflow: hidden;
 }
 
+.advance-request-card .section-header {
+  margin-bottom: 12px;
+}
+
+.advance-request-card .section-header h2 {
+  max-width: 280px;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
 .advance-limit-row {
   display: flex;
   align-items: center;
@@ -921,7 +984,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 24px 0 16px;
+  margin: 18px 0 12px;
   color: var(--ink);
 }
 
@@ -930,7 +993,7 @@ h2 {
 }
 
 .advance-amount-display strong {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
   line-height: 1;
 }
@@ -959,11 +1022,11 @@ h2 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .quick-amounts button {
-  min-height: 40px;
+  min-height: 36px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #ffffff;
@@ -979,14 +1042,44 @@ h2 {
   color: var(--blue);
 }
 
+.advance-hold-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
+  padding: 14px;
+}
+
+.advance-hold-card span {
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.advance-hold-card strong {
+  color: #9a3412;
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .advance-calculator {
   display: grid;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 16px;
   border: 1px solid #f0f2f5;
   border-radius: 20px;
   background: #ffffff;
-  padding: 16px;
+  padding: 14px;
+}
+
+.advance-request-card .button {
+  min-height: 48px;
+  margin-top: 14px;
+  font-size: 14px;
 }
 
 .calculator-title {
@@ -1296,36 +1389,42 @@ h2 {
   align-items: flex-start;
 }
 
+.tracking-summary-card .section-header h2 {
+  font-size: 18px;
+}
+
 .track-status-hero {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  border-radius: 20px;
-  background: var(--brand-gradient);
-  color: #ffffff;
-  padding: 16px;
+  gap: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: var(--blue-soft);
+  color: var(--ink);
+  padding: 12px;
 }
 
 .track-status-hero > span {
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   place-items: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  border-radius: 13px;
+  background: #ffffff;
+  color: var(--blue);
 }
 
 .track-status-hero p {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .track-status-hero strong {
   display: block;
   margin-top: 4px;
-  color: #ffffff;
-  font-size: 16px;
+  color: var(--ink);
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -1452,6 +1551,10 @@ button.profile-menu-row {
   white-space: nowrap;
 }
 
+.profile-menu-row > div {
+  min-width: 0;
+}
+
 .profile-menu-row > span {
   display: grid;
   width: 32px;
@@ -1474,8 +1577,7 @@ button.profile-menu-row {
   overflow: hidden;
   color: var(--muted);
   font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
 }
 
 .profile-menu-row > svg {

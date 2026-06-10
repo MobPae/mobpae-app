@@ -140,24 +140,27 @@ export function DashboardScreen({ appState, eligibleForAdvance, nextBlocker, onN
       </button>
 
       {latestRequest ? (
-        <section className="home-payment-panel">
-          <div className="home-payment-title">
+        <section className="home-transactions-panel">
+          <div className="home-transactions-title">
             <span>
               <WalletCards size={16} />
-              Payment snapshot
+              My transactions
             </span>
-            <strong>{formattedStatus}</strong>
+            <button type="button" onClick={() => onNavigate("tracking")}>
+              View all
+              <ArrowRight size={13} />
+            </button>
           </div>
-          <div className="home-payment-grid">
+          <article className="home-transaction-row">
+            <span>
+              <BadgeIndianRupee size={17} />
+            </span>
             <div>
-              <span>Scheduled payment</span>
-              <strong>{formatMoney(latestRequest.totalRecoveryAmount || latestRequest.approvedAmount)}</strong>
+              <strong>{latestRequest.id}</strong>
+              <p>{formattedStatus} • {formatShortDate(latestRequest.recoveryDate || latestRequest.requestDate)}</p>
             </div>
-            <div>
-              <span>Payment date</span>
-              <strong>{formatShortDate(latestRequest.recoveryDate)}</strong>
-            </div>
-          </div>
+            <strong>{formatMoney(latestRequest.totalRecoveryAmount || latestRequest.approvedAmount || latestRequest.requestedAmount)}</strong>
+          </article>
         </section>
       ) : null}
     </>

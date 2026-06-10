@@ -22,6 +22,8 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
   const amountReady = amount > 0 && amount <= limit;
   const quickAmounts = [1000, 3000, 5000, 10000].filter((value) => value <= limit);
   const lowAvailableLimit = limit > 0 && limit < 1000;
+  const displayAmount = Math.min(amount, limit);
+  const alertMessage = lowAvailableLimit ? "Your available limit is currently on hold. You can withdraw again after the current due is cleared." : eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker;
 
   return (
     <>
@@ -33,24 +35,32 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
         </div>
         <div className="advance-amount-display">
           <IndianRupee size={23} />
-          <strong>{formatMoney(amount).replace("₹", "")}</strong>
+          <strong>{formatMoney(displayAmount).replace("₹", "")}</strong>
         </div>
-        <div className="advance-range-wrap">
-          <input className="range" type="range" min={1000} max={limit} step={500} value={amount} onChange={(event) => onAmountChange(Number(event.target.value))} />
-          <div className="range-labels">
-            <span>{formatMoney(1000)}</span>
-            <span>{formatMoney(limit)}</span>
+        {!lowAvailableLimit ? (
+          <>
+            <div className="advance-range-wrap">
+              <input className="range" type="range" min={1000} max={limit} step={500} value={displayAmount} onChange={(event) => onAmountChange(Number(event.target.value))} />
+              <div className="range-labels">
+                <span>{formatMoney(1000)}</span>
+                <span>{formatMoney(limit)}</span>
+              </div>
+            </div>
+            <div className="quick-amounts" aria-label="Quick amount options">
+              {quickAmounts.map((value) => (
+                <button className={value === displayAmount ? "active" : ""} type="button" key={value} onClick={() => onAmountChange(value)}>
+                  {formatMoney(value)}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="advance-hold-card">
+            <span>Current available limit</span>
+            <strong>{formatMoney(limit)}</strong>
           </div>
-        </div>
-        <div className="quick-amounts" aria-label="Quick amount options">
-          {quickAmounts.map((value) => (
-            <button className={value === amount ? "active" : ""} type="button" key={value} onClick={() => onAmountChange(value)}>
-              {formatMoney(value)}
-            </button>
-          ))}
-        </div>
-        <InlineAlert message={eligible ? "Eligible for salary advance. Payment preview is shown below." : nextBlocker} tone={eligible ? "success" : "warning"} />
-        {lowAvailableLimit ? <InlineAlert message="You can withdraw again after the current due is cleared." tone="warning" /> : null}
+        )}
+        <InlineAlert message={alertMessage} tone={eligible && !lowAvailableLimit ? "success" : "warning"} />
 
         <div className="advance-calculator">
           <div className="calculator-title">
@@ -68,7 +78,7 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
             <p className="muted">{previewLoading ? "Calculating preview..." : "Move the slider to preview payment."}</p>
           )}
         </div>
-        <PrimaryButton icon={<Send size={17} />} disabled={!eligible || !amountReady || previewLoading || submitting} onClick={onSubmit}>
+        <PrimaryButton icon={<Send size={17} />} disabled={!eligible || lowAvailableLimit || !amountReady || previewLoading || submitting} onClick={onSubmit}>
           {submitting ? "Submitting" : "Continue"}
         </PrimaryButton>
       </Card>

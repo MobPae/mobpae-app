@@ -23,7 +23,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
   return (
     <>
       <Card className="request-summary tracking-summary-card">
-        <SectionHeader title={latestRequest.id} eyebrow="Current request" icon={<Route size={19} />} />
+        <SectionHeader title="Current request" eyebrow={`Request ID ${latestRequest.id}`} icon={<Route size={19} />} />
         <div className="track-status-hero">
           <span>
             <BadgeCheck size={22} />
