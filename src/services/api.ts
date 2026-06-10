@@ -22,8 +22,16 @@ type BackendSalaryRequest = {
   id: string;
   amount?: number | string;
   approvedAmount?: number | string | null;
+  principalAmount?: number | string;
+  interestAmount?: number | string;
+  totalAmount?: number | string;
+  totalRecoveryAmount?: number | string;
+  interestDays?: number | string;
   requestedAt?: string;
+  createdAt?: string;
   repaymentDate?: string | null;
+  dueDate?: string | null;
+  recoveryDate?: string | null;
   status?: string;
   remarks?: string | null;
   repayment?: BackendRepayment | null;
@@ -133,9 +141,13 @@ const normalizeRequests = (requests: BackendSalaryRequest[], repayments: Backend
     const repayment = getRequestRepayment(request, repayments, requests.length);
     const requestedAmount = toAmount(request.amount);
     const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
-    const requestDate = request.requestedAt ?? todayIso();
-    const recoveryDate = repayment?.dueDate ?? request.repaymentDate ?? "";
+    const requestDate = request.requestedAt ?? request.createdAt ?? todayIso();
+    const recoveryDate = repayment?.dueDate ?? request.repaymentDate ?? request.dueDate ?? request.recoveryDate ?? "";
     const status = normalizeRequestStatus(request.status);
+    const principalAmount = toAmount(repayment?.principalAmount ?? request.principalAmount ?? approvedAmount);
+    const interestAmount = toAmount(repayment?.interestAmount ?? request.interestAmount);
+    const totalRecoveryAmount = toAmount(repayment?.totalAmount ?? request.totalAmount ?? request.totalRecoveryAmount ?? principalAmount + interestAmount);
+    const interestDays = repayment?.interestDays ?? request.interestDays;
 
     return {
       id: request.id,
@@ -144,10 +156,10 @@ const normalizeRequests = (requests: BackendSalaryRequest[], repayments: Backend
       requestDate,
       status,
       remarks: request.remarks ?? "",
-      principalAmount: toAmount(repayment?.principalAmount ?? approvedAmount),
-      interestAmount: toAmount(repayment?.interestAmount),
-      totalRecoveryAmount: toAmount(repayment?.totalAmount ?? approvedAmount),
-      interestDays: repayment?.interestDays === undefined ? undefined : Number(repayment.interestDays),
+      principalAmount,
+      interestAmount,
+      totalRecoveryAmount,
+      interestDays: interestDays === undefined ? undefined : Number(interestDays),
       recoveryDate,
       recoveryStatus: repayment?.status === "PAID" ? "Completed" : "Scheduled",
       disbursalStatus: request.status === "DISBURSED" || request.status === "REPAYMENT_SCHEDULED" || request.status === "REPAID" ? "Disbursed" : "Pending",
