@@ -69,6 +69,7 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
           </div>
           {preview ? (
             <div>
+              <DetailLine label="Advance amount" value={formatMoney(preview.principal)} />
               <DetailLine label="Tenure" value={`${preview.interestDays} days`} />
               <DetailLine label="Interest" value={formatMoney(preview.interest)} />
               <DetailLine label="Total payment" value={formatMoney(preview.total)} />
