@@ -20,6 +20,7 @@ type AdvanceScreenProps = {
 };
 
 const getTenureDays = (request?: AdvanceRequest) => {
+  if (request?.interestDays) return request.interestDays;
   if (!request?.requestDate || !request.recoveryDate) return 0;
   const startDate = new Date(request.requestDate);
   const endDate = new Date(request.recoveryDate);
@@ -83,7 +84,7 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
               <DetailLine label="Tenure" value={currentTenureDays ? `${currentTenureDays} days` : "Scheduled"} />
               <DetailLine label="Interest" value={formatMoney(currentRequest.interestAmount)} />
               <DetailLine label="Total payment" value={formatMoney(currentRequest.totalRecoveryAmount || currentRequest.approvedAmount)} />
-              <DetailLine label="Payment date" value={formatDate(currentRequest.recoveryDate)} />
+              <DetailLine label="Est. payment date" value={formatDate(currentRequest.recoveryDate)} />
             </div>
           ) : preview ? (
             <div>
@@ -91,7 +92,7 @@ export function AdvanceScreen({ amount, eligible, limit, nextBlocker, preview, p
               <DetailLine label="Tenure" value={`${preview.interestDays} days`} />
               <DetailLine label="Interest" value={formatMoney(preview.interest)} />
               <DetailLine label="Total payment" value={formatMoney(preview.total)} />
-              <DetailLine label="Payment date" value={formatDate(preview.recoveryDate)} />
+              <DetailLine label="Est. payment date" value={formatDate(preview.recoveryDate)} />
             </div>
           ) : (
             <p className="muted">{previewLoading ? "Calculating preview..." : "Move the slider to preview payment."}</p>

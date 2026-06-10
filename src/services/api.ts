@@ -26,6 +26,7 @@ type BackendSalaryRequest = {
   repaymentDate?: string | null;
   status?: string;
   remarks?: string | null;
+  repayment?: BackendRepayment | null;
 };
 
 type BackendRecoveryPreview = Partial<RecoveryPreview> & {
@@ -37,9 +38,11 @@ type BackendRecoveryPreview = Partial<RecoveryPreview> & {
 
 type BackendRepayment = {
   id: string;
+  salaryRequestId?: string;
   principalAmount?: number | string;
   interestAmount?: number | string;
   totalAmount?: number | string;
+  interestDays?: number | string;
   dueDate?: string;
   status?: string;
   salaryRequest?: BackendSalaryRequest;
@@ -120,10 +123,14 @@ const normalizeRequestStatus = (status?: string): RequestStatus => {
 
 const toAmount = (value: unknown) => Number(value ?? 0);
 const todayIso = () => new Date().toISOString();
+const getRequestRepayment = (request: BackendSalaryRequest, repayments: BackendRepayment[], requestCount: number) =>
+  request.repayment ??
+  repayments.find((item) => item.salaryRequest?.id === request.id || item.salaryRequestId === request.id) ??
+  (requestCount === 1 && repayments.length === 1 ? repayments[0] : undefined);
 
 const normalizeRequests = (requests: BackendSalaryRequest[], repayments: BackendRepayment[]): AdvanceRequest[] =>
   requests.map((request) => {
-    const repayment = repayments.find((item) => item.salaryRequest?.id === request.id);
+    const repayment = getRequestRepayment(request, repayments, requests.length);
     const requestedAmount = toAmount(request.amount);
     const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
     const requestDate = request.requestedAt ?? todayIso();
@@ -140,6 +147,7 @@ const normalizeRequests = (requests: BackendSalaryRequest[], repayments: Backend
       principalAmount: toAmount(repayment?.principalAmount ?? approvedAmount),
       interestAmount: toAmount(repayment?.interestAmount),
       totalRecoveryAmount: toAmount(repayment?.totalAmount ?? approvedAmount),
+      interestDays: repayment?.interestDays === undefined ? undefined : Number(repayment.interestDays),
       recoveryDate,
       recoveryStatus: repayment?.status === "PAID" ? "Completed" : "Scheduled",
       disbursalStatus: request.status === "DISBURSED" || request.status === "REPAYMENT_SCHEDULED" || request.status === "REPAID" ? "Disbursed" : "Pending",

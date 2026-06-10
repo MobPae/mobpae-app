@@ -61,6 +61,7 @@ export type AdvanceRequest = {
   principalAmount: number;
   interestAmount: number;
   totalRecoveryAmount: number;
+  interestDays?: number;
   recoveryDate: string;
   recoveryStatus: "Scheduled" | "Completed";
   disbursalDate?: string;
