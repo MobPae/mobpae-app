@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { TabBar } from "./TabBar";
-import { TopBar } from "./TopBar";
 import type { EmployeeProfile, View } from "../../types/app";
 
 type AppShellProps = {
@@ -10,14 +9,15 @@ type AppShellProps = {
   onNavigate: (view: View) => void;
 };
 
-export function AppShell({ activeView, children, profile, onNavigate }: AppShellProps) {
+export function AppShell({ activeView, children, onNavigate }: AppShellProps) {
   return (
-    <main className="app-shell">
+    <div className="app-root">
       <div className="phone-shell">
-        <TopBar profile={profile} />
-        <div className="screen-content">{children}</div>
+        <div className="screen-body">
+          {children}
+        </div>
         <TabBar activeView={activeView} onChange={onNavigate} />
       </div>
-    </main>
+    </div>
   );
 }

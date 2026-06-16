@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { emptyBankAccount, mockState } from "../data/mockData";
+import { emptyBankAccount, emptyState } from "../data/mockData";
 import { employeeApi } from "../services/api";
-import type { AppState, BankAccount, KycDocumentType, RecoveryPreview, View } from "../types/app";
+import type { AppState, BankAccount, CouponValidation, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 
 export function useEmployeeApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => employeeApi.hasSession());
-  const [activeView, setActiveView] = useState<View>("dashboard");
-  const [appState, setAppState] = useState<AppState>(mockState);
+  const [activeView, setActiveView] = useState<View>("home");
+  const [appState, setAppState] = useState<AppState>(emptyState);
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [notice, setNotice] = useState("Using local data until your backend returns employee records.");
   const [bankForm, setBankForm] = useState<BankAccount>(emptyBankAccount);
@@ -19,8 +19,9 @@ export function useEmployeeApp() {
   const [submittingAdvance, setSubmittingAdvance] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [uploadingKycType, setUploadingKycType] = useState<KycDocumentType | null>(null);
-  const [couponCode, setCouponCode] = useState("");
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [couponValidation, setCouponValidation] = useState<CouponValidation | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
   const [activatingMembership, setActivatingMembership] = useState(false);
   const [loginError, setLoginError] = useState("");
 
@@ -31,12 +32,13 @@ export function useEmployeeApp() {
       setAppState(nextState);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
       setEditingBank(false);
-      setCouponCode(nextState.membershipConfig.couponCode ?? "");
+      setCouponValidation(null);
+    setCouponError("");
       setNotice("Employee app connected. Live records will show where the backend has data.");
       setLoadState("ready");
     } catch {
-      setAppState(mockState);
-      setNotice("Backend is unavailable, so the app is showing local demo data.");
+      setAppState(emptyState);
+      setNotice("Backend is unavailable. Please check your connection.");
       setLoadState("error");
     }
   };
@@ -46,6 +48,17 @@ export function useEmployeeApp() {
 
     setIsLoggedIn(true);
     void loadEmployee();
+  }, []);
+
+  // When a 401 is detected in the API layer, clear session state so the login screen shows.
+  useEffect(() => {
+    const handleExpired = () => {
+      setIsLoggedIn(false);
+      setAppState(emptyState);
+      setLoadState("idle");
+    };
+    window.addEventListener("mobpae:session:expired", handleExpired);
+    return () => window.removeEventListener("mobpae:session:expired", handleExpired);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -64,13 +77,13 @@ export function useEmployeeApp() {
   const logout = () => {
     employeeApi.logout();
     setIsLoggedIn(false);
-    setActiveView("dashboard");
+    setActiveView("home");
   };
 
   const kycComplete = appState.documents.every((document) => document.status === "Verified");
   const bankComplete = Boolean(appState.bankAccount?.verified);
   const activeRecovery = appState.requests.some((request) => request.recoveryStatus === "Scheduled");
-  const membershipFee = appState.membershipConfig.amountPayable ?? Math.max(0, appState.membershipConfig.fee - appState.membershipConfig.couponDiscount);
+  const membershipFee = appState.membershipConfig.fee;
 
   const onboardingSteps = useMemo(
     () => [
@@ -99,12 +112,13 @@ export function useEmployeeApp() {
   useEffect(() => {
     const limit = appState.profile.salaryLimit;
     if (limit <= 0) return;
-    setAdvanceAmount((currentAmount) => Math.min(Math.max(currentAmount, Math.min(1000, limit)), limit));
+    // Clamp current selection to [500, limit] when limit changes
+    setAdvanceAmount((cur) => Math.min(Math.max(cur, Math.min(500, limit)), limit));
   }, [appState.profile.salaryLimit]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    if (advanceAmount < 1000 || advanceAmount > appState.profile.salaryLimit) {
+    if (advanceAmount < 500 || advanceAmount > appState.profile.salaryLimit) {
       setPreview(null);
       setPreviewLoading(false);
       return;
@@ -113,10 +127,15 @@ export function useEmployeeApp() {
 
     const runPreview = async () => {
       setPreviewLoading(true);
-      const nextPreview = await employeeApi.previewSalaryAdvance(advanceAmount);
-      if (!cancelled) {
-        setPreview(nextPreview);
-        setPreviewLoading(false);
+      try {
+        const nextPreview = await employeeApi.previewSalaryAdvance(advanceAmount);
+        if (!cancelled) {
+          setPreview(nextPreview);
+        }
+      } catch {
+        if (!cancelled) setPreview(null);
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
       }
     };
 
@@ -128,11 +147,19 @@ export function useEmployeeApp() {
 
   const saveBankAccount = async () => {
     setSavingBank(true);
-    const savedBank = await employeeApi.saveBankAccount(appState.profile.id, bankForm);
-    setAppState((current) => ({ ...current, bankAccount: savedBank }));
-    setSavingBank(false);
-    setEditingBank(false);
-    setNotice(savedBank.verified ? "Payout details updated." : "Bank account saved. Admin verification is pending.");
+    try {
+      const savedBank = await employeeApi.saveBankAccount(appState.profile.id, bankForm);
+      // unwrap if the GET /bank-accounts/my response is wrapped
+      const bank = (savedBank as Record<string, unknown>)?.bankAccount as BankAccount ?? savedBank;
+      setAppState((current) => ({ ...current, bankAccount: bank }));
+      setBankForm(bank);
+      setEditingBank(false);
+      setNotice(bank.verified ? "Bank account updated successfully." : "Bank account saved. Pending verification.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to save bank account. Please try again.");
+    } finally {
+      setSavingBank(false);
+    }
   };
 
   const startBankEdit = () => {
@@ -157,68 +184,66 @@ export function useEmployeeApp() {
   const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {
     setUploadingKycType(documentType);
     try {
-      const savedDocument = await employeeApi.uploadKycDocument(appState.profile.id, documentType, file);
-      setAppState((current) => ({
-        ...current,
-        documents: current.documents.map((document) =>
-          document.documentType === documentType || document.label.toUpperCase().replace("AADHAAR", "AADHAR").replaceAll(" ", "_") === documentType
-            ? {
-                ...document,
-                ...savedDocument,
-                documentType,
-                status: "Under Review",
-                note: "Uploaded. Waiting for admin verification."
-              }
-            : document
-        )
-      }));
-      setNotice("KYC document uploaded for admin verification.");
+      // POST /kyc-documents — backend derives employee from JWT, no employeeId needed
+      await employeeApi.uploadKycDocument(documentType, file);
+
+      // Refetch GET /kyc-documents/my so state matches what the server persisted
+      const refreshedDocs = await employeeApi.fetchKycDocuments();
+      setAppState((current) => ({ ...current, documents: refreshedDocs }));
+
+      setNotice(`✓ ${documentType.replaceAll("_", " ")} uploaded successfully. Pending admin verification.`);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Unable to upload KYC document.");
+      setNotice(error instanceof Error ? error.message : "Unable to upload document. Please try again.");
     } finally {
       setUploadingKycType(null);
     }
   };
 
-  const applyMembershipCoupon = async () => {
-    if (!couponCode.trim()) return;
-    setApplyingCoupon(true);
+  const validateCoupon = async (code: string) => {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+    setCouponError("");
+    setValidatingCoupon(true);
     try {
-      const result = await employeeApi.applyMembershipCoupon(appState.profile.id, couponCode);
-      setAppState((current) => ({
-        ...current,
-        membershipConfig: {
-          ...current.membershipConfig,
-          couponCode: result.couponCode ?? couponCode.trim().toUpperCase(),
-          couponDiscount: Number(result.couponDiscount ?? 0),
-          amountPayable: Number(result.amountPayable ?? current.membershipConfig.fee)
-        }
-      }));
-      setCouponCode(result.couponCode ?? couponCode.trim().toUpperCase());
-      setNotice("Coupon applied to your membership fee.");
+      const result = await employeeApi.validateMembershipCoupon(trimmed);
+      if (result.valid) {
+        setCouponValidation(result);
+      } else {
+        setCouponValidation(null);
+        setCouponError("Invalid coupon code. Please try again.");
+      }
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Unable to apply coupon.");
+      setCouponValidation(null);
+      setCouponError(error instanceof Error ? error.message : "Unable to validate coupon.");
     } finally {
-      setApplyingCoupon(false);
+      setValidatingCoupon(false);
     }
+  };
+
+  const clearCoupon = () => {
+    setCouponValidation(null);
+    setCouponError("");
   };
 
   const activateMembership = async () => {
     setActivatingMembership(true);
     try {
-      const result = await employeeApi.activateMembership(appState.profile.id, couponCode);
+      const result = await employeeApi.activateMembership(couponValidation?.couponCode);
       setAppState((current) => ({
         ...current,
         membershipActive: Boolean(result.active ?? true),
         membershipConfig: {
           ...current.membershipConfig,
-          couponCode: result.couponCode ?? current.membershipConfig.couponCode,
-          couponDiscount: Number(result.couponDiscount ?? current.membershipConfig.couponDiscount),
-          amountPayable: Number(result.amountPayable ?? membershipFee)
+          planName: result.planName ?? current.membershipConfig.planName,
+          daysRemaining: result.daysRemaining ?? current.membershipConfig.daysRemaining,
+          memberSince: result.memberSince ?? current.membershipConfig.memberSince,
+          validTill: result.validTill ?? current.membershipConfig.validTill,
         }
       }));
-      setNotice("Membership activated for this employee account.");
-      setActiveView("dashboard");
+      setCouponValidation(null);
+      setCouponError("");
+      setNotice("Membership activated successfully.");
+      setActiveView("member");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to activate membership.");
     } finally {
@@ -242,7 +267,7 @@ export function useEmployeeApp() {
         notifications: [`Request ${savedRequest.id} submitted for employer approval.`, ...current.notifications].slice(0, 5)
       }));
       setNotice("Salary advance request submitted for employer approval.");
-      setActiveView("tracking");
+      setActiveView("activity");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to submit salary advance request.");
     } finally {
@@ -255,11 +280,13 @@ export function useEmployeeApp() {
     activeView,
     activatingMembership,
     advanceAmount,
-    applyingCoupon,
     appState,
     bankComplete,
     bankForm,
     cancelBankEdit,
+    couponError,
+    couponValidation,
+    clearCoupon,
     editingBank,
     eligibleForAdvance,
     isLoggedIn,
@@ -275,20 +302,19 @@ export function useEmployeeApp() {
     onboardingSteps,
     preview,
     previewLoading,
-    couponCode,
     saveBankAccount,
     savingBank,
     setActiveView,
     setAdvanceAmount,
     setBankForm,
-    setCouponCode,
     startBankEdit,
     submitSalaryAdvance,
     submittingAdvance,
     updateUpiId,
     uploadKycDocument,
     uploadingKycType,
-    applyMembershipCoupon,
-    activateMembership
+    validateCoupon,
+    validatingCoupon,
+    activateMembership,
   };
 }
