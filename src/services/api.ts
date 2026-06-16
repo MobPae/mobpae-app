@@ -1,8 +1,9 @@
-import { emptyBankAccount, mockState } from "../data/mockData";
+import { emptyBankAccount, emptyState, mockState } from "../data/mockData";
 import type {
   AdvanceRequest,
   AppState,
   BankAccount,
+  CouponValidation,
   DocumentStatus,
   EmployeeDashboard,
   KycDocument,
@@ -42,13 +43,28 @@ type BackendSalaryRequest = {
   dueDate?: string | null;
   recoveryDate?: string | null;
   status?: string;
+  statusLabel?: string;   // human-readable label from backend
+  statusColor?: string;   // hex or CSS color from backend
   remarks?: string | null;
   repayment?: BackendRepayment | null;
 };
 
-type BackendRecoveryPreview = Partial<RecoveryPreview> & {
-  principalAmount?: number;
+type BackendRecoveryPreview = {
+  // New contract fields
+  requestedAmount?: number;
+  youReceive?: number;
+  processingFee?: number;
+  interestRate?: number;
+  interestDays?: number;
   interestAmount?: number;
+  totalRecovery?: number;   // primary total field
+  recoveryDate?: string;
+  principalAmount?: number;
+  availableAdvance?: number;
+  // Legacy / alternate field names kept for safety
+  principal?: number;
+  interest?: number;
+  total?: number;
   totalAmount?: number;
   dueDate?: string;
 };
@@ -72,14 +88,45 @@ type BackendNotification = {
   createdAt?: string;
 };
 
+type BackendMembershipNested = {
+  id?: string;
+  planName?: string;
+  amount?: string | number;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  couponCode?: string;
+  discountAmount?: string | number;
+};
+
 type BackendMembership = {
   active?: boolean;
   planName?: string;
-  fee?: number;
-  validityLabel?: string;
+  amountPaid?: number;
+  membershipFee?: number;
+  membershipValidityDays?: number;
+  fee?: number;              // legacy compat
+  amountPayable?: number;   // legacy compat
   couponCode?: string;
   couponDiscount?: number;
-  amountPayable?: number;
+  discountAmount?: string | number;
+  validityLabel?: string;
+  daysRemaining?: number;
+  benefits?: string[];
+  memberSince?: string | null;
+  validTill?: string | null;
+  membership?: BackendMembershipNested;  // nested detail object in /membership/me
+};
+
+type BackendMembershipConfig = {
+  membershipFee?: number;
+  membershipValidityDays?: number;
+  freePlanTitle?: string;
+  freePlanSubtitle?: string;
+  membershipTitle?: string;
+  membershipSubtitle?: string;
+  freeBenefits?: string[];
+  membershipBenefits?: string[];
 };
 
 type BackendEmployeeMe = EmployeeDashboard & {
@@ -100,7 +147,13 @@ type BackendEmployeeMe = EmployeeDashboard & {
   employerName?: string;
   companyName?: string;
   accountActive?: boolean;
+  appActivated?: boolean;
+  employmentStatus?: string;
   salaryLimit?: number;
+  payrollDate?: number;         // backend field name (maps to payrollDay)
+  membershipActive?: boolean;   // flat field from /employees/me
+  kycStatus?: string;           // e.g. "NOT_SUBMITTED", "SUBMITTED", "VERIFIED"
+  bankAccountStatus?: string;   // e.g. "NOT_ADDED", "PENDING", "VERIFIED"
   dashboard?: EmployeeDashboard;
   employee?: Partial<BackendEmployeeMe>;
 };
@@ -137,21 +190,15 @@ const normalizeKycDocuments = (
     note: document.note ?? "Document status synced from backend.",
   }));
 
-const createUploadPath = (
-  employeeId: string,
-  documentType: KycDocumentType,
-  file: File
-) =>
-  `employee-uploads/${employeeId}/${documentType}/${Date.now()}-${file.name}`;
 
 const normalizeRequestStatus = (status?: string): RequestStatus => {
   switch (status) {
     case "SUBMITTED":
       return "Submitted";
     case "EMPLOYER_APPROVED":
-      return "Approved";
+      return "Employer Approved";
     case "READY_FOR_DISBURSAL":
-      return "Under Review";
+      return "Admin Approved";
     case "DISBURSED":
       return "Disbursed";
     case "REPAYMENT_SCHEDULED":
@@ -216,6 +263,8 @@ const normalizeRequests = (
       approvedAmount,
       requestDate,
       status,
+      statusLabel: request.statusLabel,
+      statusColor: request.statusColor,
       remarks: request.remarks ?? "",
       principalAmount,
       interestAmount,
@@ -232,15 +281,15 @@ const normalizeRequests = (
           : "Pending",
       timeline: [
         {
-          status: "Submitted",
+          status: "Submitted" as RequestStatus,
           timestamp: requestDate,
-          description: "Salary advance request submitted.",
+          description: "Advance request submitted successfully.",
           done: true,
         },
         {
-          status: "Approved",
+          status: "Employer Approved" as RequestStatus,
           timestamp: requestDate,
-          description: "Employer approval status synced from backend.",
+          description: "Approved by your employer.",
           done: [
             "EMPLOYER_APPROVED",
             "READY_FOR_DISBURSAL",
@@ -250,26 +299,42 @@ const normalizeRequests = (
           ].includes(request.status ?? ""),
         },
         {
-          status: "Disbursed",
+          status: "Admin Approved" as RequestStatus,
           timestamp: requestDate,
-          description: "Disbursal status synced from backend.",
+          description: "Reviewed and approved by MobPae admin.",
+          done: [
+            "READY_FOR_DISBURSAL",
+            "DISBURSED",
+            "REPAYMENT_SCHEDULED",
+            "REPAID",
+          ].includes(request.status ?? ""),
+        },
+        {
+          status: "Disbursed" as RequestStatus,
+          timestamp: requestDate,
+          description: "Funds disbursed to your bank account.",
           done: ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(
             request.status ?? ""
           ),
         },
         {
-          status: "Payment Scheduled",
+          status: "Payment Scheduled" as RequestStatus,
           timestamp: recoveryDate,
-          description: "Payroll payment is scheduled.",
+          description: "Recovery scheduled from next payroll.",
           done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(
             request.status ?? ""
           ),
         },
         {
-          status: "Paid",
+          status: (request.status === "EMPLOYER_REJECTED" ? "Rejected" : "Paid") as RequestStatus,
           timestamp: recoveryDate,
-          description: "Payment completed.",
-          done: repayment?.status === "PAID" || request.status === "REPAID",
+          description: request.status === "EMPLOYER_REJECTED"
+            ? "Request rejected by employer."
+            : "Salary deduction completed.",
+          done:
+            repayment?.status === "PAID" ||
+            request.status === "REPAID" ||
+            request.status === "EMPLOYER_REJECTED",
         },
       ],
     };
@@ -336,18 +401,30 @@ const unwrapObject = <T>(
 
 const normalizeEmployeeMe = (employeeMe: BackendEmployeeMe) => {
   const employee = employeeMe.employee ?? employeeMe;
-  const dashboard = employeeMe.dashboard ?? employeeMe;
+  const rawDashboard = employeeMe.dashboard ?? employeeMe;
   const employeeId =
     employee.id ??
     employee.employeeId ??
     employeeMe.id ??
     employeeMe.employeeId ??
-    mockState.profile.id;
+    "";
+
+  // Normalise field-name differences between backend and our EmployeeDashboard type.
+  // Backend sends `payrollDate`, we use `payrollDay` internally.
+  const dashboard: EmployeeDashboard = {
+    ...rawDashboard,
+    payrollDay: rawDashboard.payrollDay ?? employeeMe.payrollDate ?? (employee as BackendEmployeeMe).payrollDate,
+  };
 
   return {
     employee,
     dashboard,
     employeeId,
+    // Flat membership/kyc/bank flags from /employees/me — use as supplementary signals
+    membershipActiveFromEmployee: employeeMe.membershipActive,
+    kycStatus: employeeMe.kycStatus,
+    bankAccountStatus: employeeMe.bankAccountStatus,
+    appActivated: employeeMe.appActivated,
   };
 };
 
@@ -357,7 +434,7 @@ const getEmployerName = (employee: Partial<BackendEmployeeMe>) => {
     employee.employer?.companyName ??
     employee.employerName ??
     employee.companyName ??
-    mockState.profile.employer
+    ""
   );
 };
 
@@ -394,6 +471,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     } catch {
       message = response.status === 0 ? "Backend is not reachable." : message;
     }
+
+    // Session expired — clear the token so the app shows the login screen on next render.
+    if (response.status === 401 && !path.includes("/auth/login")) {
+      localStorage.removeItem(TOKEN_KEY);
+      window.dispatchEvent(new CustomEvent("mobpae:session:expired"));
+    }
+
     throw new ApiError(message, response.status);
   }
 
@@ -426,8 +510,15 @@ export const employeeApi = {
   async loadAppState(): Promise<AppState> {
     try {
       const employeeMe = await request<BackendEmployeeMe>("/employees/me");
-      const { employee, dashboard, employeeId } =
-        normalizeEmployeeMe(employeeMe);
+      const {
+        employee,
+        dashboard,
+        employeeId,
+        membershipActiveFromEmployee,
+        kycStatus,
+        bankAccountStatus,
+        appActivated,
+      } = normalizeEmployeeMe(employeeMe);
 
       const [
         kycDocuments,
@@ -436,6 +527,7 @@ export const employeeApi = {
         repayments,
         notifications,
         membership,
+        membershipConfig,
       ] = await Promise.allSettled([
         request<
           | BackendKycDocument[]
@@ -482,6 +574,7 @@ export const employeeApi = {
           | BackendMembership
           | { membership?: BackendMembership; data?: BackendMembership }
         >("/membership/me"),
+        request<BackendMembershipConfig | { data?: BackendMembershipConfig }>("/membership/config"),
       ]);
 
       const dashboardData = dashboard;
@@ -489,9 +582,8 @@ export const employeeApi = {
         dashboardData?.availableAdvance ??
           dashboardData?.approvedLimit ??
           employee.salaryLimit ??
-          mockState.profile.salaryLimit
+          0
       );
-      const kycComplete = Boolean(dashboardData?.kycCompleted);
       const requestData =
         salaryRequests.status === "fulfilled"
           ? unwrapArray(salaryRequests.value, "requests")
@@ -503,14 +595,34 @@ export const employeeApi = {
       const normalizedRequests =
         salaryRequests.status === "fulfilled"
           ? normalizeRequests(requestData, repaymentData)
-          : mockState.requests;
+          : [];
       const notificationData =
         notifications.status === "fulfilled"
           ? unwrapArray(notifications.value, "notifications")
           : [];
-      const membershipData =
+      // /membership/me returns top-level fields (active, memberSince, validTill, …)
+      // plus a nested `membership` sub-object for detail fields.
+      // unwrapObject must NOT follow the "membership" key or it will discard the
+      // top-level fields and return only the nested sub-object.
+      const membershipData: BackendMembership | null =
         membership.status === "fulfilled"
-          ? unwrapObject<BackendMembership>(membership.value, ["membership"])
+          ? (() => {
+              const v = membership.value as Record<string, unknown> | null | undefined;
+              if (!v) return null;
+              // Unwrap only if response is wrapped in { data: … }
+              if (!("active" in v) && "data" in v && v.data) return v.data as BackendMembership;
+              return v as BackendMembership;
+            })()
+          : null;
+      const membershipConfigData: BackendMembershipConfig | null =
+        membershipConfig.status === "fulfilled"
+          ? (() => {
+              const v = membershipConfig.value;
+              // Could be the object directly or wrapped in { data: ... }
+              if (v && typeof v === "object" && "membershipFee" in v) return v as BackendMembershipConfig;
+              const wrapped = v as { data?: BackendMembershipConfig };
+              return wrapped?.data ?? (v as BackendMembershipConfig);
+            })()
           : null;
       const bankAccountData =
         bankAccount.status === "fulfilled"
@@ -525,49 +637,91 @@ export const employeeApi = {
           : [];
 
       return {
-        ...mockState,
         profile: {
-          ...mockState.profile,
           id: employeeId,
-          name:
-            employee.name ??
-            dashboardData?.employeeName ??
-            mockState.profile.name,
-          email: employee.email ?? mockState.profile.email,
-          phone: employee.phone ?? mockState.profile.phone,
-          employeeCode: employee.employeeCode ?? mockState.profile.employeeCode,
+          name: employee.name ?? dashboardData?.employeeName ?? "",
+          email: employee.email ?? "",
+          phone: employee.phone ?? "",
+          employeeCode: employee.employeeCode ?? "",
           employer: getEmployerName(employee),
-          accountActive:
-            employee.accountActive ?? mockState.profile.accountActive,
+          // appActivated is the definitive "account is live" flag from the new API shape
+          accountActive: appActivated ?? employee.accountActive ?? false,
           salaryLimit,
         },
         dashboard: dashboardData,
-        membershipActive: membershipData?.active ?? mockState.membershipActive,
-        membershipConfig: {
-          ...mockState.membershipConfig,
-          planName:
-            membershipData?.planName ?? mockState.membershipConfig.planName,
-          fee: Number(membershipData?.fee ?? mockState.membershipConfig.fee),
-          couponCode: membershipData?.couponCode ?? "",
-          couponDiscount: Number(membershipData?.couponDiscount ?? 0),
-          amountPayable: Number(
-            membershipData?.amountPayable ??
-              membershipData?.fee ??
-              mockState.membershipConfig.fee
-          ),
-          validityLabel:
-            membershipData?.validityLabel ??
-            mockState.membershipConfig.validityLabel,
-        },
-        documents: kycData.length
-          ? normalizeKycDocuments(kycData)
-          : kycComplete
-          ? mockState.documents.map((document) => ({
-              ...document,
-              status: "Verified",
-            }))
-          : mockState.documents,
-        bankAccount: bankAccountData ?? mockState.bankAccount,
+        // Prefer the flag from /employees/me; fall back to /membership/me response
+        membershipActive: membershipActiveFromEmployee ?? membershipData?.active ?? false,
+        membershipConfig: (() => {
+          const nested = membershipData?.membership;
+
+          // Plan fee (list price) — from /membership/config, then /membership/me top-level
+          const planFee = Number(
+            membershipConfigData?.membershipFee ??
+            membershipData?.membershipFee ??
+            membershipData?.fee ??
+            0
+          );
+          // Amount actually paid (may differ if coupon was used)
+          const amountPaid = Number(
+            membershipData?.amountPaid ??
+            nested?.amount ??
+            planFee
+          );
+          const validityDays = Number(
+            membershipConfigData?.membershipValidityDays ??
+            membershipData?.membershipValidityDays ??
+            365
+          );
+          const daysRemaining = membershipData?.daysRemaining ?? 0;
+          // Coupon fields live in the nested membership object
+          const couponCode =
+            nested?.couponCode ??
+            membershipData?.couponCode ??
+            "";
+          const couponDiscount = Number(
+            nested?.discountAmount ??
+            membershipData?.discountAmount ??
+            membershipData?.couponDiscount ??
+            0
+          );
+          // memberSince/validTill: top-level or nested startDate/endDate
+          const memberSince =
+            membershipData?.memberSince ??
+            nested?.startDate ??
+            undefined;
+          const validTill =
+            membershipData?.validTill ??
+            nested?.endDate ??
+            undefined;
+          const validityLabel = membershipData?.validityLabel
+            ?? (daysRemaining > 0
+                ? `${daysRemaining} days remaining`
+                : validTill
+                  ? `Valid till ${new Date(validTill).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                  : "—");
+          return {
+            planName: membershipData?.planName ?? nested?.planName ?? membershipConfigData?.membershipTitle ?? "",
+            fee: planFee,
+            couponCode,
+            couponDiscount,
+            amountPayable: amountPaid,
+            validityLabel,
+            daysRemaining,
+            membershipValidityDays: validityDays,
+            memberSince,
+            validTill,
+            // Plan comparison content — from /membership/config only, no hardcoded fallbacks
+            freePlanTitle:      membershipConfigData?.freePlanTitle      ?? "",
+            freePlanSubtitle:   membershipConfigData?.freePlanSubtitle   ?? "",
+            membershipTitle:    membershipConfigData?.membershipTitle     ?? "",
+            membershipSubtitle: membershipConfigData?.membershipSubtitle  ?? "",
+            freeBenefits:       membershipConfigData?.freeBenefits        ?? [],
+            membershipBenefits: membershipConfigData?.membershipBenefits  ?? [],
+          };
+        })(),
+        documents: kycData.length ? normalizeKycDocuments(kycData) : [],
+        // bankAccountStatus from /employees/me tells us definitively if there's an account
+        bankAccount: bankAccountStatus === "NOT_ADDED" ? null : (bankAccountData ?? null),
         requests: normalizedRequests,
         notifications: buildActivity(
           notificationData,
@@ -576,22 +730,24 @@ export const employeeApi = {
         ),
       };
     } catch {
-      return mockState;
+      return emptyState;
     }
   },
 
-  async saveBankAccount(employeeId: string, bankAccount: BankAccount) {
-    try {
-      return await request<BankAccount>("/bank-accounts/my", {
-        method: "POST",
-        body: JSON.stringify({
-          ...bankAccount,
-          ifscCode: bankAccount.ifscCode.toUpperCase(),
-        }),
-      });
-    } catch {
-      return { ...bankAccount, ifscCode: bankAccount.ifscCode.toUpperCase() };
-    }
+  async saveBankAccount(_employeeId: string, bankAccount: BankAccount) {
+    // POST /bank-accounts (create) — NOT /bank-accounts/my
+    await request<BankAccount>("/bank-accounts", {
+      method: "POST",
+      body: JSON.stringify({
+        accountHolderName: bankAccount.accountHolderName,
+        accountNumber:     bankAccount.accountNumber,
+        bankName:          bankAccount.bankName,
+        ifscCode:          bankAccount.ifscCode.toUpperCase(),
+        upiId:             bankAccount.upiId ?? "",
+      }),
+    });
+    // Refetch the saved record so we get the server-side state (verified flag, id, etc.)
+    return await request<BankAccount>("/bank-accounts/my");
   },
 
   async updateUpiId(employeeId: string, upiId: string) {
@@ -605,34 +761,44 @@ export const employeeApi = {
     }
   },
 
-  async uploadKycDocument(
-    employeeId: string,
-    documentType: KycDocumentType,
-    file: File
-  ) {
-    // MVP upload contract: backend stores the submitted file path and does not inspect the PDF.
-    const filePath = createUploadPath(employeeId, documentType, file);
-    const savedDocument = await request<BackendKycDocument>(
-      "/kyc-documents/my",
-      {
-        method: "POST",
-        body: JSON.stringify({ documentType, filePath }),
-      }
-    );
+  async fetchKycDocuments(): Promise<KycDocument[]> {
+    const result = await request<
+      | BackendKycDocument[]
+      | { documents?: BackendKycDocument[]; data?: BackendKycDocument[]; items?: BackendKycDocument[] }
+    >("/kyc-documents/my");
+    const docs = unwrapArray(result, "documents");
+    return docs.length ? normalizeKycDocuments(docs) : [];
+  },
+
+  async uploadKycDocument(documentType: KycDocumentType, file: File) {
+    // POST /kyc-documents — backend derives employee from JWT.
+    // Body: JSON { documentType, filePath } — filePath is a base64 data URL of the file.
+    const filePath = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new ApiError("Failed to read file."));
+      reader.readAsDataURL(file);
+    });
+
+    const savedDocument = await request<BackendKycDocument>("/kyc-documents", {
+      method: "POST",
+      body: JSON.stringify({ documentType, filePath }),
+    });
+
     return normalizeKycDocuments([savedDocument])[0];
   },
 
-  async applyMembershipCoupon(employeeId: string, couponCode: string) {
-    return request<BackendMembership>("/membership/apply-coupon", {
+  async validateMembershipCoupon(couponCode: string): Promise<CouponValidation> {
+    return request<CouponValidation>("/membership/coupons/validate", {
       method: "POST",
       body: JSON.stringify({ couponCode }),
     });
   },
 
-  async activateMembership(employeeId: string, couponCode?: string) {
-    return request<BackendMembership>("/membership/activate", {
+  async activateMembership(couponCode?: string) {
+    return request<BackendMembership>("/membership/request", {
       method: "POST",
-      body: JSON.stringify({ couponCode }),
+      body: JSON.stringify(couponCode ? { couponCode } : {}),
     });
   },
 
@@ -648,36 +814,22 @@ export const employeeApi = {
   },
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {
-    try {
-      const preview = await request<BackendRecoveryPreview>(
-        "/salary-requests/preview",
-        {
-          method: "POST",
-          body: JSON.stringify({ amount }),
-        }
-      );
-      return {
-        principal: preview.principal ?? preview.principalAmount ?? amount,
-        interest:
-          preview.interest ??
-          preview.interestAmount ??
-          Number((amount * 0.00789).toFixed(2)),
-        total:
-          preview.total ??
-          preview.totalAmount ??
-          amount + Number((amount * 0.00789).toFixed(2)),
-        interestDays: preview.interestDays ?? 8,
-        recoveryDate: preview.recoveryDate ?? preview.dueDate ?? "2026-06-28",
-      };
-    } catch {
-      const interest = Number((amount * 0.00789).toFixed(2));
-      return {
-        principal: amount,
-        interest,
-        total: amount + interest,
-        interestDays: 8,
-        recoveryDate: "2026-06-28",
-      };
-    }
+    const preview = await request<BackendRecoveryPreview>(
+      "/salary-requests/preview",
+      {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      }
+    );
+    return {
+      principal:     preview.principalAmount  ?? preview.principal     ?? amount,
+      interest:      preview.interestAmount   ?? preview.interest      ?? 0,
+      processingFee: preview.processingFee    ?? 0,
+      youReceive:    preview.youReceive       ?? amount,
+      total:         preview.totalRecovery    ?? preview.total         ?? preview.totalAmount ?? amount,
+      interestDays:  preview.interestDays     ?? 0,
+      interestRate:  preview.interestRate,
+      recoveryDate:  preview.recoveryDate     ?? preview.dueDate       ?? "",
+    };
   },
 };

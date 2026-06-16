@@ -1,36 +1,47 @@
 import { AppShell } from "../components/layout/AppShell";
+import { ActivityScreen } from "./ActivityScreen";
 import { AdvanceScreen } from "./AdvanceScreen";
 import { DashboardScreen } from "./DashboardScreen";
-import { KycScreen } from "./KycScreen";
 import { LoginScreen } from "./LoginScreen";
+import { MembershipScreen } from "./MembershipScreen";
 import { ProfileScreen } from "./ProfileScreen";
-import { TrackingScreen } from "./TrackingScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
 
   if (!app.isLoggedIn) {
-    return <LoginScreen error={app.loginError} loading={app.loadState === "loading"} onLogin={app.login} />;
+    return (
+      <LoginScreen
+        error={app.loginError}
+        loading={app.loadState === "loading"}
+        onLogin={app.login}
+      />
+    );
   }
 
   if (app.loadState === "idle" || app.loadState === "loading") {
     return (
-      <main className="app-shell">
+      <div className="app-root">
         <div className="phone-shell">
-          <div className="employee-loading">
-            <span />
-            <strong>Loading your MobPae account</strong>
-            <p>Syncing salary, requests, KYC, bank, and membership details.</p>
+          <div className="splash-screen">
+            <div className="splash-mark">M</div>
+            <div className="splash-dots">
+              <span /><span /><span />
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <AppShell activeView={app.activeView} profile={app.appState.profile} onNavigate={app.setActiveView}>
-      {app.activeView === "dashboard" ? (
+    <AppShell
+      activeView={app.activeView}
+      profile={app.appState.profile}
+      onNavigate={app.setActiveView}
+    >
+      {app.activeView === "home" && (
         <DashboardScreen
           appState={app.appState}
           eligibleForAdvance={app.eligibleForAdvance}
@@ -38,17 +49,9 @@ export function EmployeeApp() {
           notice={app.notice}
           onNavigate={app.setActiveView}
         />
-      ) : null}
-      {app.activeView === "kyc" ? (
-        <KycScreen
-          bankVerified={Boolean(app.appState.bankAccount?.verified)}
-          documents={app.appState.documents}
-          onNavigate={app.setActiveView}
-          onUpload={app.uploadKycDocument}
-          uploadingType={app.uploadingKycType}
-        />
-      ) : null}
-      {app.activeView === "advance" ? (
+      )}
+
+      {app.activeView === "advance" && (
         <AdvanceScreen
           amount={app.advanceAmount}
           eligible={app.eligibleForAdvance}
@@ -61,30 +64,44 @@ export function EmployeeApp() {
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
         />
-      ) : null}
-      {app.activeView === "tracking" ? <TrackingScreen requests={app.appState.requests} /> : null}
-      {app.activeView === "profile" ? (
+      )}
+
+      {app.activeView === "activity" && (
+        <ActivityScreen requests={app.appState.requests} />
+      )}
+
+      {app.activeView === "member" && (
+        <MembershipScreen
+          appState={app.appState}
+          activatingMembership={app.activatingMembership}
+          couponValidation={app.couponValidation}
+          couponError={app.couponError}
+          validatingCoupon={app.validatingCoupon}
+          onActivateMembership={app.activateMembership}
+          onValidateCoupon={app.validateCoupon}
+          onClearCoupon={app.clearCoupon}
+          onNavigate={app.setActiveView}
+        />
+      )}
+
+      {app.activeView === "profile" && (
         <ProfileScreen
           appState={app.appState}
+          onLogout={app.logout}
+          onNavigate={app.setActiveView}
+          uploadKycDocument={app.uploadKycDocument}
+          uploadingKycType={app.uploadingKycType}
           bankForm={app.bankForm}
           editingBank={app.editingBank}
-          membershipFee={app.membershipFee}
-          notice={app.notice}
           savingBank={app.savingBank}
-          couponCode={app.couponCode}
-          applyingCoupon={app.applyingCoupon}
-          activatingMembership={app.activatingMembership}
-          onApplyCoupon={app.applyMembershipCoupon}
-          onActivateMembership={app.activateMembership}
-          onBankFormChange={app.setBankForm}
+          onStartBankEdit={app.startBankEdit}
           onCancelBankEdit={app.cancelBankEdit}
-          onCouponCodeChange={app.setCouponCode}
-          onEditBank={app.startBankEdit}
           onSaveBank={app.saveBankAccount}
-          onUpdateUpi={app.updateUpiId}
-          onLogout={app.logout}
+          onBankFormChange={(field, value) =>
+            app.setBankForm((prev) => ({ ...prev, [field]: value }))
+          }
         />
-      ) : null}
+      )}
     </AppShell>
   );
 }

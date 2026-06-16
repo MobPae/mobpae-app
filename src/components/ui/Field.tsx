@@ -13,9 +13,20 @@ type FieldProps = {
 
 export function Field({ label, value, onChange, placeholder, type = "text", min, max, disabled }: FieldProps) {
   return (
-    <label className="field">
-      <span>{label}</span>
-      <input type={type} value={value} onChange={onChange} placeholder={placeholder} min={min} max={max} disabled={disabled} />
-    </label>
+    <div className="field">
+      <label>{label}</label>
+      <div className="field-wrap">
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          min={min}
+          max={max}
+          disabled={disabled}
+          style={{ paddingLeft: 14 }}
+        />
+      </div>
+    </div>
   );
 }
