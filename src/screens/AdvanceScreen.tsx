@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { AlertCircle, Info, Pencil } from "lucide-react";
+import { AlertCircle, CalendarDays, IndianRupee, ReceiptText, ShieldCheck, WalletCards } from "lucide-react";
 import { formatMoney, formatShortDate } from "../utils/format";
 import type { AdvanceRequest, RecoveryPreview } from "../types/app";
 
@@ -18,8 +17,6 @@ type AdvanceScreenProps = {
   onSubmit: () => void;
 };
 
-/** Generate 4 evenly spaced chips: limit/4, limit/2, limit*3/4, limit.
- *  Rounded to nearest 500, minimum chip is MIN_AMOUNT. */
 function makeChips(limit: number): number[] {
   const step = Math.max(Math.round(limit / 4 / 500) * 500, MIN_AMOUNT);
   return [step, step * 2, step * 3, limit];
@@ -37,13 +34,10 @@ export function AdvanceScreen({
   onAmountChange,
   onSubmit,
 }: AdvanceScreenProps) {
-  const [editing, setEditing] = useState(false);
-  const [inputVal, setInputVal] = useState("");
-
-  const chips = makeChips(limit);
+  const chips    = makeChips(limit);
   const hasActive = Boolean(
     currentRequest &&
-      ["Disbursed", "Payment Scheduled"].includes(currentRequest.status)
+    ["Disbursed", "Payment Scheduled"].includes(currentRequest.status)
   );
   const canSubmit =
     eligible &&
@@ -52,7 +46,6 @@ export function AdvanceScreen({
     amount <= limit &&
     !submitting;
 
-  // Fee / preview figures — all from API, no local calculation
   const processingFee = preview?.processingFee;
   const interest      = preview?.interest;
   const youReceive    = preview?.youReceive;
@@ -60,196 +53,208 @@ export function AdvanceScreen({
   const recoveryDate  = preview?.recoveryDate ?? currentRequest?.recoveryDate ?? "";
   const interestRate  = preview?.interestRate;
   const interestDays  = preview?.interestDays;
+  const activeAmount = currentRequest?.approvedAmount || currentRequest?.requestedAmount || 0;
+  const activeInterest = currentRequest?.interestAmount ?? 0;
+  const activeTotal = currentRequest?.totalRecoveryAmount || activeAmount + activeInterest;
+  const activeTenure = currentRequest?.interestDays;
+  const activeStatus = currentRequest?.statusLabel ?? currentRequest?.status;
+
   const fmtFee = (v: number | undefined) =>
     previewLoading ? "…" : v !== undefined ? formatMoney(v) : "—";
+
   const interestLabel =
     interestRate !== undefined && interestDays !== undefined
       ? `Interest (${interestRate}% p.a. · ${interestDays}d)`
       : interestRate !== undefined
-      ? `Interest (${interestRate}% p.a.)`
-      : "Interest";
-
-  // Manual input handlers
-  const commitInput = () => {
-    const parsed = Number(inputVal.replace(/[^\d]/g, ""));
-    if (!Number.isNaN(parsed) && parsed >= MIN_AMOUNT && parsed <= limit) {
-      onAmountChange(parsed);
-    }
-    setEditing(false);
-  };
+        ? `Interest (${interestRate}% p.a.)`
+        : "Interest (1.5%)";
 
   return (
     <div className="advance-screen">
-      {/* Header */}
-      <div className="advance-screen-header">
-        <h2>Request advance</h2>
-        <p>Money you've already earned</p>
-      </div>
 
-      {/* Available card */}
-      <div className="advance-avail-card">
-        <div className="advance-avail-label">Available to access</div>
-        <div className="advance-avail-amount">
-          {limit > 0 ? formatMoney(limit) : "N/A"}
+      {/* ── Back header ───────────────────────────────────────────── */}
+      <div className="advance-page-header">
+        <div>
+          <span>Salary access</span>
+          <h2>Request advance</h2>
         </div>
       </div>
 
-      {/* Active advance warning */}
+      {/* ── Available limit card ──────────────────────────────────── */}
+      <div className="advance-avail-card">
+        <div className="advance-avail-topline">
+          <div>
+            <div className="advance-avail-label">Available advance</div>
+            <div className="advance-avail-amount">
+              {limit > 0 ? formatMoney(limit) : "N/A"}
+            </div>
+          </div>
+          <div className="advance-card-icon">
+            <WalletCards size={22} />
+          </div>
+        </div>
+        <div className="advance-avail-meta-grid">
+          <span><IndianRupee size={14} /> Instant request</span>
+          <span><CalendarDays size={14} /> Payroll recovery</span>
+        </div>
+      </div>
+
+      {/* ── Active advance summary ────────────────────────────────── */}
       {hasActive && (
-        <div className="active-adv-banner">
-          <AlertCircle size={16} />
-          <div className="active-adv-banner-body">
-            <div className="active-adv-banner-title">
-              You have an active advance
+        <div className="adv-current-card">
+          <div className="adv-current-head">
+            <div>
+              <span>Current advance</span>
+              <h3>{formatMoney(activeAmount)}</h3>
             </div>
-            <div className="active-adv-banner-sub">
-              {formatMoney(
-                currentRequest!.approvedAmount ||
-                  currentRequest!.requestedAmount
-              )}{" "}
-              — recovery on{" "}
-              {formatShortDate(currentRequest!.recoveryDate)}. New
-              requests unlock after recovery.
+            <strong>{activeStatus}</strong>
+          </div>
+
+          <div className="adv-current-grid">
+            <div>
+              <span>Amount</span>
+              <strong>{formatMoney(activeAmount)}</strong>
             </div>
+            <div>
+              <span>Tenure</span>
+              <strong>{activeTenure ? `${activeTenure} days` : "—"}</strong>
+            </div>
+            <div>
+              <span>Interest</span>
+              <strong>{formatMoney(activeInterest)}</strong>
+            </div>
+            <div>
+              <span>Total payment</span>
+              <strong>{formatMoney(activeTotal)}</strong>
+            </div>
+          </div>
+
+          <div className="adv-current-date">
+            <CalendarDays size={15} />
+            <span>Payment scheduled</span>
+            <strong>{recoveryDate ? formatShortDate(recoveryDate) : "—"}</strong>
+          </div>
+
+          <div className="adv-current-note">
+            <AlertCircle size={14} />
+            <p>You can withdraw more after this payment is cleared.</p>
           </div>
         </div>
       )}
 
-      {/* Amount selector */}
+      {/* ── Amount selector ───────────────────────────────────────── */}
       {!hasActive && limit > 0 && (
         <div className="advance-amount-box">
-          {/* Amount display / manual input */}
-          <div className="adv-amount-row">
-            <div className="adv-amount-label">You want</div>
-            {editing ? (
-              <div className="adv-manual-wrap">
-                <span className="adv-manual-prefix">₹</span>
-                <input
-                  className="adv-manual-input"
-                  type="number"
-                  min={MIN_AMOUNT}
-                  max={limit}
-                  value={inputVal}
-                  autoFocus
-                  onChange={(e) => setInputVal(e.target.value)}
-                  onBlur={commitInput}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") commitInput();
-                    if (e.key === "Escape") setEditing(false);
-                  }}
-                />
+          <div className="adv-amount-stack">
+            <div className="adv-amount-label">How much would you like to withdraw?</div>
+            <div className="adv-amount-display-value">{formatMoney(amount)}</div>
+            <div className="adv-range-wrap">
+              <input
+                className="adv-range"
+                type="range"
+                min={MIN_AMOUNT}
+                max={limit}
+                step={100}
+                value={amount}
+                onChange={(event) => onAmountChange(Number(event.target.value))}
+              />
+              <div className="adv-range-labels">
+                <span>{formatMoney(MIN_AMOUNT)}</span>
+                <span>{formatMoney(limit)}</span>
               </div>
-            ) : (
-              <button
-                type="button"
-                className="adv-amount-display-btn"
-                onClick={() => {
-                  setInputVal(String(amount));
-                  setEditing(true);
-                }}
-                title="Tap to edit amount"
-              >
-                <span className="adv-amount-display-value">
-                  {formatMoney(amount)}
-                </span>
-                <span className="adv-amount-edit-hint">
-                  <Pencil size={13} />
-                  Edit
-                </span>
-              </button>
-            )}
+            </div>
           </div>
 
-          {/* 4 dynamic chips */}
           <div className="adv-chips">
-            {chips.map((chip) => (
+            {chips.map(chip => (
               <button
                 key={chip}
                 type="button"
-                className={`adv-chip ${amount === chip ? "active" : ""}`}
-                onClick={() => {
-                  onAmountChange(chip);
-                  setEditing(false);
-                }}
+                className={`adv-chip${amount === chip ? " active" : ""}`}
+                onClick={() => onAmountChange(chip)}
               >
                 {formatMoney(chip)}
               </button>
             ))}
           </div>
 
-          {/* Validation hint */}
-          {amount < MIN_AMOUNT || amount > limit ? (
+          {(amount < MIN_AMOUNT || amount > limit) && (
             <p className="adv-hint-err">
-              Enter an amount between {formatMoney(MIN_AMOUNT)} and{" "}
-              {formatMoney(limit)}
+              Enter an amount between {formatMoney(MIN_AMOUNT)} and {formatMoney(limit)}
             </p>
-          ) : null}
+          )}
         </div>
       )}
 
-      {/* Breakdown */}
+      {/* ── Repayment preview card ────────────────────────────────── */}
       {!hasActive && limit > 0 && (
         <div className="adv-breakdown">
-          <div className="adv-breakdown-title">Breakdown</div>
-          <div className="adv-breakdown-row">
-            <span>Requested amount</span>
-            <strong>{formatMoney(amount)}</strong>
+          <div className="adv-breakdown-head">
+            <div>
+              <div className="adv-breakdown-title">Repayment preview</div>
+              <p>Based on your selected amount</p>
+            </div>
+            <span><ReceiptText size={16} /></span>
+          </div>
+
+          <div className="adv-preview-grid">
+            <div>
+              <span>Amount</span>
+              <strong>{formatMoney(amount)}</strong>
+            </div>
+            <div>
+              <span>Tenure</span>
+              <strong>{previewLoading ? "…" : interestDays ? `${interestDays} days` : "—"}</strong>
+            </div>
+          </div>
+
+          <div className="adv-breakdown-row highlight">
+            <span>You receive</span>
+            <strong>{fmtFee(youReceive)}</strong>
           </div>
 
           <div className="adv-breakdown-row">
             <span>{interestLabel}</span>
             <strong>{fmtFee(interest)}</strong>
           </div>
-          <div className="adv-breakdown-row highlight">
-            <span>You receive instantly</span>
-            <strong>{fmtFee(youReceive)}</strong>
+
+          {processingFee !== undefined && (
+            <div className="adv-breakdown-row">
+              <span>Processing fee</span>
+              <strong>{fmtFee(processingFee)}</strong>
+            </div>
+          )}
+
+          <div style={{ height: 1, background: "var(--b1)", margin: "8px 0" }} />
+
+          <div className="adv-breakdown-row" style={{ fontWeight: 700, color: "var(--t1)" }}>
+            <span style={{ fontWeight: 700, color: "var(--t1)" }}>Total repayment</span>
+            <strong style={{ fontSize: 16 }}>{fmtFee(toRecover)}</strong>
           </div>
-          <div
-            className="adv-breakdown-row recovery-row"
-            style={{
-              borderTop: "1px solid var(--b1)",
-              paddingTop: 10,
-              marginTop: 4,
-            }}
-          >
-            <span>
-              To be recovered on{" "}
-              {recoveryDate ? formatShortDate(recoveryDate) : "paydate"}
-            </span>
-            <strong>{fmtFee(toRecover)}</strong>
+
+          <div className="adv-breakdown-row">
+            <span>Repayment date</span>
+            <strong>{recoveryDate ? formatShortDate(recoveryDate) : "—"}</strong>
           </div>
         </div>
       )}
 
-      {/* Info */}
+      {/* ── Note ──────────────────────────────────────────────────── */}
       {!hasActive && limit > 0 && (
         <div className="adv-info">
-          <Info size={14} />
-          <p>
-            Auto-debited from your next salary. No impact on your CIBIL
-            score.
-          </p>
+          <ShieldCheck size={14} />
+          <p>Auto-debited from your next salary. No impact on your CIBIL score.</p>
         </div>
       )}
 
-      {/* Not eligible */}
+      {/* ── Not eligible ──────────────────────────────────────────── */}
       {!eligible && nextBlocker && (
-        <div
-          style={{
-            margin: "10px 16px 0",
-            background: "#fef3c7",
-            border: "1px solid #fde68a",
-            borderRadius: "var(--r-md)",
-            padding: "10px 14px",
-            fontSize: 13,
-            color: "#78350f",
-          }}
-        >
+        <div className="adv-blocker">
           {nextBlocker}
         </div>
       )}
 
-      {/* CTA */}
+      {/* ── CTA ───────────────────────────────────────────────────── */}
       <div className="adv-submit-bar">
         <button
           type="button"
@@ -258,18 +263,9 @@ export function AdvanceScreen({
           onClick={onSubmit}
         >
           {submitting ? (
-            <span
-              className="cta-spinner"
-              style={{
-                borderTopColor: "white",
-                borderColor: "rgba(255,255,255,0.3)",
-              }}
-            />
+            <span className="cta-spinner" style={{ borderTopColor: "white", borderColor: "rgba(255,255,255,0.3)" }} />
           ) : (
-            <>
-              Request {amount >= MIN_AMOUNT && amount <= limit ? formatMoney(amount) : "—"}{" "}
-              <span>→</span>
-            </>
+            <>Preview &amp; Submit {amount >= MIN_AMOUNT && amount <= limit ? formatMoney(amount) : ""}</>
           )}
         </button>
       </div>

@@ -14,10 +14,24 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const TOKEN_KEY = "mobpae_employee_token";
+const REFRESH_TOKEN_KEY = "mobpae_employee_refresh_token";
+
+/** Converts a relative upload path (e.g. "uploads/user-id/file.png") to an absolute URL. */
+export function getFileUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const base = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "")
+    .replace(/\/api\/v1\/?$/, "")
+    .replace(/\/api\/?$/, "");
+  return `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+}
 
 type LoginResponse = {
   accessToken?: string;
   token?: string;
+  refreshToken?: string;
+  passwordChanged?: boolean;
+  user?: { passwordChanged?: boolean; [key: string]: unknown };
 };
 
 type BackendKycDocument = {
@@ -154,6 +168,9 @@ type BackendEmployeeMe = EmployeeDashboard & {
   membershipActive?: boolean;   // flat field from /employees/me
   kycStatus?: string;           // e.g. "NOT_SUBMITTED", "SUBMITTED", "VERIFIED"
   bankAccountStatus?: string;   // e.g. "NOT_ADDED", "PENDING", "VERIFIED"
+  selfieStatus?: string;        // "PENDING" | "VERIFIED" | "REJECTED"
+  selfieUrl?: string;
+  profilePhotoUrl?: string;
   dashboard?: EmployeeDashboard;
   employee?: Partial<BackendEmployeeMe>;
 };
@@ -164,9 +181,114 @@ export class ApiError extends Error {
   }
 }
 
-const authHeaders = (): Record<string, string> => {
+let refreshPromise: Promise<string | null> | null = null;
+
+const clearStoredSession = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+};
+
+const notifySessionExpired = () => {
+  clearStoredSession();
+  window.dispatchEvent(new CustomEvent("mobpae:session:expired"));
+};
+
+const decodeJwtPayload = (token: string): { exp?: number } | null => {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      "="
+    );
+    return JSON.parse(atob(padded)) as { exp?: number };
+  } catch {
+    return null;
+  }
+};
+
+const shouldRefreshAccessToken = (token: string) => {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now() + 30_000;
+};
+
+const refreshSession = async (): Promise<string | null> => {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (!refreshToken) return null;
+
+      let response: Response;
+      try {
+        response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch {
+        return null;
+      }
+
+      if (!response.ok) return null;
+
+      const data = (await response.json()) as LoginResponse;
+      const nextAccessToken = data.accessToken ?? data.token;
+      if (!nextAccessToken || !data.refreshToken) return null;
+
+      localStorage.setItem(TOKEN_KEY, nextAccessToken);
+      localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+      return nextAccessToken;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+};
+
+const getAccessTokenForRequest = async () => {
   const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token) return null;
+  if (!shouldRefreshAccessToken(token)) return token;
+  return (await refreshSession()) ?? token;
+};
+
+const fetchWithAuth = async (
+  path: string,
+  options: RequestInit = {},
+  retryAfterRefresh = true
+) => {
+  const headers = new Headers(options.headers);
+  const token = await getAccessTokenForRequest();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+
+  const isAuthEndpoint =
+    path.startsWith("/auth/login") ||
+    path.startsWith("/auth/refresh") ||
+    path.startsWith("/auth/forgot-password") ||
+    path.startsWith("/auth/reset-password");
+
+  if (response.status !== 401 || !retryAfterRefresh || isAuthEndpoint) {
+    return response;
+  }
+
+  const refreshedToken = await refreshSession();
+  if (!refreshedToken) return response;
+
+  const retryHeaders = new Headers(options.headers);
+  retryHeaders.set("Authorization", `Bearer ${refreshedToken}`);
+
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: retryHeaders,
+  });
 };
 
 const normalizeDocumentStatus = (status?: string): DocumentStatus => {
@@ -425,6 +547,9 @@ const normalizeEmployeeMe = (employeeMe: BackendEmployeeMe) => {
     kycStatus: employeeMe.kycStatus,
     bankAccountStatus: employeeMe.bankAccountStatus,
     appActivated: employeeMe.appActivated,
+    selfieStatus: (employeeMe.selfieStatus ?? (employee as BackendEmployeeMe).selfieStatus) as "PENDING" | "VERIFIED" | "REJECTED" | undefined,
+    selfieUrl: employeeMe.selfieUrl ?? (employee as BackendEmployeeMe).selfieUrl,
+    profilePhotoUrl: employeeMe.profilePhotoUrl ?? (employee as BackendEmployeeMe).profilePhotoUrl,
   };
 };
 
@@ -441,13 +566,10 @@ const getEmployerName = (employee: Partial<BackendEmployeeMe>) => {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
-  Object.entries(authHeaders()).forEach(([key, value]) =>
-    headers.set(key, value)
-  );
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetchWithAuth(path, {
       ...options,
       headers,
     });
@@ -472,10 +594,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       message = response.status === 0 ? "Backend is not reachable." : message;
     }
 
-    // Session expired — clear the token so the app shows the login screen on next render.
+    // Session expired after refresh retry — clear both tokens and show login.
     if (response.status === 401 && !path.includes("/auth/login")) {
-      localStorage.removeItem(TOKEN_KEY);
-      window.dispatchEvent(new CustomEvent("mobpae:session:expired"));
+      notifySessionExpired();
     }
 
     throw new ApiError(message, response.status);
@@ -488,7 +609,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 // so product review never lands on a blank screen when a local API is unavailable.
 export const employeeApi = {
   hasSession() {
-    return Boolean(localStorage.getItem(TOKEN_KEY));
+    return Boolean(
+      localStorage.getItem(TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY)
+    );
   },
 
   async login(email: string, password: string) {
@@ -500,11 +623,37 @@ export const employeeApi = {
     if (!token) {
       throw new ApiError("Login succeeded but no access token was returned.");
     }
+    if (!data.refreshToken) {
+      throw new ApiError("Login succeeded but no refresh token was returned.");
+    }
     localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+    return data.user?.passwordChanged ?? data.passwordChanged;
   },
 
   logout() {
-    localStorage.removeItem(TOKEN_KEY);
+    clearStoredSession();
+  },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await request<{ success: boolean; message: string }>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  async forgotPassword(email: string): Promise<void> {
+    await request<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    await request<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, newPassword }),
+    });
   },
 
   async loadAppState(): Promise<AppState> {
@@ -518,6 +667,9 @@ export const employeeApi = {
         kycStatus,
         bankAccountStatus,
         appActivated,
+        selfieStatus,
+        selfieUrl,
+        profilePhotoUrl,
       } = normalizeEmployeeMe(employeeMe);
 
       const [
@@ -647,6 +799,9 @@ export const employeeApi = {
           // appActivated is the definitive "account is live" flag from the new API shape
           accountActive: appActivated ?? employee.accountActive ?? false,
           salaryLimit,
+          selfieStatus,
+          selfieUrl,
+          profilePhotoUrl,
         },
         dashboard: dashboardData,
         // Prefer the flag from /employees/me; fall back to /membership/me response
@@ -771,15 +926,42 @@ export const employeeApi = {
   },
 
   async uploadKycDocument(documentType: KycDocumentType, file: File) {
-    // POST /kyc-documents — backend derives employee from JWT.
-    // Body: JSON { documentType, filePath } — filePath is a base64 data URL of the file.
-    const filePath = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new ApiError("Failed to read file."));
-      reader.readAsDataURL(file);
-    });
+    // Step 1 — upload the file as multipart/form-data to /files/upload.
+    // Do NOT set Content-Type manually; the browser sets the correct boundary.
+    const formData = new FormData();
+    formData.append("file", file);
 
+    let uploadRes: Response;
+    try {
+      uploadRes = await fetchWithAuth("/files/upload", {
+        method: "POST",
+        body: formData,
+      });
+    } catch {
+      throw new ApiError("Could not reach the server. Please check your connection and try again.");
+    }
+
+    if (!uploadRes.ok) {
+      let msg = `File upload failed (${uploadRes.status}).`;
+      try {
+        const body = (await uploadRes.json()) as { message?: string | string[] };
+        if (Array.isArray(body.message)) msg = body.message.join(" ");
+        else if (body.message) msg = body.message;
+      } catch { /* ignore */ }
+      if (uploadRes.status === 413) msg = "File is too large. Please upload a file under 5 MB.";
+      if (uploadRes.status === 415) msg = "Unsupported file type. Please upload a PDF, JPG, or PNG.";
+      if (uploadRes.status === 401) {
+        notifySessionExpired();
+        msg = "Your session has expired. Please log in again.";
+      }
+      throw new ApiError(msg, uploadRes.status);
+    }
+
+    const uploaded = (await uploadRes.json()) as { filePath?: string; path?: string; url?: string };
+    const filePath = uploaded.filePath ?? uploaded.path ?? uploaded.url;
+    if (!filePath) throw new ApiError("Upload succeeded but server did not return a file path.");
+
+    // Step 2 — register the KYC document with only the filePath (no base64).
     const savedDocument = await request<BackendKycDocument>("/kyc-documents", {
       method: "POST",
       body: JSON.stringify({ documentType, filePath }),
@@ -800,6 +982,78 @@ export const employeeApi = {
       method: "POST",
       body: JSON.stringify(couponCode ? { couponCode } : {}),
     });
+  },
+
+  async uploadProfilePhoto(file: File): Promise<string> {
+    // Backend: POST /employees/profile-photo (multipart) — uploads and updates profilePhotoUrl in one call.
+    // Do NOT use POST /files/upload + PATCH /employees/me; the latter route is EMPLOYER-only.
+    const formData = new FormData();
+    formData.append("file", file);
+
+    let res: Response;
+    try {
+      res = await fetchWithAuth("/employees/profile-photo", {
+        method: "POST",
+        body: formData,
+      });
+    } catch {
+      throw new ApiError("Could not reach the server. Please check your connection.");
+    }
+
+    if (!res.ok) {
+      let msg = `Photo upload failed (${res.status}).`;
+      try {
+        const body = (await res.json()) as { message?: string | string[] };
+        if (Array.isArray(body.message)) msg = body.message.join(" ");
+        else if (body.message) msg = body.message;
+      } catch { /* ignore */ }
+      if (res.status === 413) msg = "Photo is too large. Please choose a smaller image.";
+      if (res.status === 415) msg = "Unsupported file type. Please upload a JPG or PNG.";
+      if (res.status === 401) {
+        notifySessionExpired();
+        msg = "Your session has expired. Please log in again.";
+      }
+      throw new ApiError(msg, res.status);
+    }
+
+    const employee = (await res.json()) as { profilePhotoUrl?: string };
+    const filePath = employee.profilePhotoUrl;
+    if (!filePath) throw new ApiError("Upload succeeded but server did not return a photo URL.");
+
+    return filePath;
+  },
+
+  async uploadSelfie(file: File): Promise<{ selfieUrl?: string; selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED" }> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    let res: Response;
+    try {
+      res = await fetchWithAuth("/employees/selfie", {
+        method: "POST",
+        body: formData,
+      });
+    } catch {
+      throw new ApiError("Could not reach the server. Please check your connection.");
+    }
+
+    if (!res.ok) {
+      let msg = `Selfie upload failed (${res.status}).`;
+      try {
+        const body = (await res.json()) as { message?: string | string[] };
+        if (Array.isArray(body.message)) msg = body.message.join(" ");
+        else if (body.message) msg = body.message;
+      } catch { /* ignore */ }
+      if (res.status === 413) msg = "Selfie is too large. Please capture again or choose a smaller image.";
+      if (res.status === 415) msg = "Unsupported file type. Please upload a JPG, PNG or WebP image.";
+      if (res.status === 401) {
+        notifySessionExpired();
+        msg = "Your session has expired. Please log in again.";
+      }
+      throw new ApiError(msg, res.status);
+    }
+
+    return res.json() as Promise<{ selfieUrl?: string; selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED" }>;
   },
 
   async submitSalaryAdvance(employeeId: string, amount: number) {

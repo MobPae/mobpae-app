@@ -1,4 +1,18 @@
-import { CalendarClock, CheckCircle2, Circle, XCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  CheckCircle2,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Clock3,
+  FileText,
+  IndianRupee,
+  Landmark,
+  ReceiptText,
+  ShieldCheck,
+  WalletCards,
+  XCircle,
+} from "lucide-react";
 import { formatMoney, formatShortDate } from "../utils/format";
 import type { AdvanceRequest, RequestStatus } from "../types/app";
 
@@ -6,7 +20,6 @@ type ActivityScreenProps = {
   requests: AdvanceRequest[];
 };
 
-// Ordered steps for the forward path
 const TIMELINE_STEPS: RequestStatus[] = [
   "Submitted",
   "Employer Approved",
@@ -16,30 +29,14 @@ const TIMELINE_STEPS: RequestStatus[] = [
   "Paid",
 ];
 
-function stepIndexOf(status: RequestStatus): number {
-  if (status === "Rejected") return 1;
-  const idx = TIMELINE_STEPS.indexOf(status);
-  return idx >= 0 ? idx : 0;
-}
-
-// Fallback colors when backend doesn't send statusColor
 const FALLBACK_COLOR: Partial<Record<RequestStatus, string>> = {
-  Rejected:           "#ef4444",
-  Paid:               "#16a34a",
-  Disbursed:          "#c4522a",
-  "Payment Scheduled":"#c4522a",
-  "Admin Approved":   "#7c3aed",
-  "Employer Approved":"#0369a1",
-  Submitted:          "#64748b",
-};
-const FALLBACK_BG: Partial<Record<RequestStatus, string>> = {
-  Rejected:           "#fef2f2",
-  Paid:               "#f0fdf4",
-  Disbursed:          "#fdf3ee",
-  "Payment Scheduled":"#fdf3ee",
-  "Admin Approved":   "#ede9fe",
-  "Employer Approved":"#e0f2fe",
-  Submitted:          "#f8fafc",
+  Submitted: "#00A884",
+  "Employer Approved": "#0EA5E9",
+  "Admin Approved": "#6366F1",
+  Disbursed: "#00A884",
+  "Payment Scheduled": "#F59E0B",
+  Paid: "#16A34A",
+  Rejected: "#EF4444",
 };
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -51,207 +48,270 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-function StatusBadge({ request }: { request: AdvanceRequest }) {
-  // Backend statusLabel/statusColor take full priority
-  const label = request.statusLabel ?? request.status;
-  const color = request.statusColor ?? FALLBACK_COLOR[request.status] ?? "#64748b";
-  const bg    = hexToRgba(color.startsWith("#") ? color : "#64748b", 0.1);
+function getStatusColor(request: AdvanceRequest) {
+  const color = request.statusColor ?? FALLBACK_COLOR[request.status] ?? "#667085";
+  return color.startsWith("#") ? color : "#667085";
+}
 
+function getStatusLabel(request: AdvanceRequest) {
+  return request.statusLabel ?? request.status;
+}
+
+function shortRequestId(id: string) {
+  return id ? `#${id.slice(0, 8).toUpperCase()}` : "—";
+}
+
+function isClosed(request: AdvanceRequest) {
+  return ["Paid", "Recovered", "Rejected"].includes(request.status);
+}
+
+function stepIndexOf(status: RequestStatus): number {
+  if (status === "Rejected") return 1;
+  const idx = TIMELINE_STEPS.indexOf(status);
+  return idx >= 0 ? idx : 0;
+}
+
+function compactStatusLabel(label: string) {
+  const normalized = label.toLowerCase();
+  if (normalized.includes("pending approval")) return "Pending";
+  if (normalized.includes("employer approved")) return "Employer OK";
+  if (normalized.includes("admin approved")) return "Admin OK";
+  if (normalized.includes("payment scheduled")) return "Scheduled";
+  return label;
+}
+
+function StatusPill({ request, compact = false }: { request: AdvanceRequest; compact?: boolean }) {
+  const color = getStatusColor(request);
+  const label = getStatusLabel(request);
   return (
-    <span
-      style={{
-        background: bg,
-        color,
-        fontSize: 11,
-        fontWeight: 700,
-        borderRadius: 20,
-        padding: "3px 10px",
-        letterSpacing: "0.02em",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {label}
+    <span className={`tx-status-pill${compact ? " compact" : ""}`} style={{ color, background: hexToRgba(color, 0.1) }}>
+      {compact ? compactStatusLabel(label) : label}
     </span>
   );
 }
 
-type TimelineStepProps = {
-  step: RequestStatus;
-  stepLabel: string;      // backend statusLabel if available, else step string
-  stepColor: string;      // backend statusColor if available, else fallback
-  done: boolean;
-  active: boolean;
-  isLast: boolean;
-  description: string;
-  timestamp: string;
-};
-
-function TimelineStep({
-  step,
-  stepLabel,
-  stepColor,
-  done,
-  active,
-  isLast,
-  description,
-  timestamp,
-}: TimelineStepProps) {
-  const isRejected = step === "Rejected";
-
-  const dotColor = done
-    ? stepColor
-    : active
-    ? stepColor
-    : "var(--b1)";
-
-  const labelColor = done ? "var(--t1)" : active ? "var(--t1)" : "var(--t3)";
-  const descColor  = done || active ? "var(--t2)" : "var(--t3)";
+function Timeline({ request }: { request: AdvanceRequest }) {
+  const currentIdx = stepIndexOf(request.status);
+  const isRejected = request.status === "Rejected";
+  const displaySteps = isRejected ? (["Submitted", "Rejected"] as RequestStatus[]) : TIMELINE_STEPS;
 
   return (
-    <div style={{ display: "flex", gap: 12, position: "relative" }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
-        <div
-          style={{
-            width: 20, height: 20, borderRadius: "50%",
-            background: dotColor,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0, transition: "background 0.2s",
-          }}
-        >
-          {done && !isRejected && <CheckCircle2 size={13} color="white" />}
-          {done && isRejected  && <XCircle size={13} color="white" />}
-          {!done && active     && <Circle size={8} color="white" fill="white" />}
-        </div>
-        {!isLast && (
-          <div style={{ width: 2, flex: 1, minHeight: 24, background: done ? hexToRgba(stepColor, 0.18) : "var(--b2)", margin: "3px 0" }} />
-        )}
-      </div>
+    <div className="tx-timeline">
+      {displaySteps.map((step, index) => {
+        const isLast = index === displaySteps.length - 1;
+        const timelineItem = request.timeline.find((item) => item.status === step);
+        const done = isRejected ? step === "Submitted" || step === "Rejected" : index <= currentIdx;
+        const active = !isRejected && index === currentIdx;
+        const color = step === request.status ? getStatusColor(request) : FALLBACK_COLOR[step] ?? "#98A2B3";
 
-      <div style={{ paddingBottom: isLast ? 0 : 20, flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 13, fontWeight: done || active ? 700 : 500, color: labelColor }}>
-            {stepLabel}
-          </span>
-          {done && timestamp && (
-            <span style={{ fontSize: 11, color: "var(--t3)", fontWeight: 500 }}>
-              {formatShortDate(timestamp)}
-            </span>
-          )}
-        </div>
-        {(done || active) && description && (
-          <p style={{ fontSize: 12, color: descColor, marginTop: 2, lineHeight: 1.5 }}>
-            {description}
-          </p>
-        )}
-      </div>
+        return (
+          <div className={`tx-timeline-row ${done ? "done" : ""} ${active ? "active" : ""}`} key={step}>
+            <div className="tx-timeline-marker">
+              <span style={{ background: done || active ? color : undefined }}>
+                {done && step !== "Rejected" && <CheckCircle2 size={12} />}
+                {done && step === "Rejected" && <XCircle size={12} />}
+              </span>
+              {!isLast && <i />}
+            </div>
+            <div className="tx-timeline-copy">
+              <div>
+                <strong>{step === request.status ? getStatusLabel(request) : step}</strong>
+                {timelineItem?.timestamp && <small>{formatShortDate(timelineItem.timestamp)}</small>}
+              </div>
+              {timelineItem?.description && <p>{timelineItem.description}</p>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function RequestCard({ request }: { request: AdvanceRequest }) {
-  const currentIdx = stepIndexOf(request.status);
-  const isRejected = request.status === "Rejected";
+function RequestReceipt({ request }: { request: AdvanceRequest }) {
+  const amount = request.approvedAmount || request.requestedAmount;
+  return (
+    <div className="tx-receipt">
+      <div className="tx-receipt-head">
+        <div>
+          <span>Request receipt</span>
+          <strong>{shortRequestId(request.id)}</strong>
+        </div>
+        <StatusPill request={request} compact />
+      </div>
+      <div className="tx-receipt-grid">
+        <div>
+          <span>Amount</span>
+          <strong>{formatMoney(request.principalAmount || amount)}</strong>
+        </div>
+        <div>
+          <span>Tenure</span>
+          <strong>{request.interestDays ? `${request.interestDays} days` : "—"}</strong>
+        </div>
+        <div>
+          <span>Interest</span>
+          <strong>{formatMoney(request.interestAmount || 0)}</strong>
+        </div>
+        <div>
+          <span>Total payment</span>
+          <strong>{formatMoney(request.totalRecoveryAmount || amount)}</strong>
+        </div>
+      </div>
+      <div className="tx-receipt-date">
+        <CalendarDays size={14} />
+        <span>Payment date</span>
+        <strong>{request.recoveryDate ? formatShortDate(request.recoveryDate) : "—"}</strong>
+      </div>
+      <div className="tx-receipt-grid compact">
+        <div>
+          <span>Requested</span>
+          <strong>{formatShortDate(request.requestDate)}</strong>
+        </div>
+        <div>
+          <span>Recovery</span>
+          <strong>{request.recoveryDate ? formatShortDate(request.recoveryDate) : "—"}</strong>
+        </div>
+      </div>
+      <Timeline request={request} />
+    </div>
+  );
+}
 
-  const displaySteps: RequestStatus[] = isRejected
-    ? ["Submitted", "Rejected"]
-    : TIMELINE_STEPS;
+function CurrentRequestCard({ request, expanded, onToggle }: {
+  request: AdvanceRequest;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const amount = request.approvedAmount || request.requestedAmount;
+  return (
+    <section className="tx-current-card">
+      <div className="tx-current-top">
+        <div>
+          <span>Live request · {shortRequestId(request.id)}</span>
+          <h2>{formatMoney(amount)}</h2>
+        </div>
+        <StatusPill request={request} />
+      </div>
+      <div className="tx-current-meta">
+        <div>
+          <Clock3 size={15} />
+          <span>Started {formatShortDate(request.requestDate)}</span>
+        </div>
+        <div>
+          <Landmark size={15} />
+          <span>{request.recoveryDate ? `Pays on ${formatShortDate(request.recoveryDate)}` : "Payment date pending"}</span>
+        </div>
+      </div>
+      <button type="button" className="tx-expand-btn" onClick={onToggle}>
+        {expanded ? "Hide details" : "View receipt"}
+        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
+      {expanded && <RequestReceipt request={request} />}
+    </section>
+  );
+}
+
+function TransactionRow({ request, expanded, onToggle }: {
+  request: AdvanceRequest;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const amount = request.approvedAmount || request.requestedAmount;
+  const color = getStatusColor(request);
+  const positive = ["Paid", "Recovered"].includes(request.status);
 
   return (
-    <div
-      style={{
-        background: "var(--surface)",
-        borderRadius: 20,
-        padding: "18px 16px",
-        marginBottom: 12,
-        border: "1px solid var(--border)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-      }}
-    >
-      {/* Card header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
-        <div>
-          <div style={{ fontSize: 11, color: "var(--t3)", fontWeight: 600, marginBottom: 2 }}>
-            {formatShortDate(request.requestDate)}
-          </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--t1)", letterSpacing: "-0.02em" }}>
-            {formatMoney(request.approvedAmount || request.requestedAmount)}
-          </div>
-          {request.recoveryDate && !isRejected && (
-            <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 2 }}>
-              Recovery {formatShortDate(request.recoveryDate)}
-            </div>
-          )}
-        </div>
-        <StatusBadge request={request} />
-      </div>
-
-      {/* Timeline */}
-      <div style={{ paddingLeft: 4 }}>
-        {displaySteps.map((step, i) => {
-          const isLast = i === displaySteps.length - 1;
-          const timelineItem = request.timeline.find((t) => t.status === step);
-          const done   = isRejected ? (step === "Submitted" || step === "Rejected") : i <= currentIdx;
-          const active = !isRejected && i === currentIdx;
-
-          // Use backend color for this step if it's the current status, else fallback
-          const stepColor =
-            step === request.status && request.statusColor
-              ? request.statusColor
-              : FALLBACK_COLOR[step] ?? "#64748b";
-
-          // Use backend label only for the current status step, else the step name
-          const stepLabel =
-            step === request.status && request.statusLabel
-              ? request.statusLabel
-              : step;
-
-          return (
-            <TimelineStep
-              key={step}
-              step={step}
-              stepLabel={stepLabel}
-              stepColor={stepColor}
-              done={done}
-              active={active}
-              isLast={isLast}
-              description={timelineItem?.description ?? ""}
-              timestamp={timelineItem?.timestamp ?? ""}
-            />
-          );
-        })}
-      </div>
+    <div className="tx-row-wrap">
+      <button type="button" className="tx-row" onClick={onToggle}>
+        <span className="tx-row-icon" style={{ color, background: hexToRgba(color, 0.1) }}>
+          <IndianRupee size={18} />
+        </span>
+        <span className="tx-row-body">
+          <strong>{shortRequestId(request.id)}</strong>
+          <small>{formatShortDate(request.requestDate)} · {getStatusLabel(request)}</small>
+        </span>
+        <span className="tx-row-side">
+          <strong>{positive ? "+" : ""}{formatMoney(amount)}</strong>
+          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        </span>
+      </button>
+      {expanded && <RequestReceipt request={request} />}
     </div>
   );
 }
 
 export function ActivityScreen({ requests }: ActivityScreenProps) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const currentRequest = requests.find((request) => !isClosed(request));
+  const history = requests.filter((request) => request.id !== currentRequest?.id);
+  const totalDisbursed = requests
+    .filter((request) => ["Disbursed", "Payment Scheduled", "Paid", "Recovered"].includes(request.status))
+    .reduce((sum, request) => sum + Number(request.approvedAmount || request.requestedAmount || 0), 0);
+
   return (
-    <div className="activity-screen">
-      <div className="screen-header">
-        <div className="screen-header-text">
-          <h2>Advance History</h2>
-          <p>Track your salary advance requests</p>
+    <div className="activity-screen-v2 tx-screen">
+      <div className="tx-header">
+        <div>
+          <span>Money movement</span>
+          <h1>Transactions</h1>
+        </div>
+        <div className="tx-header-icon">
+          <ReceiptText size={20} />
         </div>
       </div>
 
+      <div className="tx-summary-strip">
+        <div>
+          <WalletCards size={17} />
+          <span>Total accessed</span>
+          <strong>{formatMoney(totalDisbursed)}</strong>
+        </div>
+        <div>
+          <FileText size={17} />
+          <span>Requests</span>
+          <strong>{requests.length}</strong>
+        </div>
+      </div>
+
+      {currentRequest && (
+        <CurrentRequestCard
+          request={currentRequest}
+          expanded={expanded === currentRequest.id}
+          onToggle={() => setExpanded(expanded === currentRequest.id ? null : currentRequest.id)}
+        />
+      )}
+
+      <div className="tx-section-head">
+        <div>
+          <span>History</span>
+          <h2>{currentRequest ? "Past advances" : "Advance history"}</h2>
+        </div>
+        <small>{history.length} total</small>
+      </div>
+
       {requests.length === 0 ? (
-        <div className="act-empty">
-          <div className="act-empty-icon">
-            <CalendarClock size={24} />
-          </div>
-          <h3>No advances yet</h3>
-          <p>
-            Your salary advance requests and their status will appear here once
-            you make your first request.
-          </p>
+        <div className="tx-empty">
+          <div><ShieldCheck size={28} /></div>
+          <h3>No transactions yet</h3>
+          <p>Your salary advance requests and repayments will appear here once you make your first request.</p>
+        </div>
+      ) : history.length === 0 ? (
+        <div className="tx-empty slim">
+          <p>No past advances yet. Your completed requests will appear here.</p>
         </div>
       ) : (
-        <div style={{ padding: "0 16px 24px" }}>
-          {requests.map((req) => (
-            <RequestCard key={req.id} request={req} />
+        <div className="tx-list">
+          {history.map((request) => (
+            <TransactionRow
+              key={request.id}
+              request={request}
+              expanded={expanded === request.id}
+              onToggle={() => setExpanded(expanded === request.id ? null : request.id)}
+            />
           ))}
         </div>
       )}
+
+      <div style={{ height: 42 }} />
     </div>
   );
 }

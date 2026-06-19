@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, CheckCircle2, Crown, Tag, X } from "lucide-react";
+import { Check, CheckCircle2, Crown, Gem, ShieldCheck, Sparkles, Tag, X } from "lucide-react";
 import type { AppState, CouponValidation, View } from "../types/app";
 
 type Props = {
@@ -48,10 +48,8 @@ export function MembershipScreen({
     memberSince,
     validTill,
     membershipValidityDays,
-    freePlanTitle,
     membershipTitle,
     membershipSubtitle,
-    freeBenefits,
     membershipBenefits,
   } = membershipConfig;
 
@@ -66,13 +64,6 @@ export function MembershipScreen({
     ? Math.min(100, Math.round((daysRemaining / membershipValidityDays) * 100))
     : 0;
 
-  const configLoaded = freeBenefits.length > 0 || membershipBenefits.length > 0;
-
-  const compareRows: [string, boolean, boolean][] = [
-    ...freeBenefits.map((b): [string, boolean, boolean] => [b, true, true]),
-    ...membershipBenefits.map((b): [string, boolean, boolean] => [b, false, true]),
-  ];
-
   // Effective payable: validated coupon > base fee (no frontend calc)
   const effectiveFee = couponValidation?.payableAmount ?? fee;
   const hasDiscount  = couponValidation?.valid && couponValidation.discountAmount > 0;
@@ -84,6 +75,12 @@ export function MembershipScreen({
   const handleClearCoupon = () => {
     setCouponInput("");
     onClearCoupon();
+  };
+
+  const handleActivate = async () => {
+    setPaidAmount(effectiveFee > 0 ? effectiveFee : fee);
+    await onActivateMembership();
+    setJustActivated(true);
   };
 
   /* ── Activation success screen ──────────────────────────────────────── */
@@ -150,8 +147,9 @@ export function MembershipScreen({
     <div className="mem-screen">
 
       {/* ── Screen header ────────────────────────────────────────────── */}
-      <div className="screen-header">
-        <div className="screen-header-text">
+      <div className="mem-page-header">
+        <div>
+          <span>MobPae access</span>
           <h2>Membership</h2>
           <p>{membershipActive ? "Your active plan" : "Upgrade for more benefits"}</p>
         </div>
@@ -164,10 +162,10 @@ export function MembershipScreen({
         <div className="mem-status-top">
           <div className="mem-status-plan-pill">
             <Crown size={11} />
-            {membershipActive ? planName : freePlanTitle}
+            {membershipActive ? planName : (membershipTitle || "MobPae Plus")}
           </div>
-          <span className={`mem-status-badge ${membershipActive ? "mem-status-badge--active" : "mem-status-badge--free"}`}>
-            {membershipActive ? "Active" : "Free plan"}
+          <span className={`mem-status-badge ${membershipActive ? "mem-status-badge--active" : "mem-status-badge--inactive"}`}>
+            {membershipActive ? "Active" : "Not Active"}
           </span>
         </div>
 
@@ -255,192 +253,180 @@ export function MembershipScreen({
         </>
       )}
 
-      {/* ── Plan comparison + upgrade (inactive view) ────────────────── */}
+      {/* ── Premium upgrade card (inactive view) ────────────────────── */}
       {!membershipActive && (
-        <>
-          {/* ── Upgrade box (shown first so CTA is visible) ─────────── */}
-          {(fee > 0 || configLoaded) && (
-            <div className="mem-upgrade-box">
-              <div className="mem-upgrade-box-top">
-                <div className="mem-upgrade-crown-wrap">
-                  <Crown size={22} color="#fbbf24" />
-                </div>
-                <div>
-                  <div className="mem-upgrade-box-title">
-                    Upgrade to {membershipTitle || "Premium"}
-                  </div>
-                  <div className="mem-upgrade-box-sub">
-                    {fee > 0 ? `₹${fmtMoney(fee)}` : "—"}
-                    {membershipValidityDays > 0 ? ` · ${membershipValidityDays} days` : ""}
-                    {" · One-time"}
-                  </div>
-                </div>
-              </div>
+        <div className="mem-upgrade-box">
 
-              {/* Step 1: Initial activate CTA */}
-              {!showCouponStep && (
-                <button
-                  type="button"
-                  className="mem-upgrade-btn"
-                  disabled={fee === 0}
-                  onClick={() => setShowCouponStep(true)}
-                >
-                  Activate{fee > 0 ? ` for ₹${fmtMoney(fee)}` : ""}
-                </button>
-              )}
-
-              {/* Step 2: Coupon + confirm */}
-              {showCouponStep && (
-                <div className="mem-coupon-step">
-
-                  {/* Coupon input (hidden once valid coupon applied) */}
-                  {!couponValidation && (
-                    <div className="mem-coupon-row">
-                      <div className="mem-coupon-input-wrap">
-                        <Tag size={14} className="mem-coupon-icon" />
-                        <input
-                          className="mem-coupon-input"
-                          type="text"
-                          placeholder="Coupon code (optional)"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                          disabled={validatingCoupon}
-                          autoFocus
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="mem-coupon-apply-btn"
-                        disabled={!couponInput.trim() || validatingCoupon}
-                        onClick={handleApplyCoupon}
-                      >
-                        {validatingCoupon ? <span className="cta-spinner" /> : "Apply"}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Error */}
-                  {couponError && (
-                    <div className="mem-coupon-error">{couponError}</div>
-                  )}
-
-                  {/* Success state — all numbers from backend, zero frontend calc */}
-                  {couponValidation?.valid && (
-                    <div className="mem-coupon-success">
-                      <div className="mem-coupon-success-top">
-                        <div className="mem-coupon-success-code">
-                          <Tag size={13} />
-                          {couponValidation.couponCode}
-                        </div>
-                        <button
-                          type="button"
-                          className="mem-coupon-clear-btn"
-                          onClick={handleClearCoupon}
-                          title="Remove coupon"
-                        >
-                          <X size={13} />
-                        </button>
-                      </div>
-                      <div className="mem-coupon-price-row">
-                        <span className="mem-coupon-price-label">Original price</span>
-                        <span className="mem-coupon-price-original">₹{fmtMoney(couponValidation.membershipAmount)}</span>
-                      </div>
-                      <div className="mem-coupon-price-row">
-                        <span className="mem-coupon-price-label">Discount</span>
-                        <span className="mem-coupon-price-discount">−₹{fmtMoney(couponValidation.discountAmount)}</span>
-                      </div>
-                      <div className="mem-coupon-price-row mem-coupon-price-row--total">
-                        <span className="mem-coupon-price-label">You pay</span>
-                        <span className="mem-coupon-price-payable">₹{fmtMoney(couponValidation.payableAmount)}</span>
-                      </div>
-                      {couponValidation.savings > 0 && (
-                        <div className="mem-coupon-savings-pill">
-                          🎉 You save ₹{fmtMoney(couponValidation.savings)}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Confirm activation */}
-                  <button
-                    type="button"
-                    className="mem-upgrade-btn"
-                    disabled={activatingMembership}
-                    onClick={() => {
-                      setPaidAmount(effectiveFee > 0 ? effectiveFee : fee);
-                      onActivateMembership();
-                      setJustActivated(true);
-                    }}
-                  >
-                    {activatingMembership ? (
-                      <span className="cta-spinner" />
-                    ) : hasDiscount ? (
-                      <>Activate for ₹{fmtMoney(effectiveFee)}</>
-                    ) : (
-                      <>Activate{fee > 0 ? ` for ₹${fmtMoney(fee)}` : ""}</>
-                    )}
-                  </button>
-
-                  {/* Cancel link */}
-                  {!activatingMembership && (
-                    <button
-                      type="button"
-                      className="mem-coupon-skip-btn"
-                      onClick={() => {
-                        setShowCouponStep(false);
-                        handleClearCoupon();
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <p className="mem-upgrade-disclaimer">
-                No auto-renewal · Instant activation · Cancel anytime
-              </p>
+          {/* Dark premium header */}
+          <div className="mem-upgrade-premium-hero">
+            <div className="mem-upgrade-premium-crown">
+              <Gem size={28} color="#fbbf24" />
             </div>
-          )}
-
-          {/* ── Plan comparison (reference, shown below CTA) ─────────── */}
-          <div className="mem-section-label">What's included</div>
-
-          {!configLoaded ? (
-            <div className="mem-config-loading">Loading plan details…</div>
-          ) : (
-            <div className="mem-compare-table">
-              <div className="mem-compare-header">
-                <div className="mem-compare-header-feature" />
-                <div className="mem-compare-header-col mem-compare-header-col--free">
-                  {freePlanTitle || "Free"}
-                </div>
-                <div className="mem-compare-header-col mem-compare-header-col--premium">
-                  <Crown size={11} color="#fbbf24" />
-                  {membershipTitle || "Premium"}
-                </div>
+            <div>
+              <div className="mem-upgrade-box-title">
+                {membershipTitle || "MobPae Plus"}
               </div>
-              {compareRows.map(([label, freeHas, premiumHas], i) => (
-                <div key={i} className={`mem-compare-row ${i % 2 === 1 ? "mem-compare-row--alt" : ""}`}>
-                  <div className="mem-compare-row-label">{label}</div>
-                  <div className="mem-compare-row-cell">
-                    {freeHas
-                      ? <span className="mem-cell-check"><Check size={13} strokeWidth={3} /></span>
-                      : <span className="mem-cell-cross"><X size={13} strokeWidth={3} /></span>
-                    }
+              <div className="mem-upgrade-box-sub">
+                {fee > 0 ? `₹${fmtMoney(fee)}` : "—"}
+                {membershipValidityDays > 0 ? ` · ${membershipValidityDays} days` : ""}
+                {" · One-time payment"}
+              </div>
+            </div>
+          </div>
+
+          <div className="mem-price-card">
+            <div>
+              <span>One-time membership</span>
+              <strong>{fee > 0 ? `₹${fmtMoney(fee)}` : "—"}</strong>
+            </div>
+            <div>
+              <span>Valid for</span>
+              <strong>{membershipValidityDays > 0 ? `${membershipValidityDays} days` : "—"}</strong>
+            </div>
+          </div>
+
+          {/* Benefits list */}
+          {membershipBenefits.length > 0 && (
+            <>
+            <div className="mem-section-label">Benefits you get</div>
+            <div className="mem-upgrade-benefits">
+              {membershipBenefits.map((b, i) => (
+                <div key={i} className="mem-upgrade-benefit-row">
+                  <div className="mem-upgrade-benefit-check">
+                    <Check size={11} strokeWidth={3} />
                   </div>
-                  <div className="mem-compare-row-cell">
-                    {premiumHas
-                      ? <span className="mem-cell-check mem-cell-check--premium"><Check size={13} strokeWidth={3} /></span>
-                      : <span className="mem-cell-cross"><X size={13} strokeWidth={3} /></span>
-                    }
-                  </div>
+                  <span className="mem-upgrade-benefit-text">{b}</span>
                 </div>
               ))}
             </div>
+            </>
           )}
-        </>
+
+          {/* Divider */}
+          <div className="mem-upgrade-divider" />
+
+          {/* Step 1: Initial activate CTA */}
+          {!showCouponStep && (
+            <button
+              type="button"
+              className="mem-upgrade-btn"
+              disabled={fee === 0}
+              onClick={() => setShowCouponStep(true)}
+            >
+              <Crown size={15} />
+              Activate{fee > 0 ? ` for ₹${fmtMoney(fee)}` : ""}
+            </button>
+          )}
+
+          {/* Step 2: Coupon + confirm */}
+          {showCouponStep && (
+            <div className="mem-coupon-step">
+
+              {/* Coupon input (hidden once valid coupon applied) */}
+              {!couponValidation && (
+                <div className="mem-coupon-row">
+                  <div className="mem-coupon-input-wrap">
+                    <Tag size={14} className="mem-coupon-icon" />
+                    <input
+                      className="mem-coupon-input"
+                      type="text"
+                      placeholder="Coupon code (optional)"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                      disabled={validatingCoupon}
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="mem-coupon-apply-btn"
+                    disabled={!couponInput.trim() || validatingCoupon}
+                    onClick={handleApplyCoupon}
+                  >
+                    {validatingCoupon ? <span className="cta-spinner" /> : "Apply"}
+                  </button>
+                </div>
+              )}
+
+              {/* Error */}
+              {couponError && (
+                <div className="mem-coupon-error">{couponError}</div>
+              )}
+
+              {/* Success state — all numbers from backend */}
+              {couponValidation?.valid && (
+                <div className="mem-coupon-success">
+                  <div className="mem-coupon-success-top">
+                    <div className="mem-coupon-success-code">
+                      <Tag size={13} />
+                      {couponValidation.couponCode}
+                    </div>
+                    <button
+                      type="button"
+                      className="mem-coupon-clear-btn"
+                      onClick={handleClearCoupon}
+                      title="Remove coupon"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                  <div className="mem-coupon-price-row">
+                    <span className="mem-coupon-price-label">Original price</span>
+                    <span className="mem-coupon-price-original">₹{fmtMoney(couponValidation.membershipAmount)}</span>
+                  </div>
+                  <div className="mem-coupon-price-row">
+                    <span className="mem-coupon-price-label">Discount</span>
+                    <span className="mem-coupon-price-discount">−₹{fmtMoney(couponValidation.discountAmount)}</span>
+                  </div>
+                  <div className="mem-coupon-price-row mem-coupon-price-row--total">
+                    <span className="mem-coupon-price-label">You pay</span>
+                    <span className="mem-coupon-price-payable">₹{fmtMoney(couponValidation.payableAmount)}</span>
+                  </div>
+                  {couponValidation.savings > 0 && (
+                    <div className="mem-coupon-savings-pill">
+                      <Sparkles size={13} /> You save ₹{fmtMoney(couponValidation.savings)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Confirm activation */}
+              <button
+                type="button"
+                className="mem-upgrade-btn"
+                disabled={activatingMembership}
+                onClick={() => void handleActivate()}
+              >
+                {activatingMembership ? (
+                  <span className="cta-spinner" />
+                ) : hasDiscount ? (
+                  <>Activate for ₹{fmtMoney(effectiveFee)}</>
+                ) : (
+                  <>Activate{fee > 0 ? ` for ₹${fmtMoney(fee)}` : ""}</>
+                )}
+              </button>
+
+              {/* Cancel link */}
+              {!activatingMembership && (
+                <button
+                  type="button"
+                  className="mem-coupon-skip-btn"
+                  onClick={() => {
+                    setShowCouponStep(false);
+                    handleClearCoupon();
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          )}
+
+          <p className="mem-upgrade-disclaimer">
+            <ShieldCheck size={13} /> No auto-renewal · Instant activation · Cancel anytime
+          </p>
+        </div>
       )}
 
     </div>

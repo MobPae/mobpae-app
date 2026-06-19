@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { emptyBankAccount, emptyState } from "../data/mockData";
 import { employeeApi } from "../services/api";
 import type { AppState, BankAccount, CouponValidation, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 
+const REFRESH_COOLDOWN_MS = 30_000; // 30 s between auto-refreshes on tab switch
+
 export function useEmployeeApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => employeeApi.hasSession());
-  const [activeView, setActiveView] = useState<View>("home");
+  const [activeView, setActiveViewRaw] = useState<View>("home");
+  const lastRefreshAt = useRef<number>(0);
   const [appState, setAppState] = useState<AppState>(emptyState);
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [notice, setNotice] = useState("Using local data until your backend returns employee records.");
@@ -23,19 +26,29 @@ export function useEmployeeApp() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
   const [activatingMembership, setActivatingMembership] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingSelfie, setUploadingSelfie] = useState(false);
 
-  const loadEmployee = async () => {
+  const loadEmployee = async (checkOnboarding = false) => {
     setLoadState("loading");
     try {
       const nextState = await employeeApi.loadAppState();
+      lastRefreshAt.current = Date.now();
       setAppState(nextState);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
       setEditingBank(false);
       setCouponValidation(null);
-    setCouponError("");
+      setCouponError("");
       setNotice("Employee app connected. Live records will show where the backend has data.");
       setLoadState("ready");
+
+      if (checkOnboarding) {
+        setActiveView("home");
+      }
     } catch {
       setAppState(emptyState);
       setNotice("Backend is unavailable. Please check your connection.");
@@ -47,7 +60,7 @@ export function useEmployeeApp() {
     if (!employeeApi.hasSession()) return;
 
     setIsLoggedIn(true);
-    void loadEmployee();
+    void loadEmployee(false);
   }, []);
 
   // When a 401 is detected in the API layer, clear session state so the login screen shows.
@@ -65,12 +78,38 @@ export function useEmployeeApp() {
     setLoginError("");
     setLoadState("loading");
     try {
-      await employeeApi.login(email, password);
+      const passwordChanged = await employeeApi.login(email, password);
       setIsLoggedIn(true);
-      await loadEmployee();
+      if (passwordChanged === false) {
+        setActiveView("change-password");
+        setLoadState("ready");
+      } else {
+        await loadEmployee(true);
+      }
     } catch (error) {
       setLoadState("error");
       setLoginError(error instanceof Error ? error.message : "Unable to sign in. Please try again.");
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    setChangingPassword(true);
+    setChangePasswordError("");
+    try {
+      await employeeApi.changePassword(currentPassword, newPassword);
+      // Backend invalidates all sessions on password change — clear tokens and force re-login
+      employeeApi.logout();
+      setIsLoggedIn(false);
+      setActiveView("home");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to change password.";
+      const displayMessage = msg.toLowerCase().includes("incorrect") || msg.toLowerCase().includes("wrong")
+        ? "Current password is incorrect."
+        : msg;
+      setChangePasswordError(displayMessage);
+      throw new Error(displayMessage);
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -80,7 +119,18 @@ export function useEmployeeApp() {
     setActiveView("home");
   };
 
-  const kycComplete = appState.documents.every((document) => document.status === "Verified");
+  const forgotPassword = async (email: string) => {
+    await employeeApi.forgotPassword(email);
+  };
+
+  const resetPassword = async (token: string, newPassword: string) => {
+    await employeeApi.resetPassword(token, newPassword);
+  };
+
+  const kycComplete =
+    appState.documents.length >= 3 &&
+    appState.documents.every((document) => document.status === "Verified") &&
+    appState.profile.selfieStatus === "VERIFIED";
   const bankComplete = Boolean(appState.bankAccount?.verified);
   const activeRecovery = appState.requests.some((request) => request.recoveryStatus === "Scheduled");
   const membershipFee = appState.membershipConfig.fee;
@@ -181,6 +231,43 @@ export function useEmployeeApp() {
     setNotice("UPI ID updated.");
   };
 
+  const uploadProfilePhoto = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      const filePath = await employeeApi.uploadProfilePhoto(file);
+      setAppState((current) => ({
+        ...current,
+        profile: { ...current.profile, profilePhotoUrl: filePath },
+      }));
+      setNotice("Profile photo updated.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to upload photo. Please try again.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const uploadSelfie = async (file: File) => {
+    setUploadingSelfie(true);
+    try {
+      const employee = await employeeApi.uploadSelfie(file);
+      setAppState((current) => ({
+        ...current,
+        profile: {
+          ...current.profile,
+          selfieUrl: employee.selfieUrl ?? current.profile.selfieUrl,
+          selfieStatus: employee.selfieStatus ?? "PENDING",
+        },
+      }));
+      setNotice("Selfie uploaded successfully. Pending admin verification.");
+      await loadEmployee();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to upload selfie. Please try again.");
+    } finally {
+      setUploadingSelfie(false);
+    }
+  };
+
   const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {
     setUploadingKycType(documentType);
     try {
@@ -243,7 +330,6 @@ export function useEmployeeApp() {
       setCouponValidation(null);
       setCouponError("");
       setNotice("Membership activated successfully.");
-      setActiveView("member");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to activate membership.");
     } finally {
@@ -275,6 +361,29 @@ export function useEmployeeApp() {
     }
   };
 
+  // Explicit refresh — can be called from any screen's refresh button
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadEmployee();
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  // Tab-switch wrapper: silently background-refresh if cooldown has passed
+  const setActiveView = useCallback((view: View) => {
+    setActiveViewRaw(view);
+    const now = Date.now();
+    if (
+      isLoggedIn &&
+      loadState === "ready" &&
+      now - lastRefreshAt.current >= REFRESH_COOLDOWN_MS
+    ) {
+      void loadEmployee();
+    }
+  }, [isLoggedIn, loadState]);
+
   return {
     activeRecovery,
     activeView,
@@ -296,12 +405,16 @@ export function useEmployeeApp() {
     login,
     loginError,
     logout,
+    forgotPassword,
+    resetPassword,
     membershipFee,
     nextBlocker,
     notice,
     onboardingSteps,
     preview,
     previewLoading,
+    refresh,
+    refreshing,
     saveBankAccount,
     savingBank,
     setActiveView,
@@ -316,5 +429,13 @@ export function useEmployeeApp() {
     validateCoupon,
     validatingCoupon,
     activateMembership,
+    changePassword,
+    changingPassword,
+    changePasswordError,
+    setChangePasswordError,
+    uploadProfilePhoto,
+    uploadSelfie,
+    uploadingPhoto,
+    uploadingSelfie,
   };
 }

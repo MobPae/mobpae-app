@@ -5,14 +5,17 @@ type TabBarProps = {
   onChange: (view: View) => void;
 };
 
-/* SVG icons matched to the mockup — outline/inactive, bolder active via CSS */
+/* SVG icons matched to the mockup — filled active, outline inactive */
 function IconHome({ active }: { active: boolean }) {
+  const c = active ? "#10B981" : "#b0b0be";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? "#c4522a" : "none"}
-      stroke={active ? "#c4522a" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
-      strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
-      <path d="M9 21V12h6v9" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      {/* Roof */}
+      <path d="M2 11L12 3l10 8" stroke={c} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Body */}
+      <path d="M4 10v9a1 1 0 0 0 1 1h4v-5h6v5h4a1 1 0 0 0 1-1V10"
+        stroke={c} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
+        fill={active ? "rgba(5,150,105,0.14)" : "none"} />
     </svg>
   );
 }
@@ -20,10 +23,10 @@ function IconHome({ active }: { active: boolean }) {
 function IconWallet({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#c4522a" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
+      stroke={active ? "#10B981" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
       strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="5" width="20" height="14" rx="2" />
-      <path d="M16 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill={active ? "#c4522a" : "#b0b0be"} />
+      <path d="M16 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill={active ? "#10B981" : "#b0b0be"} />
       <path d="M2 10h20" />
     </svg>
   );
@@ -32,32 +35,22 @@ function IconWallet({ active }: { active: boolean }) {
 function IconActivity({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#c4522a" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
+      stroke={active ? "#10B981" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
       strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   );
 }
 
-function IconCrown({ active }: { active: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#c4522a" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
-      strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 20h20" />
-      <path d="M5 20V10l7-6 7 6v10" />
-      <path d="M12 4L2 10l3 4 7-4 7 4 3-4L12 4z" />
-    </svg>
-  );
-}
-
 function IconUser({ active }: { active: boolean }) {
+  const c = active ? "#10B981" : "#b0b0be";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#c4522a" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
-      strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="7.5" r="4"
+        fill={active ? "rgba(5,150,105,0.14)" : "none"}
+        stroke={c} strokeWidth="1.9" />
+      <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"
+        stroke={c} strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }
@@ -65,8 +58,7 @@ function IconUser({ active }: { active: boolean }) {
 const TABS: Array<{ id: View; label: string }> = [
   { id: "home",     label: "Home"     },
   { id: "advance",  label: "Advance"  },
-  { id: "activity", label: "Activity" },
-  { id: "member",   label: "Member"   },
+  { id: "activity", label: "History" },
   { id: "profile",  label: "Profile"  },
 ];
 
@@ -74,7 +66,6 @@ function TabIcon({ id, active }: { id: View; active: boolean }) {
   if (id === "home")     return <IconHome     active={active} />;
   if (id === "advance")  return <IconWallet   active={active} />;
   if (id === "activity") return <IconActivity active={active} />;
-  if (id === "member")   return <IconCrown    active={active} />;
   return <IconUser active={active} />;
 }
 
@@ -82,7 +73,8 @@ export function TabBar({ activeView, onChange }: TabBarProps) {
   return (
     <nav className="bottom-nav" aria-label="Navigation">
       {TABS.map(tab => {
-        const active = activeView === tab.id;
+        const active = activeView === tab.id ||
+          (tab.id === "profile" && ["profile-kyc", "profile-bank", "profile-membership"].includes(activeView));
         return (
           <button
             key={tab.id}

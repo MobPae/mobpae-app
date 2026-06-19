@@ -1,9 +1,24 @@
 import type { ReactNode } from "react";
 
-export type View = "home" | "advance" | "activity" | "member" | "profile";
+export type View =
+  | "home"
+  | "advance"
+  | "activity"
+  | "profile"
+  | "profile-kyc"
+  | "profile-bank"
+  | "profile-membership"
+  | "change-password"
+  | "onboarding-kyc"
+  | "onboarding-bank"
+  | "onboarding-done"
+  | "forgot-password"
+  | "reset-password";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
 export type RequestStatus = "Submitted" | "Employer Approved" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
+
+export type SelfieStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
 export type EmployeeProfile = {
   id: string;
@@ -14,6 +29,9 @@ export type EmployeeProfile = {
   employer: string;
   accountActive: boolean;
   salaryLimit: number;
+  selfieStatus?: SelfieStatus;
+  selfieUrl?: string;
+  profilePhotoUrl?: string;
 };
 
 export type AuthProfile = {

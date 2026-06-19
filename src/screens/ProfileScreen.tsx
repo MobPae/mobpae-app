@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   Building2,
+  CalendarCheck,
+  Camera,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -10,12 +12,15 @@ import {
   Crown,
   FileText,
   IdCard,
+  KeyRound,
   LogOut,
   Search,
   ShieldCheck,
   UploadCloud,
+  UserRoundCheck,
   Wallet,
 } from "lucide-react";
+import { getFileUrl } from "../services/api";
 import type { AppState, BankAccount, KycDocumentType, View } from "../types/app";
 import { formatMoney, maskAccountNumber } from "../utils/format";
 
@@ -25,6 +30,10 @@ type ProfileScreenProps = {
   onNavigate: (view: View) => void;
   uploadKycDocument: (type: KycDocumentType, file: File) => void;
   uploadingKycType: KycDocumentType | null;
+  uploadProfilePhoto: (file: File) => void;
+  uploadingPhoto: boolean;
+  uploadSelfie: (file: File) => void;
+  uploadingSelfie: boolean;
   bankForm: BankAccount;
   editingBank: boolean;
   savingBank: boolean;
@@ -32,6 +41,7 @@ type ProfileScreenProps = {
   onCancelBankEdit: () => void;
   onSaveBank: () => void;
   onBankFormChange: (field: keyof BankAccount, value: string) => void;
+  initialSection?: "kyc" | "bank" | "membership";
 };
 
 function getInitials(name: string) {
@@ -61,7 +71,7 @@ const POPULAR_BANKS = [
   { name: "HDFC Bank",           color: "#e8192c", bg: "#fef2f2", letter: "H" },
   { name: "ICICI Bank",          color: "#f37322", bg: "#fff7ed", letter: "I" },
   { name: "Axis Bank",           color: "#97144d", bg: "#fdf2f8", letter: "A" },
-  { name: "State Bank of India", color: "#2563eb", bg: "#eff6ff", letter: "S" },
+  { name: "State Bank of India", color: "#059669", bg: "#eff6ff", letter: "S" },
 ];
 
 export function ProfileScreen({
@@ -70,6 +80,10 @@ export function ProfileScreen({
   onNavigate,
   uploadKycDocument,
   uploadingKycType,
+  uploadProfilePhoto,
+  uploadingPhoto,
+  uploadSelfie,
+  uploadingSelfie,
   bankForm,
   editingBank,
   savingBank,
@@ -77,20 +91,50 @@ export function ProfileScreen({
   onCancelBankEdit,
   onSaveBank,
   onBankFormChange,
+  initialSection,
 }: ProfileScreenProps) {
   const { profile, bankAccount, documents, membershipActive } = appState;
 
   const [empOpen,    setEmpOpen]    = useState(false);
-  const [kycOpen,    setKycOpen]    = useState(false);
-  const [bankOpen,   setBankOpen]   = useState(false);
+  const [kycOpen,    setKycOpen]    = useState(initialSection === "kyc");
+  const [bankOpen,   setBankOpen]   = useState(initialSection === "bank");
+
+  const kycRef        = useRef<HTMLDivElement>(null);
+  const bankRef       = useRef<HTMLDivElement>(null);
+  const membershipRef = useRef<HTMLDivElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const selfieVideoRef = useRef<HTMLVideoElement>(null);
+  const selfieCanvasRef = useRef<HTMLCanvasElement>(null);
+  const selfieStreamRef = useRef<MediaStream | null>(null);
+  const selfieFileInputRef = useRef<HTMLInputElement>(null);
+  const [selfieCameraOpen, setSelfieCameraOpen] = useState(false);
+  const [selfiePreview, setSelfiePreview] = useState("");
+  const [selfieError, setSelfieError] = useState("");
+
+  useEffect(() => {
+    if (!initialSection) return;
+    const target =
+      initialSection === "kyc"        ? kycRef.current :
+      initialSection === "bank"       ? bankRef.current :
+      initialSection === "membership" ? membershipRef.current : null;
+    if (target) setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  }, [initialSection]);
   const [bankSearch, setBankSearch] = useState("");
   const [pickedBank, setPickedBank] = useState<string | null>(null);
 
-  const kycVerified = documents.length > 0 && documents.every((d) => d.status === "Verified");
+  const kycVerified    = documents.length > 0 && documents.every((d) => d.status === "Verified") && profile.selfieStatus === "VERIFIED";
+  const selfieStatus   = profile.selfieStatus;
+  const selfieVerified = selfieStatus === "VERIFIED";
+  const selfieRejected = selfieStatus === "REJECTED";
   const bankLabel   = bankAccount
     ? `${bankAccount.bankName || "Bank"} ··· ${maskAccountNumber(bankAccount.accountNumber).slice(-4)}`
     : "Not added";
   const bankStatus  = bankAccount ? (bankAccount.verified ? "Verified" : "Pending") : null;
+  const profileStatusItems = [
+    { label: "KYC", value: kycVerified ? "Verified" : "Pending", tone: kycVerified ? "ok" : "wait" },
+    { label: "Bank", value: bankAccount?.verified ? "Verified" : bankAccount ? "Review" : "Add", tone: bankAccount?.verified ? "ok" : "wait" },
+    { label: "Plan", value: membershipActive ? "Active" : "Inactive", tone: membershipActive ? "ok" : "wait" },
+  ];
 
   const filteredBanks = POPULAR_BANKS.filter(b =>
     b.name.toLowerCase().includes(bankSearch.toLowerCase())
@@ -108,6 +152,76 @@ export function ProfileScreen({
     onCancelBankEdit();
   }
 
+  async function openSelfieCamera() {
+    setSelfieError("");
+    setSelfiePreview("");
+    setSelfieCameraOpen(true);
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setSelfieCameraOpen(false);
+        selfieFileInputRef.current?.click();
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false,
+      });
+      selfieStreamRef.current = stream;
+      setTimeout(() => {
+        if (selfieVideoRef.current) {
+          selfieVideoRef.current.srcObject = stream;
+          void selfieVideoRef.current.play();
+        }
+      }, 50);
+    } catch {
+      setSelfieCameraOpen(false);
+      selfieFileInputRef.current?.click();
+    }
+  }
+
+  function closeSelfieCamera() {
+    selfieStreamRef.current?.getTracks().forEach((track) => track.stop());
+    selfieStreamRef.current = null;
+    setSelfieCameraOpen(false);
+    setSelfiePreview("");
+    setSelfieError("");
+  }
+
+  function captureSelfie() {
+    const video = selfieVideoRef.current;
+    const canvas = selfieCanvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth || 720;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setSelfiePreview(canvas.toDataURL("image/jpeg", 0.92));
+  }
+
+  async function submitSelfie() {
+    const canvas = selfieCanvasRef.current;
+    if (!canvas) return;
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        setSelfieError("Could not capture selfie. Please try again.");
+        return;
+      }
+      const file = new File([blob], `mobpae-selfie-${Date.now()}.jpg`, {
+        type: "image/jpeg",
+      });
+      uploadSelfie(file);
+      closeSelfieCamera();
+    }, "image/jpeg", 0.92);
+  }
+
+  function handleSelfieFile(file?: File) {
+    if (!file) return;
+    uploadSelfie(file);
+  }
+
   return (
     <div className="profile-screen">
 
@@ -120,7 +234,42 @@ export function ProfileScreen({
 
       {/* ── User card ──────────────────────────────────────────────── */}
       <div className="profile-user-card">
-        <div className="profile-avatar-lg">{getInitials(profile.name)}</div>
+        {/* Avatar with camera overlay */}
+        <div className="profile-avatar-wrap">
+          {profile.profilePhotoUrl ? (
+            <img
+              src={getFileUrl(profile.profilePhotoUrl)}
+              alt={profile.name}
+              className="profile-avatar-lg profile-avatar-photo"
+            />
+          ) : (
+            <div className="profile-avatar-lg">{getInitials(profile.name)}</div>
+          )}
+          <button
+            type="button"
+            className={`profile-avatar-camera${uploadingPhoto ? " uploading" : ""}`}
+            aria-label="Change photo"
+            disabled={uploadingPhoto}
+            onClick={() => photoInputRef.current?.click()}
+          >
+            {uploadingPhoto ? (
+              <span className="profile-avatar-spinner" />
+            ) : (
+              <Camera size={13} />
+            )}
+          </button>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/jpg,image/webp"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadProfilePhoto(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="profile-user-name">{profile.name || "—"}</div>
           <div className="profile-user-phone">{profile.phone || "—"}</div>
@@ -129,6 +278,20 @@ export function ProfileScreen({
             {kycVerified && (
               <span className="profile-kyc-badge">
                 <ShieldCheck size={11} /> KYC Verified
+              </span>
+            )}
+            {selfieVerified && (
+              <span className="profile-kyc-badge">
+                <ShieldCheck size={11} /> Selfie ✓
+              </span>
+            )}
+            {selfieRejected && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                background: "#fff1f2", color: "#e11d48",
+                borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 600,
+              }}>
+                Selfie Rejected
               </span>
             )}
             {membershipActive && (
@@ -140,9 +303,80 @@ export function ProfileScreen({
         </div>
       </div>
 
+      <div className="profile-status-strip">
+        {profileStatusItems.map((item) => (
+          <div className="profile-status-item" key={item.label}>
+            <span>{item.label}</span>
+            <strong className={item.tone}>{item.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Membership card ───────────────────────────────────────── */}
+      <div className="profile-section" ref={membershipRef}>
+        <div className="profile-section-title">Membership</div>
+        <div className="profile-section-cards">
+          {membershipActive ? (
+            <div className="profile-mem-card">
+              <div className="profile-mem-card-bg" />
+              <div className="profile-mem-card-top">
+                <div className="profile-mem-card-icon">
+                  <Crown size={16} color="#fbbf24" />
+                </div>
+                <div>
+                  <div className="profile-mem-card-plan">{appState.membershipConfig.planName || "Annual Access Plan"}</div>
+                  <div className="profile-mem-card-since">
+                    Since {appState.membershipConfig.memberSince
+                      ? new Date(appState.membershipConfig.memberSince).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                      : "—"}
+                  </div>
+                </div>
+                <span className="profile-mem-card-badge">Active</span>
+              </div>
+              <div className="profile-mem-card-divider" />
+              <div className="profile-mem-card-bottom">
+                <div className="profile-mem-card-stat">
+                  <CalendarCheck size={13} />
+                  <span>
+                    Valid till{" "}
+                    {appState.membershipConfig.validTill
+                      ? new Date(appState.membershipConfig.validTill).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                      : "—"}
+                  </span>
+                </div>
+                {appState.membershipConfig.daysRemaining != null && (
+                  <div className="profile-mem-card-days">
+                    {appState.membershipConfig.daysRemaining} days left
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="profile-mem-inactive">
+              <div className="profile-mem-inactive-left">
+                <div className="profile-mem-inactive-icon">
+                  <Crown size={16} color="var(--t3)" />
+                </div>
+                <div>
+                  <div className="profile-row-label">Membership</div>
+                  <div className="profile-row-value" style={{ fontSize: 12 }}>Not activated</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="profile-mem-activate-btn"
+                onClick={() => onNavigate("profile-membership")}
+              >
+                Activate
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ── Employment (collapsable) ───────────────────────────────── */}
       <div className="profile-section">
-        <div className="profile-section-title">Employment</div>
+        <div className="profile-section-title">Work</div>
         <div className="profile-section-cards">
           <button
             type="button"
@@ -185,8 +419,8 @@ export function ProfileScreen({
       </div>
 
       {/* ── KYC documents (collapsable) ───────────────────────────── */}
-      <div className="profile-section">
-        <div className="profile-section-title">KYC Documents</div>
+      <div className="profile-section" ref={kycRef}>
+        <div className="profile-section-title">Verification</div>
         <div className="profile-section-cards">
           <button
             type="button"
@@ -213,6 +447,13 @@ export function ProfileScreen({
 
           {kycOpen && (
             <div className="profile-kyc-expand">
+              <div className="profile-kyc-summary">
+                <div>
+                  <span>Verification progress</span>
+                  <strong>{kycVerified ? "All checks verified" : "Action may be required"}</strong>
+                </div>
+                <b>{documents.filter(d => d.status === "Verified").length}/{documents.length || KYC_DOCS.length}</b>
+              </div>
               {KYC_DOCS.map(({ type, label, hint }) => {
                 const doc = documents.find(
                   d => d.documentType === type ||
@@ -233,14 +474,69 @@ export function ProfileScreen({
                   />
                 );
               })}
+              <div className="kyc-upload-card profile-selfie-card">
+                <div className="kyc-upload-card-left">
+                  {profile.selfieUrl ? (
+                    <img
+                      className="profile-selfie-thumb"
+                      src={getFileUrl(profile.selfieUrl)}
+                      alt="Selfie"
+                    />
+                  ) : (
+                    <div className="kyc-upload-card-icon selfie">
+                      <UserRoundCheck size={16} />
+                    </div>
+                  )}
+                  <div>
+                    <div className="kyc-upload-card-label">Selfie verification</div>
+                    <div className="kyc-upload-card-hint">
+                      {selfieVerified
+                        ? "Identity selfie approved"
+                        : selfieRejected
+                          ? "Selfie rejected by admin"
+                          : "Selfie verification is pending"}
+                    </div>
+                  </div>
+                </div>
+                <span className={`profile-selfie-status ${
+                  selfieVerified ? "verified" : selfieRejected ? "rejected" : "pending"
+                }`}>
+                  {selfieVerified ? "Verified" : selfieRejected ? "Rejected" : "Pending"}
+                </span>
+                {!selfieVerified && (
+                  <>
+                    <input
+                      ref={selfieFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      capture="user"
+                      style={{ display: "none" }}
+                      disabled={uploadingSelfie}
+                      onChange={(event) => {
+                        handleSelfieFile(event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="profile-selfie-capture-btn"
+                      disabled={uploadingSelfie}
+                      onClick={openSelfieCamera}
+                    >
+                      <Camera size={13} />
+                      {uploadingSelfie ? "Uploading..." : selfieRejected ? "Retake" : "Capture"}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
 
       {/* ── Bank account (collapsable + bank picker) ──────────────── */}
-      <div className="profile-section">
-        <div className="profile-section-title">Bank Account</div>
+      <div className="profile-section" ref={bankRef}>
+        <div className="profile-section-title">Money</div>
         <div className="profile-section-cards">
 
           {/* Toggle row */}
@@ -271,13 +567,30 @@ export function ProfileScreen({
               {/* ── Saved bank → read-only or edit form ── */}
               {bankAccount && !editingBank && (
                 <div className="profile-bank-detail">
-                  <BankDetailRow label="Account holder" value={bankAccount.accountHolderName} />
-                  <BankDetailRow label="Bank"           value={bankAccount.bankName} />
-                  <BankDetailRow label="Account number" value={maskAccountNumber(bankAccount.accountNumber)} />
-                  <BankDetailRow label="IFSC code"      value={bankAccount.ifscCode} />
-                  {bankAccount.upiId && <BankDetailRow label="UPI ID" value={bankAccount.upiId} />}
+                  <div className="profile-bank-card">
+                    <div className="profile-bank-card-top">
+                      <div className="profile-bank-card-icon">
+                        <CreditCard size={18} />
+                      </div>
+                      <div>
+                        <span>Salary account</span>
+                        <strong>{bankAccount.bankName || "Bank account"}</strong>
+                      </div>
+                      <b className={bankAccount.verified ? "verified" : "pending"}>
+                        {bankAccount.verified ? "Verified" : "Pending"}
+                      </b>
+                    </div>
+                    <div className="profile-bank-number">
+                      {maskAccountNumber(bankAccount.accountNumber)}
+                    </div>
+                  </div>
+                  <div className="profile-bank-detail-grid">
+                    <BankDetailRow label="Account holder" value={bankAccount.accountHolderName} />
+                    <BankDetailRow label="IFSC code"      value={bankAccount.ifscCode} />
+                    {bankAccount.upiId && <BankDetailRow label="UPI ID" value={bankAccount.upiId} />}
+                  </div>
                   <button type="button" className="profile-bank-edit-btn" onClick={() => handlePickBank(bankAccount.bankName)}>
-                    Edit bank details
+                    Replace bank account
                   </button>
                 </div>
               )}
@@ -415,6 +728,18 @@ export function ProfileScreen({
           </div>
           <button
             type="button"
+            className="profile-row"
+            onClick={() => onNavigate("change-password")}
+            style={{ width: "100%", textAlign: "left" }}
+          >
+            <div className="profile-row-icon"><KeyRound size={16} /></div>
+            <div className="profile-row-body">
+              <div className="profile-row-label">Change Password</div>
+            </div>
+            <ChevronRight size={16} className="profile-row-right chevron" />
+          </button>
+          <button
+            type="button"
             className="profile-row danger"
             onClick={onLogout}
             style={{ width: "100%", textAlign: "left" }}
@@ -431,6 +756,48 @@ export function ProfileScreen({
       <div style={{ textAlign: "center", padding: "20px 0 8px", fontSize: 12, color: "var(--t3)" }}>
         MobPae v1.0 · Made with care in India
       </div>
+
+      {selfieCameraOpen && (
+        <div className="selfie-modal" role="dialog" aria-modal="true" aria-label="Capture selfie">
+          <div className="selfie-sheet">
+            <div className="selfie-sheet-head">
+              <div>
+                <span>Identity selfie</span>
+                <strong>Capture your photo</strong>
+              </div>
+              <button type="button" onClick={closeSelfieCamera}>Close</button>
+            </div>
+
+            <div className="selfie-camera-frame">
+              {selfiePreview ? (
+                <img src={selfiePreview} alt="Selfie preview" />
+              ) : (
+                <video ref={selfieVideoRef} playsInline muted />
+              )}
+              <canvas ref={selfieCanvasRef} style={{ display: "none" }} />
+            </div>
+
+            {selfieError && <div className="selfie-error">{selfieError}</div>}
+
+            <div className="selfie-actions">
+              {selfiePreview ? (
+                <>
+                  <button type="button" className="selfie-secondary" onClick={() => setSelfiePreview("")}>
+                    Retake
+                  </button>
+                  <button type="button" className="selfie-primary" onClick={() => void submitSelfie()}>
+                    Use photo
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="selfie-primary" disabled={Boolean(selfieError)} onClick={captureSelfie}>
+                  Capture selfie
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
