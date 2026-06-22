@@ -31,8 +31,12 @@ type LoginResponse = {
   token?: string;
   refreshToken?: string;
   passwordChanged?: boolean;
-  user?: { passwordChanged?: boolean; [key: string]: unknown };
+  user?: { passwordChanged?: boolean; role?: string; [key: string]: unknown };
 };
+
+const EMPLOYEE_ROLE = "EMPLOYEE";
+const EMPLOYEE_ACCESS_MESSAGE =
+  "This account does not have access to the Employee app.";
 
 type BackendKycDocument = {
   id?: string;
@@ -193,7 +197,7 @@ const notifySessionExpired = () => {
   window.dispatchEvent(new CustomEvent("mobpae:session:expired"));
 };
 
-const decodeJwtPayload = (token: string): { exp?: number } | null => {
+const decodeJwtPayload = (token: string): { exp?: number; role?: string } | null => {
   try {
     const [, payload] = token.split(".");
     if (!payload) return null;
@@ -202,11 +206,14 @@ const decodeJwtPayload = (token: string): { exp?: number } | null => {
       normalized.length + ((4 - (normalized.length % 4)) % 4),
       "="
     );
-    return JSON.parse(atob(padded)) as { exp?: number };
+    return JSON.parse(atob(padded)) as { exp?: number; role?: string };
   } catch {
     return null;
   }
 };
+
+const hasEmployeeRole = (token: string, responseRole?: string) =>
+  (responseRole ?? decodeJwtPayload(token)?.role) === EMPLOYEE_ROLE;
 
 const shouldRefreshAccessToken = (token: string) => {
   const payload = decodeJwtPayload(token);
@@ -236,6 +243,12 @@ const refreshSession = async (): Promise<string | null> => {
       const data = (await response.json()) as LoginResponse;
       const nextAccessToken = data.accessToken ?? data.token;
       if (!nextAccessToken || !data.refreshToken) return null;
+
+      if (!hasEmployeeRole(nextAccessToken, data.user?.role)) {
+        clearStoredSession();
+        window.dispatchEvent(new CustomEvent("mobpae:session:expired"));
+        return null;
+      }
 
       localStorage.setItem(TOKEN_KEY, nextAccessToken);
       localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
@@ -609,9 +622,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 // so product review never lands on a blank screen when a local API is unavailable.
 export const employeeApi = {
   hasSession() {
-    return Boolean(
-      localStorage.getItem(TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY)
-    );
+    const token = localStorage.getItem(TOKEN_KEY);
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+    if (token && !hasEmployeeRole(token)) {
+      clearStoredSession();
+      return false;
+    }
+
+    return Boolean(token || refreshToken);
   },
 
   async login(email: string, password: string) {
@@ -625,6 +644,10 @@ export const employeeApi = {
     }
     if (!data.refreshToken) {
       throw new ApiError("Login succeeded but no refresh token was returned.");
+    }
+    if (!hasEmployeeRole(token, data.user?.role)) {
+      clearStoredSession();
+      throw new ApiError(EMPLOYEE_ACCESS_MESSAGE, 403);
     }
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);

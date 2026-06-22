@@ -13,7 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { getFileUrl } from "../services/api";
-import { formatMoney, formatShortDate } from "../utils/format";
+import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
 import type { AppState, View } from "../types/app";
 
 type DashboardScreenProps = {
@@ -164,15 +164,29 @@ export function DashboardScreen({
             <span>{profile.employer || "MobPae"}</span>
             <strong>{getGreeting()}, {firstName}</strong>
           </div>
-          <button
-            type="button"
-            className="mp-icon-btn"
-            aria-label="Refresh dashboard"
-            onClick={onRefresh}
-          >
-            {refreshing ? <RefreshCw size={17} className="spin" /> : <Bell size={18} />}
-            {appState.notifications.length > 0 && <span className="mp-notification-dot" />}
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              className="mp-icon-btn mp-bell-btn"
+              aria-label="Notifications"
+              onClick={() => onNavigate("notifications")}
+            >
+              <Bell size={17} />
+              {appState.notifications.length > 0 && (
+                <span className="mp-bell-badge">
+                  {appState.notifications.length > 9 ? "9+" : appState.notifications.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              className="mp-icon-btn"
+              aria-label="Refresh dashboard"
+              onClick={onRefresh}
+            >
+              <RefreshCw size={17} className={refreshing ? "spin" : ""} />
+            </button>
+          </div>
         </div>
 
         <div className="mp-limit-card">
@@ -245,7 +259,7 @@ export function DashboardScreen({
             </div>
             <div>
               <span>Status</span>
-              <strong>{activeRequest.statusLabel ?? activeRequest.status}</strong>
+              <strong>{formatRequestStatus(activeRequest.status, activeRequest.statusLabel)}</strong>
             </div>
           </div>
         </section>
@@ -307,7 +321,7 @@ export function DashboardScreen({
                   </span>
                   <span className="mp-transaction-body">
                     <strong>Salary advance</strong>
-                    <small>{request.statusLabel ?? request.status} · {formatShortDate(request.requestDate)}</small>
+                    <small>{formatRequestStatus(request.status, request.statusLabel)} · {formatShortDate(request.requestDate)}</small>
                   </span>
                   <span className="mp-transaction-amount">{formatMoney(amount)}</span>
                 </button>

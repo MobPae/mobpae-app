@@ -13,7 +13,7 @@ import {
   WalletCards,
   XCircle,
 } from "lucide-react";
-import { formatMoney, formatShortDate } from "../utils/format";
+import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
 import type { AdvanceRequest, RequestStatus } from "../types/app";
 
 type ActivityScreenProps = {
@@ -30,13 +30,13 @@ const TIMELINE_STEPS: RequestStatus[] = [
 ];
 
 const FALLBACK_COLOR: Partial<Record<RequestStatus, string>> = {
-  Submitted: "#00A884",
-  "Employer Approved": "#0EA5E9",
-  "Admin Approved": "#6366F1",
-  Disbursed: "#00A884",
-  "Payment Scheduled": "#F59E0B",
-  Paid: "#16A34A",
-  Rejected: "#EF4444",
+  Submitted:          "#185FA5",
+  "Employer Approved":"#185FA5",
+  "Admin Approved":   "#185FA5",
+  Disbursed:          "#3B6D11",
+  "Payment Scheduled":"#9A4910",
+  Paid:               "#3B6D11",
+  Rejected:           "#A32D2D",
 };
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -49,12 +49,12 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 function getStatusColor(request: AdvanceRequest) {
-  const color = request.statusColor ?? FALLBACK_COLOR[request.status] ?? "#667085";
-  return color.startsWith("#") ? color : "#667085";
+  const color = request.statusColor ?? FALLBACK_COLOR[request.status] ?? "#8D90A3";
+  return color.startsWith("#") ? color : "#8D90A3";
 }
 
 function getStatusLabel(request: AdvanceRequest) {
-  return request.statusLabel ?? request.status;
+  return formatRequestStatus(request.status, request.statusLabel);
 }
 
 function shortRequestId(id: string) {
@@ -73,7 +73,7 @@ function stepIndexOf(status: RequestStatus): number {
 
 function compactStatusLabel(label: string) {
   const normalized = label.toLowerCase();
-  if (normalized.includes("pending approval")) return "Pending";
+  if (normalized.includes("pending approval")) return "Pending approval";
   if (normalized.includes("employer approved")) return "Employer OK";
   if (normalized.includes("admin approved")) return "Admin OK";
   if (normalized.includes("payment scheduled")) return "Scheduled";
@@ -189,7 +189,7 @@ function CurrentRequestCard({ request, expanded, onToggle }: {
           <span>Live request · {shortRequestId(request.id)}</span>
           <h2>{formatMoney(amount)}</h2>
         </div>
-        <StatusPill request={request} />
+        <StatusPill request={request} compact />
       </div>
       <div className="tx-current-meta">
         <div>

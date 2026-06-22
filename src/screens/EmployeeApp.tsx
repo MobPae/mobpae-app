@@ -11,10 +11,30 @@ import { OnboardingBankScreen } from "./OnboardingBankScreen";
 import { OnboardingDoneScreen } from "./OnboardingDoneScreen";
 import { ForgotPasswordScreen } from "./ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./ResetPasswordScreen";
+import { NotificationsScreen } from "./NotificationsScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
+import { AppToast } from "../components/ui/AppToast";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
+
+  const resolveAdvanceBlocker = () => {
+    if (app.activeRequest) return app.setActiveView("activity");
+    if (!app.appState.profile.accountActive) return app.setActiveView("home");
+    if (!app.kycComplete) return app.setActiveView("profile-kyc");
+    if (!app.appState.bankAccount || !app.bankComplete) return app.setActiveView("profile-bank");
+    if (!app.appState.membershipActive) return app.setActiveView("profile-membership");
+  };
+
+  const advanceBlockerActionLabel = app.activeRequest
+    ? "Track request"
+    : !app.kycComplete
+      ? "Complete KYC"
+      : !app.appState.bankAccount || !app.bankComplete
+        ? "View bank status"
+        : !app.appState.membershipActive
+          ? "Activate membership"
+          : "View details";
 
   if (!app.isLoggedIn) {
     if (app.activeView === "forgot-password") {
@@ -30,11 +50,16 @@ export function EmployeeApp() {
       );
     }
     if (app.activeView === "reset-password") {
+      const token = new URLSearchParams(window.location.search).get("token") ?? "";
+      // Strip token from URL bar without adding a history entry
+      if (window.location.search) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
       return (
         <div className="app-root">
           <div className="phone-shell">
             <ResetPasswordScreen
-              token={new URLSearchParams(window.location.search).get("token") ?? ""}
+              token={token}
               onBack={() => app.setActiveView("home")}
               onResetPassword={app.resetPassword}
             />
@@ -72,6 +97,7 @@ export function EmployeeApp() {
   }
 
   return (
+    <>
     <AppShell
       activeView={app.activeView}
       profile={app.appState.profile}
@@ -158,10 +184,12 @@ export function EmployeeApp() {
           nextBlocker={app.nextBlocker}
           preview={app.preview}
           previewLoading={app.previewLoading}
-          currentRequest={app.appState.requests[0]}
+          currentRequest={app.activeRequest}
           submitting={app.submittingAdvance}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
+          blockerActionLabel={advanceBlockerActionLabel}
+          onResolveBlocker={resolveAdvanceBlocker}
         />
       )}
 
@@ -175,6 +203,13 @@ export function EmployeeApp() {
           error={app.changePasswordError}
           onSubmit={app.changePassword}
           onClearError={() => app.setChangePasswordError("")}
+        />
+      )}
+
+      {app.activeView === "notifications" && (
+        <NotificationsScreen
+          notifications={app.appState.notifications}
+          onBack={() => app.setActiveView("home")}
         />
       )}
 
@@ -208,5 +243,7 @@ export function EmployeeApp() {
         />
       )}
     </AppShell>
+    <AppToast message={app.notice} onDismiss={app.clearNotice} />
+    </>
   );
 }

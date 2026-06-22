@@ -31,3 +31,25 @@ export const formatShortDate = (date?: string) => {
 };
 
 export const maskAccountNumber = (accountNumber: string) => (accountNumber ? `**** ${accountNumber.slice(-4)}` : "");
+
+export const formatRequestStatus = (status?: string, label?: string) => {
+  const value = (label || status || "Pending").trim();
+  const key = value.toUpperCase().replaceAll(" ", "_");
+  const labels: Record<string, string> = {
+    SUBMITTED: "Pending approval",
+    PENDING_APPROVAL: "Pending approval",
+    UNDER_REVIEW: "Under review",
+    EMPLOYER_APPROVED: "Employer approved",
+    ADMIN_APPROVED: "Admin approved",
+    READY_FOR_DISBURSAL: "Ready for payout",
+    DISBURSED: "Disbursed",
+    PAYMENT_SCHEDULED: "Payment scheduled",
+    REPAYMENT_SCHEDULED: "Payment scheduled",
+    PAID: "Repaid",
+    REPAID: "Repaid",
+    RECOVERED: "Repaid",
+    EMPLOYER_REJECTED: "Rejected",
+    REJECTED: "Rejected",
+  };
+  return labels[key] ?? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+};

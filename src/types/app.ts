@@ -13,7 +13,8 @@ export type View =
   | "onboarding-bank"
   | "onboarding-done"
   | "forgot-password"
-  | "reset-password";
+  | "reset-password"
+  | "notifications";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
 export type RequestStatus = "Submitted" | "Employer Approved" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";

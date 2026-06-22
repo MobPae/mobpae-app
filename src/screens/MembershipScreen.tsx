@@ -8,7 +8,7 @@ type Props = {
   couponValidation: CouponValidation | null;
   couponError: string;
   validatingCoupon: boolean;
-  onActivateMembership: () => void;
+  onActivateMembership: () => Promise<void>;
   onValidateCoupon: (code: string) => Promise<void>;
   onClearCoupon: () => void;
   onNavigate: (view: View) => void;
@@ -57,6 +57,7 @@ export function MembershipScreen({
   const [couponInput, setCouponInput] = useState("");
   const [justActivated, setJustActivated] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
+  const [activationError, setActivationError] = useState("");
 
   const memberSinceFmt = fmtDate(memberSince);
   const validTillFmt   = fmtDate(validTill);
@@ -78,9 +79,14 @@ export function MembershipScreen({
   };
 
   const handleActivate = async () => {
-    setPaidAmount(effectiveFee > 0 ? effectiveFee : fee);
-    await onActivateMembership();
-    setJustActivated(true);
+    setActivationError("");
+    try {
+      await onActivateMembership();
+      setPaidAmount(effectiveFee > 0 ? effectiveFee : fee);
+      setJustActivated(true);
+    } catch (error) {
+      setActivationError(error instanceof Error ? error.message : "Unable to activate membership.");
+    }
   };
 
   /* ── Activation success screen ──────────────────────────────────────── */
@@ -352,6 +358,10 @@ export function MembershipScreen({
               {/* Error */}
               {couponError && (
                 <div className="mem-coupon-error">{couponError}</div>
+              )}
+
+              {activationError && (
+                <div className="mem-coupon-error">{activationError}</div>
               )}
 
               {/* Success state — all numbers from backend */}

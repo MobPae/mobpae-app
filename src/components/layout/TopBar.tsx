@@ -3,6 +3,8 @@ import type { EmployeeProfile } from "../../types/app";
 
 type TopBarProps = {
   profile: EmployeeProfile;
+  notifCount?: number;
+  onNotificationsClick?: () => void;
 };
 
 function initials(name: string) {
@@ -15,7 +17,7 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function TopBar({ profile }: TopBarProps) {
+export function TopBar({ profile, notifCount = 0, onNotificationsClick }: TopBarProps) {
   return (
     <header className="topbar">
       <div className="topbar-left">
@@ -26,8 +28,18 @@ export function TopBar({ profile }: TopBarProps) {
         </div>
       </div>
       <div className="topbar-actions">
-        <button className="icon-btn" type="button" aria-label="Notifications">
+        <button
+          className="icon-btn topbar-bell-btn"
+          type="button"
+          aria-label="Notifications"
+          onClick={onNotificationsClick}
+        >
           <Bell size={16} />
+          {notifCount > 0 && (
+            <span className="topbar-bell-badge">
+              {notifCount > 9 ? "9+" : notifCount}
+            </span>
+          )}
         </button>
       </div>
     </header>

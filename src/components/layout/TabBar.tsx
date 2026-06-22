@@ -7,7 +7,7 @@ type TabBarProps = {
 
 /* SVG icons matched to the mockup — filled active, outline inactive */
 function IconHome({ active }: { active: boolean }) {
-  const c = active ? "#10B981" : "#b0b0be";
+  const c = active ? "#7679FF" : "#b0b0be";
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       {/* Roof */}
@@ -15,7 +15,7 @@ function IconHome({ active }: { active: boolean }) {
       {/* Body */}
       <path d="M4 10v9a1 1 0 0 0 1 1h4v-5h6v5h4a1 1 0 0 0 1-1V10"
         stroke={c} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? "rgba(5,150,105,0.14)" : "none"} />
+        fill={active ? "rgba(118,121,255,0.14)" : "none"} />
     </svg>
   );
 }
@@ -23,10 +23,10 @@ function IconHome({ active }: { active: boolean }) {
 function IconWallet({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#10B981" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
+      stroke={active ? "#7679FF" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
       strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="5" width="20" height="14" rx="2" />
-      <path d="M16 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill={active ? "#10B981" : "#b0b0be"} />
+      <path d="M16 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill={active ? "#7679FF" : "#b0b0be"} />
       <path d="M2 10h20" />
     </svg>
   );
@@ -35,7 +35,7 @@ function IconWallet({ active }: { active: boolean }) {
 function IconActivity({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#10B981" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
+      stroke={active ? "#7679FF" : "#b0b0be"} strokeWidth={active ? 2.2 : 1.8}
       strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
@@ -43,11 +43,11 @@ function IconActivity({ active }: { active: boolean }) {
 }
 
 function IconUser({ active }: { active: boolean }) {
-  const c = active ? "#10B981" : "#b0b0be";
+  const c = active ? "#7679FF" : "#b0b0be";
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="7.5" r="4"
-        fill={active ? "rgba(5,150,105,0.14)" : "none"}
+        fill={active ? "rgba(118,121,255,0.14)" : "none"}
         stroke={c} strokeWidth="1.9" />
       <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"
         stroke={c} strokeWidth="1.9" strokeLinecap="round" />

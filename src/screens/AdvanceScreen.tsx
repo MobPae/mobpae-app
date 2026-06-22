@@ -1,5 +1,5 @@
 import { AlertCircle, CalendarDays, IndianRupee, ReceiptText, ShieldCheck, WalletCards } from "lucide-react";
-import { formatMoney, formatShortDate } from "../utils/format";
+import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
 import type { AdvanceRequest, RecoveryPreview } from "../types/app";
 
 const MIN_AMOUNT = 500;
@@ -15,6 +15,8 @@ type AdvanceScreenProps = {
   submitting: boolean;
   onAmountChange: (amount: number) => void;
   onSubmit: () => void;
+  blockerActionLabel: string;
+  onResolveBlocker: () => void;
 };
 
 function makeChips(limit: number): number[] {
@@ -33,11 +35,13 @@ export function AdvanceScreen({
   submitting,
   onAmountChange,
   onSubmit,
+  blockerActionLabel,
+  onResolveBlocker,
 }: AdvanceScreenProps) {
   const chips    = makeChips(limit);
   const hasActive = Boolean(
     currentRequest &&
-    ["Disbursed", "Payment Scheduled"].includes(currentRequest.status)
+    !["Paid", "Recovered", "Rejected"].includes(currentRequest.status)
   );
   const canSubmit =
     eligible &&
@@ -57,7 +61,7 @@ export function AdvanceScreen({
   const activeInterest = currentRequest?.interestAmount ?? 0;
   const activeTotal = currentRequest?.totalRecoveryAmount || activeAmount + activeInterest;
   const activeTenure = currentRequest?.interestDays;
-  const activeStatus = currentRequest?.statusLabel ?? currentRequest?.status;
+  const activeStatus = formatRequestStatus(currentRequest?.status, currentRequest?.statusLabel);
 
   const fmtFee = (v: number | undefined) =>
     previewLoading ? "…" : v !== undefined ? formatMoney(v) : "—";
@@ -76,12 +80,24 @@ export function AdvanceScreen({
       <div className="advance-page-header">
         <div>
           <span>Salary access</span>
-          <h2>Request advance</h2>
+          <h2>{hasActive ? "Your advance" : "Request advance"}</h2>
         </div>
       </div>
 
+      {!eligible && !hasActive && nextBlocker && (
+        <div className="adv-blocker-card">
+          <div className="adv-blocker-icon"><AlertCircle size={18} /></div>
+          <div>
+            <span>Before you request</span>
+            <strong>{nextBlocker}</strong>
+            <p>Complete this step to unlock your salary advance request.</p>
+          </div>
+          <button type="button" onClick={onResolveBlocker}>{blockerActionLabel}</button>
+        </div>
+      )}
+
       {/* ── Available limit card ──────────────────────────────────── */}
-      <div className="advance-avail-card">
+      {!hasActive && eligible && <div className="advance-avail-card">
         <div className="advance-avail-topline">
           <div>
             <div className="advance-avail-label">Available advance</div>
@@ -97,7 +113,7 @@ export function AdvanceScreen({
           <span><IndianRupee size={14} /> Instant request</span>
           <span><CalendarDays size={14} /> Payroll recovery</span>
         </div>
-      </div>
+      </div>}
 
       {/* ── Active advance summary ────────────────────────────────── */}
       {hasActive && (
@@ -131,7 +147,7 @@ export function AdvanceScreen({
 
           <div className="adv-current-date">
             <CalendarDays size={15} />
-            <span>Payment scheduled</span>
+            <span>{currentRequest?.recoveryDate ? "Expected payment" : "Payment date"}</span>
             <strong>{recoveryDate ? formatShortDate(recoveryDate) : "—"}</strong>
           </div>
 
@@ -139,11 +155,15 @@ export function AdvanceScreen({
             <AlertCircle size={14} />
             <p>You can withdraw more after this payment is cleared.</p>
           </div>
+
+          <button type="button" className="adv-current-track" onClick={onResolveBlocker}>
+            Track request
+          </button>
         </div>
       )}
 
       {/* ── Amount selector ───────────────────────────────────────── */}
-      {!hasActive && limit > 0 && (
+      {!hasActive && eligible && limit > 0 && (
         <div className="advance-amount-box">
           <div className="adv-amount-stack">
             <div className="adv-amount-label">How much would you like to withdraw?</div>
@@ -187,7 +207,7 @@ export function AdvanceScreen({
       )}
 
       {/* ── Repayment preview card ────────────────────────────────── */}
-      {!hasActive && limit > 0 && (
+      {!hasActive && eligible && limit > 0 && (
         <div className="adv-breakdown">
           <div className="adv-breakdown-head">
             <div>
@@ -229,7 +249,7 @@ export function AdvanceScreen({
 
           <div className="adv-breakdown-row" style={{ fontWeight: 700, color: "var(--t1)" }}>
             <span style={{ fontWeight: 700, color: "var(--t1)" }}>Total repayment</span>
-            <strong style={{ fontSize: 16 }}>{fmtFee(toRecover)}</strong>
+            <strong style={{ fontSize: 14 }}>{fmtFee(toRecover)}</strong>
           </div>
 
           <div className="adv-breakdown-row">
@@ -240,7 +260,7 @@ export function AdvanceScreen({
       )}
 
       {/* ── Note ──────────────────────────────────────────────────── */}
-      {!hasActive && limit > 0 && (
+      {!hasActive && eligible && limit > 0 && (
         <div className="adv-info">
           <ShieldCheck size={14} />
           <p>Auto-debited from your next salary. No impact on your CIBIL score.</p>
@@ -248,14 +268,8 @@ export function AdvanceScreen({
       )}
 
       {/* ── Not eligible ──────────────────────────────────────────── */}
-      {!eligible && nextBlocker && (
-        <div className="adv-blocker">
-          {nextBlocker}
-        </div>
-      )}
-
       {/* ── CTA ───────────────────────────────────────────────────── */}
-      <div className="adv-submit-bar">
+      {!hasActive && eligible && <div className="adv-submit-bar">
         <button
           type="button"
           className="adv-submit"
@@ -268,7 +282,7 @@ export function AdvanceScreen({
             <>Preview &amp; Submit {amount >= MIN_AMOUNT && amount <= limit ? formatMoney(amount) : ""}</>
           )}
         </button>
-      </div>
+      </div>}
     </div>
   );
 }

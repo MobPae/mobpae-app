@@ -16,16 +16,16 @@ const KYC_DOCS: { type: KycDocumentType; label: string; hint: string }[] = [
 ];
 
 const STATUS_COLOR: Record<string, string> = {
-  Verified:       "#16a34a",
-  "Under Review": "#0369a1",
-  Rejected:       "#dc2626",
-  "Not Uploaded": "#9ca3af",
+  Verified:       "#3B6D11",
+  "Under Review": "#92600A",
+  Rejected:       "#A32D2D",
+  "Not Uploaded": "#62657A",
 };
 const STATUS_BG: Record<string, string> = {
-  Verified:       "#f0fdf4",
-  "Under Review": "#e0f2fe",
-  Rejected:       "#fee2e2",
-  "Not Uploaded": "#f9fafb",
+  Verified:       "#EBF6E3",
+  "Under Review": "#FEF9EE",
+  Rejected:       "#FCEEEE",
+  "Not Uploaded": "#F0F0F8",
 };
 
 function UploadCard({
@@ -40,15 +40,15 @@ function UploadCard({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const status = doc?.status ?? "Not Uploaded";
-  const color  = STATUS_COLOR[status] ?? "#9ca3af";
-  const bg     = STATUS_BG[status]    ?? "#f9fafb";
+  const color  = STATUS_COLOR[status] ?? "#8D90A3";
+  const bg     = STATUS_BG[status]    ?? "#F0F0F8";
   const isVerified = status === "Verified";
 
   return (
     <div className="ob-kyc-card">
       <div className="ob-kyc-card-left">
-        <div className="ob-kyc-icon" style={{ background: isVerified ? "#f0fdf4" : "var(--brand-pale)" }}>
-          <FileText size={17} color={isVerified ? "#16a34a" : "var(--brand)"} />
+        <div className="ob-kyc-icon" style={{ background: isVerified ? "#ECEBFF" : "var(--brand-pale)" }}>
+          <FileText size={17} color={isVerified ? "#7679FF" : "var(--brand)"} />
         </div>
         <div>
           <div className="ob-kyc-label">{label}</div>
@@ -145,7 +145,7 @@ export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onC
 
       {uploadedCount > 0 && (
         <div className="ob-progress-note">
-          <ShieldCheck size={14} color="#16a34a" />
+          <ShieldCheck size={14} color="#7679FF" />
           {uploadedCount} of {KYC_DOCS.length} documents submitted · pending admin review
         </div>
       )}

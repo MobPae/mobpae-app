@@ -55,23 +55,23 @@ const KYC_DOCS: { type: KycDocumentType; label: string; hint: string }[] = [
 ];
 
 const STATUS_COLOR: Record<string, string> = {
-  Verified:      "#16a34a",
-  "Under Review":"#0369a1",
+  Verified:      "#7679FF",
+  "Under Review":"#92600A",
   Rejected:      "#dc2626",
-  "Not Uploaded":"#94a3b8",
+  "Not Uploaded":"#62657A",
 };
 const STATUS_BG: Record<string, string> = {
-  Verified:      "#f0fdf4",
-  "Under Review":"#e0f2fe",
+  Verified:      "#ECEBFF",
+  "Under Review":"#FEF9EE",
   Rejected:      "#fee2e2",
-  "Not Uploaded":"#f8fafc",
+  "Not Uploaded":"#F0F0F8",
 };
 
 const POPULAR_BANKS = [
   { name: "HDFC Bank",           color: "#e8192c", bg: "#fef2f2", letter: "H" },
   { name: "ICICI Bank",          color: "#f37322", bg: "#fff7ed", letter: "I" },
   { name: "Axis Bank",           color: "#97144d", bg: "#fdf2f8", letter: "A" },
-  { name: "State Bank of India", color: "#059669", bg: "#eff6ff", letter: "S" },
+  { name: "State Bank of India", color: "#7679FF", bg: "#ECEBFF", letter: "S" },
 ];
 
 export function ProfileScreen({
@@ -110,6 +110,7 @@ export function ProfileScreen({
   const [selfieCameraOpen, setSelfieCameraOpen] = useState(false);
   const [selfiePreview, setSelfiePreview] = useState("");
   const [selfieError, setSelfieError] = useState("");
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   useEffect(() => {
     if (!initialSection) return;
@@ -132,7 +133,7 @@ export function ProfileScreen({
   const bankStatus  = bankAccount ? (bankAccount.verified ? "Verified" : "Pending") : null;
   const profileStatusItems = [
     { label: "KYC", value: kycVerified ? "Verified" : "Pending", tone: kycVerified ? "ok" : "wait" },
-    { label: "Bank", value: bankAccount?.verified ? "Verified" : bankAccount ? "Review" : "Add", tone: bankAccount?.verified ? "ok" : "wait" },
+    { label: "Bank", value: bankAccount?.verified ? "Verified" : bankAccount ? "Under review" : "Add", tone: bankAccount?.verified ? "ok" : "wait" },
     { label: "Plan", value: membershipActive ? "Active" : "Inactive", tone: membershipActive ? "ok" : "wait" },
   ];
 
@@ -288,7 +289,7 @@ export function ProfileScreen({
             {selfieRejected && (
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
-                background: "#fff1f2", color: "#e11d48",
+                background: "#fee2e2", color: "#EF4444",
                 borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 600,
               }}>
                 Selfie Rejected
@@ -494,14 +495,14 @@ export function ProfileScreen({
                         ? "Identity selfie approved"
                         : selfieRejected
                           ? "Selfie rejected by admin"
-                          : "Selfie verification is pending"}
+                        : "Selfie is under review"}
                     </div>
                   </div>
                 </div>
                 <span className={`profile-selfie-status ${
                   selfieVerified ? "verified" : selfieRejected ? "rejected" : "pending"
                 }`}>
-                  {selfieVerified ? "Verified" : selfieRejected ? "Rejected" : "Pending"}
+                  {selfieVerified ? "Verified" : selfieRejected ? "Rejected" : "Under review"}
                 </span>
                 {!selfieVerified && (
                   <>
@@ -635,7 +636,7 @@ export function ProfileScreen({
                   </div>
 
                   <div className="bank-picker-security">
-                    <ShieldCheck size={13} color="#16a34a" />
+                    <ShieldCheck size={13} color="#7679FF" />
                     Your bank details are 100% secure · We never store your credentials
                   </div>
                 </div>
@@ -651,9 +652,9 @@ export function ProfileScreen({
                         return b ? (
                           <>
                             <div className="bank-picker-logo" style={{ background: b.bg, color: b.color }}>{b.letter}</div>
-                            <span style={{ fontWeight: 600, fontSize: 14 }}>{b.name}</span>
+                            <span style={{ fontWeight: 600, fontSize: 13 }}>{b.name}</span>
                           </>
-                        ) : <span style={{ fontWeight: 600, fontSize: 14 }}>{pickedBank}</span>;
+                        ) : <span style={{ fontWeight: 600, fontSize: 13 }}>{pickedBank}</span>;
                       })()}
                       <button type="button" className="bank-form-change-btn" onClick={() => { setPickedBank(null); handleCancelBank(); }}>
                         Change
@@ -717,15 +718,20 @@ export function ProfileScreen({
             <div className="profile-row-body">
               <div className="profile-row-label">Notifications</div>
             </div>
-            <span className="profile-row-right" style={{ fontSize: 13, color: "var(--t2)", fontWeight: 500 }}>On</span>
+            <span className="profile-row-right" style={{ fontSize: 12, color: "var(--t2)", fontWeight: 500 }}>On</span>
           </div>
-          <div className="profile-row">
+          <button
+            type="button"
+            className="profile-row"
+            onClick={() => { window.location.href = "mailto:support@mobpae.com"; }}
+            style={{ width: "100%", textAlign: "left" }}
+          >
             <div className="profile-row-icon"><CircleHelp size={16} /></div>
             <div className="profile-row-body">
               <div className="profile-row-label">Help &amp; support</div>
             </div>
             <ChevronRight size={16} className="profile-row-right chevron" />
-          </div>
+          </button>
           <button
             type="button"
             className="profile-row"
@@ -741,7 +747,7 @@ export function ProfileScreen({
           <button
             type="button"
             className="profile-row danger"
-            onClick={onLogout}
+            onClick={() => setConfirmingLogout(true)}
             style={{ width: "100%", textAlign: "left" }}
           >
             <div className="profile-row-icon"><LogOut size={16} /></div>
@@ -754,8 +760,28 @@ export function ProfileScreen({
       </div>
 
       <div style={{ textAlign: "center", padding: "20px 0 8px", fontSize: 12, color: "var(--t3)" }}>
-        MobPae v1.0 · Made with care in India
+        MobPae · Made with care in India
       </div>
+
+      {confirmingLogout && (
+        <div className="app-confirm-modal" role="presentation">
+          <button
+            type="button"
+            className="app-confirm-backdrop"
+            aria-label="Cancel sign out"
+            onClick={() => setConfirmingLogout(false)}
+          />
+          <div className="app-confirm-sheet" role="alertdialog" aria-modal="true" aria-label="Sign out of MobPae?">
+            <div className="app-confirm-icon"><LogOut size={20} /></div>
+            <h3>Sign out of MobPae?</h3>
+            <p>You can sign back in anytime with your employee credentials.</p>
+            <div className="app-confirm-actions">
+              <button type="button" className="app-confirm-cancel" onClick={() => setConfirmingLogout(false)}>Cancel</button>
+              <button type="button" className="app-confirm-danger" onClick={onLogout}>Sign out</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selfieCameraOpen && (
         <div className="selfie-modal" role="dialog" aria-modal="true" aria-label="Capture selfie">
@@ -816,8 +842,8 @@ function KycUploadCard({
   onUpload: (type: KycDocumentType, file: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const color = STATUS_COLOR[status] ?? "#94a3b8";
-  const bg    = STATUS_BG[status]    ?? "#f8fafc";
+  const color = STATUS_COLOR[status] ?? "#8D90A3";
+  const bg    = STATUS_BG[status]    ?? "#F7F7FB";
 
   return (
     <div className="kyc-upload-card">
@@ -846,15 +872,17 @@ function KycUploadCard({
             e.target.value = "";
           }}
         />
-        <button
-          type="button"
-          className={`kyc-upload-btn ${uploading ? "uploading" : ""}`}
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-        >
-          <UploadCloud size={13} />
-          {uploading ? "Uploading…" : status === "Not Uploaded" ? "Upload" : "Re-upload"}
-        </button>
+        {status !== "Verified" && (
+          <button
+            type="button"
+            className={`kyc-upload-btn ${uploading ? "uploading" : ""}`}
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+          >
+            <UploadCloud size={13} />
+            {uploading ? "Uploading…" : status === "Not Uploaded" ? "Upload" : "Replace"}
+          </button>
+        )}
       </div>
     </div>
   );

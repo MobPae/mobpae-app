@@ -6,14 +6,32 @@ import type { AppState, BankAccount, CouponValidation, KycDocumentType, Recovery
 type LoadState = "idle" | "loading" | "ready" | "error";
 
 const REFRESH_COOLDOWN_MS = 30_000; // 30 s between auto-refreshes on tab switch
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function validateUpload(file: File, allowPdf: boolean): string | null {
+  if (file.size > MAX_UPLOAD_BYTES) return "File must be smaller than 5 MB.";
+  if (!IMAGE_TYPES.has(file.type) && !(allowPdf && file.type === "application/pdf")) {
+    return allowPdf
+      ? "Upload a PDF, JPG, PNG, or WebP file."
+      : "Upload a JPG, PNG, or WebP image.";
+  }
+  return null;
+}
 
 export function useEmployeeApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => employeeApi.hasSession());
-  const [activeView, setActiveViewRaw] = useState<View>("home");
+  const [activeView, setActiveViewRaw] = useState<View>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get("view");
+    // Only allow pre-login views to be deep-linked via URL
+    if (v === "reset-password" || v === "forgot-password") return v as View;
+    return "home";
+  });
   const lastRefreshAt = useRef<number>(0);
   const [appState, setAppState] = useState<AppState>(emptyState);
   const [loadState, setLoadState] = useState<LoadState>("idle");
-  const [notice, setNotice] = useState("Using local data until your backend returns employee records.");
+  const [notice, setNotice] = useState("");
   const [bankForm, setBankForm] = useState<BankAccount>(emptyBankAccount);
   const [editingBank, setEditingBank] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState(5000);
@@ -32,6 +50,7 @@ export function useEmployeeApp() {
   const [changePasswordError, setChangePasswordError] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingSelfie, setUploadingSelfie] = useState(false);
+  const clearNotice = useCallback(() => setNotice(""), []);
 
   const loadEmployee = async (checkOnboarding = false) => {
     setLoadState("loading");
@@ -43,7 +62,6 @@ export function useEmployeeApp() {
       setEditingBank(false);
       setCouponValidation(null);
       setCouponError("");
-      setNotice("Employee app connected. Live records will show where the backend has data.");
       setLoadState("ready");
 
       if (checkOnboarding) {
@@ -132,7 +150,10 @@ export function useEmployeeApp() {
     appState.documents.every((document) => document.status === "Verified") &&
     appState.profile.selfieStatus === "VERIFIED";
   const bankComplete = Boolean(appState.bankAccount?.verified);
-  const activeRecovery = appState.requests.some((request) => request.recoveryStatus === "Scheduled");
+  const activeRequest = appState.requests.find(
+    (request) => !["Paid", "Recovered", "Rejected"].includes(request.status)
+  );
+  const activeRecovery = Boolean(activeRequest);
   const membershipFee = appState.membershipConfig.fee;
 
   const onboardingSteps = useMemo(
@@ -153,9 +174,9 @@ export function useEmployeeApp() {
     if (!appState.bankAccount) return "Add your bank account.";
     if (!bankComplete) return "Bank account verification is pending.";
     if (!appState.membershipActive) return "Activate membership.";
-    if (activeRecovery) return "Payment is already scheduled.";
+    if (activeRequest) return "You already have an active salary request.";
     return "";
-  }, [activeRecovery, appState.membershipActive, appState.profile.accountActive, bankComplete, kycComplete]);
+  }, [activeRequest, appState.membershipActive, appState.profile.accountActive, bankComplete, kycComplete]);
 
   const eligibleForAdvance = !nextBlocker;
 
@@ -232,6 +253,11 @@ export function useEmployeeApp() {
   };
 
   const uploadProfilePhoto = async (file: File) => {
+    const validationError = validateUpload(file, false);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
     setUploadingPhoto(true);
     try {
       const filePath = await employeeApi.uploadProfilePhoto(file);
@@ -248,6 +274,11 @@ export function useEmployeeApp() {
   };
 
   const uploadSelfie = async (file: File) => {
+    const validationError = validateUpload(file, false);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
     setUploadingSelfie(true);
     try {
       const employee = await employeeApi.uploadSelfie(file);
@@ -269,6 +300,11 @@ export function useEmployeeApp() {
   };
 
   const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {
+    const validationError = validateUpload(file, true);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
     setUploadingKycType(documentType);
     try {
       // POST /kyc-documents — backend derives employee from JWT, no employeeId needed
@@ -331,7 +367,9 @@ export function useEmployeeApp() {
       setCouponError("");
       setNotice("Membership activated successfully.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Unable to activate membership.");
+      const message = error instanceof Error ? error.message : "Unable to activate membership.";
+      setNotice(message);
+      throw new Error(message);
     } finally {
       setActivatingMembership(false);
     }
@@ -386,6 +424,7 @@ export function useEmployeeApp() {
 
   return {
     activeRecovery,
+    activeRequest,
     activeView,
     activatingMembership,
     advanceAmount,
@@ -410,6 +449,7 @@ export function useEmployeeApp() {
     membershipFee,
     nextBlocker,
     notice,
+    clearNotice,
     onboardingSteps,
     preview,
     previewLoading,

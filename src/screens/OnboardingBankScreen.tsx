@@ -14,7 +14,7 @@ const POPULAR_BANKS = [
   { name: "HDFC Bank",           color: "#e8192c", bg: "#fef2f2", letter: "H" },
   { name: "ICICI Bank",          color: "#f37322", bg: "#fff7ed", letter: "I" },
   { name: "Axis Bank",           color: "#97144d", bg: "#fdf2f8", letter: "A" },
-  { name: "State Bank of India", color: "#10B981", bg: "#ECFDF5", letter: "S" },
+  { name: "State Bank of India", color: "#7679FF", bg: "#ECEBFF", letter: "S" },
 ];
 
 type Step = "pick" | "form";
@@ -141,7 +141,7 @@ export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, o
           <ObBankField label="UPI ID (optional)"     value={bankForm.upiId ?? ""}        placeholder="e.g. name@upi"            onChange={(v) => onBankFormChange("upiId", v)} />
 
           <div className="ob-bank-security">
-            <ShieldCheck size={13} color="#16a34a" />
+            <ShieldCheck size={13} color="#7679FF" />
             Your bank details are 100% secure · We never store credentials
           </div>
         </div>

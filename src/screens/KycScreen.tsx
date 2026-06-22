@@ -70,7 +70,7 @@ function KycItemRow({
             onClick={() => inputRef.current?.click()}
           >
             <UploadCloud size={14} />
-            {uploading ? "Uploading…" : document.status === "Not Uploaded" ? "Upload" : "Re-upload"}
+            {uploading ? "Uploading…" : document.status === "Not Uploaded" ? "Upload" : "Replace"}
           </button>
         </>
       )}
@@ -108,7 +108,7 @@ export function KycScreen({
             <path d="m15 18-6-6 6-6"/>
           </svg>
         </button>
-        <span style={{ fontSize: 18, fontWeight: 700, color: "var(--t1)" }}>Setup &amp; KYC</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--t1)" }}>Setup &amp; KYC</span>
       </div>
 
       <div className="kyc-hero-card">
@@ -152,7 +152,7 @@ export function KycScreen({
 
       <div className="kyc-list">
         {documents.length === 0 ? (
-          <div style={{ padding: "24px 16px", textAlign: "center", color: "var(--t3)", fontSize: 13 }}>
+          <div style={{ padding: "24px 16px", textAlign: "center", color: "var(--t3)", fontSize: 12 }}>
             No documents required.
           </div>
         ) : (
