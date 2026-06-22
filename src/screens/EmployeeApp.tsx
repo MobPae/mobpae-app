@@ -208,8 +208,10 @@ export function EmployeeApp() {
 
       {app.activeView === "notifications" && (
         <NotificationsScreen
-          notifications={app.appState.notifications}
+          notifications={app.appState.rawNotifications}
           onBack={() => app.setActiveView("home")}
+          onMarkRead={app.markNotificationRead}
+          onMarkAllRead={app.markAllNotificationsRead}
         />
       )}
 

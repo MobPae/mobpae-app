@@ -172,9 +172,11 @@ export function DashboardScreen({
               onClick={() => onNavigate("notifications")}
             >
               <Bell size={17} />
-              {appState.notifications.length > 0 && (
+              {appState.rawNotifications.filter((n) => !n.isRead).length > 0 && (
                 <span className="mp-bell-badge">
-                  {appState.notifications.length > 9 ? "9+" : appState.notifications.length}
+                  {appState.rawNotifications.filter((n) => !n.isRead).length > 9
+                    ? "9+"
+                    : appState.rawNotifications.filter((n) => !n.isRead).length}
                 </span>
               )}
             </button>

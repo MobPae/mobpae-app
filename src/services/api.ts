@@ -1,4 +1,4 @@
-import { emptyBankAccount, emptyState, mockState } from "../data/mockData";
+import { emptyBankAccount, emptyState } from "../data/mockData";
 import type {
   AdvanceRequest,
   AppState,
@@ -104,6 +104,17 @@ type BackendNotification = {
   title?: string;
   message?: string;
   createdAt?: string;
+  isRead?: boolean;
+  type?: string | null;
+};
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  type: string | null;
 };
 
 type BackendMembershipNested = {
@@ -906,6 +917,14 @@ export const employeeApi = {
           normalizedRequests,
           repaymentData
         ),
+        rawNotifications: notificationData.map((n) => ({
+          id:        n.id,
+          title:     n.title   ?? "Notification",
+          message:   n.message ?? "",
+          createdAt: n.createdAt ?? new Date().toISOString(),
+          isRead:    n.isRead   ?? false,
+          type:      n.type     ?? null,
+        })),
       };
     } catch {
       return emptyState;
@@ -929,14 +948,10 @@ export const employeeApi = {
   },
 
   async updateUpiId(employeeId: string, upiId: string) {
-    try {
-      return await request<BankAccount>("/bank-account/upi", {
-        method: "POST",
-        body: JSON.stringify({ upiId }),
-      });
-    } catch {
-      return { ...(mockState.bankAccount ?? emptyBankAccount), upiId };
-    }
+    return await request<BankAccount>("/bank-account/upi", {
+      method: "POST",
+      body: JSON.stringify({ upiId }),
+    });
   },
 
   async fetchKycDocuments(): Promise<KycDocument[]> {
@@ -1088,6 +1103,28 @@ export const employeeApi = {
       }
     );
     return normalizeRequests([requestData], [])[0];
+  },
+
+  async getNotifications(): Promise<AppNotification[]> {
+    const raw = await request<
+      | BackendNotification[]
+      | { notifications?: BackendNotification[]; data?: BackendNotification[]; items?: BackendNotification[] }
+    >("/notifications/me");
+    const list: BackendNotification[] = Array.isArray(raw)
+      ? raw
+      : (raw.notifications ?? raw.data ?? raw.items ?? []);
+    return list.map((n) => ({
+      id:        n.id,
+      title:     n.title   ?? "Notification",
+      message:   n.message ?? "",
+      createdAt: n.createdAt ?? new Date().toISOString(),
+      isRead:    n.isRead   ?? false,
+      type:      n.type     ?? null,
+    }));
+  },
+
+  async markNotificationRead(id: string): Promise<void> {
+    await request(`/notifications/${id}/read`, { method: "POST" });
   },
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {

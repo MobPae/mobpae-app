@@ -87,6 +87,7 @@ export function useEmployeeApp() {
       setIsLoggedIn(false);
       setAppState(emptyState);
       setLoadState("idle");
+      setLoginError("Your session has expired. Please sign in again.");
     };
     window.addEventListener("mobpae:session:expired", handleExpired);
     return () => window.removeEventListener("mobpae:session:expired", handleExpired);
@@ -477,5 +478,24 @@ export function useEmployeeApp() {
     uploadSelfie,
     uploadingPhoto,
     uploadingSelfie,
+    markNotificationRead: async (id: string) => {
+      try {
+        await employeeApi.markNotificationRead(id);
+        setAppState((prev) => ({
+          ...prev,
+          rawNotifications: prev.rawNotifications.map((n) =>
+            n.id === id ? { ...n, isRead: true } : n
+          ),
+        }));
+      } catch { /* non-critical */ }
+    },
+    markAllNotificationsRead: async () => {
+      const unread = appState.rawNotifications.filter((n) => !n.isRead);
+      await Promise.allSettled(unread.map((n) => employeeApi.markNotificationRead(n.id)));
+      setAppState((prev) => ({
+        ...prev,
+        rawNotifications: prev.rawNotifications.map((n) => ({ ...n, isRead: true })),
+      }));
+    },
   };
 }

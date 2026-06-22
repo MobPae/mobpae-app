@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { AppNotification } from "../services/api";
 
 export type View =
   | "home"
@@ -161,6 +162,7 @@ export type AppState = {
   membershipConfig: MembershipConfig;
   requests: AdvanceRequest[];
   notifications: string[];
+  rawNotifications: AppNotification[];
 };
 
 export type NavItem = {

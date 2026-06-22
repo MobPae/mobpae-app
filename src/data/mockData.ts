@@ -1,4 +1,6 @@
 import type { AppState, BankAccount } from "../types/app";
+// emptyState and emptyBankAccount are blank initial values used before the API responds.
+// They are NOT fake data — the UI always falls back to "N/A" when these zero values are present.
 
 // Blank state shown for a new user when backend has no data yet.
 // All values are zero/null — UI must show N/A when these are absent.
@@ -35,6 +37,7 @@ export const emptyState: AppState = {
   },
   requests: [],
   notifications: [],
+  rawNotifications: [],
 };
 
 export const emptyBankAccount: BankAccount = {
@@ -45,111 +48,3 @@ export const emptyBankAccount: BankAccount = {
   upiId: ""
 };
 
-export const mockState: AppState = {
-  profile: {
-    id: "emp_2048",
-    name: "Aarav Mehta",
-    email: "aarav@northwind.in",
-    phone: "+91 98765 43210",
-    employeeCode: "NWT-04217",
-    employer: "Northwind Technologies Pvt Ltd",
-    accountActive: true,
-    salaryLimit: 10000
-  },
-  dashboard: {
-    employeeName: "Aarav Mehta",
-    kycCompleted: true,
-    approvedLimit: 10000,
-    salaryInHand: 45000,
-    monthlyCTC: 52000,
-    earnedSoFar: 28500,
-    availableAdvance: 10000,
-    activeRequestAmount: 4500,
-    activeRequestStatus: "REPAYMENT_SCHEDULED",
-    activeRepaymentStatus: "REPAYMENT_SCHEDULED",
-    payrollDay: 30,
-  },
-  documents: [
-    { id: "pan",         label: "PAN",         documentType: "PAN",         status: "Verified",     note: "PAN verified." },
-    { id: "aadhaar",     label: "Aadhaar",     documentType: "AADHAR",      status: "Verified",     note: "Aadhaar verified." },
-    { id: "salary-slip", label: "Salary Slip", documentType: "SALARY_SLIP", status: "Verified",     note: "Salary slip verified." }
-  ],
-  bankAccount: {
-    accountHolderName: "Aarav Mehta",
-    bankName: "HDFC",
-    accountNumber: "000012344217",
-    ifscCode: "HDFC0001234",
-    upiId: "aarav@hdfc",
-    verified: true,
-  },
-  membershipActive: true,
-  membershipConfig: {
-    planName: "Annual Membership",
-    fee: 449,
-    couponDiscount: 0,
-    couponCode: "",
-    amountPayable: 449,
-    validityLabel: "340 days remaining",
-    daysRemaining: 340,
-    membershipValidityDays: 365,
-    memberSince: "2026-01-10T00:00:00.000Z",
-    validTill: "2027-01-10T00:00:00.000Z",
-    savedThisYear: 2840,
-    freePlanTitle: "MobPae Free",
-    freePlanSubtitle: "Get started with salary advances",
-    membershipTitle: "MobPae Premium",
-    membershipSubtitle: "Unlock higher limits and priority processing",
-    freeBenefits: ["Access salary advances", "Track requests", "View repayment history"],
-    membershipBenefits: ["Higher advance eligibility", "Priority approval", "Reduced processing fees", "Premium support"],
-  },
-  requests: [
-    {
-      id: "ADV-1048",
-      requestedAmount: 4500,
-      approvedAmount: 4500,
-      requestDate: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-      status: "Disbursed",
-      remarks: "Disbursed to bank.",
-      principalAmount: 4500,
-      interestAmount: 54,
-      totalRecoveryAmount: 4635,
-      recoveryDate: new Date(new Date().getFullYear(), new Date().getMonth(), 30).toISOString(),
-      recoveryStatus: "Scheduled",
-      disbursalDate: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-      disbursalStatus: "Disbursed",
-      timeline: [
-        { status: "Submitted",       timestamp: new Date(Date.now() - 2.3 * 3600 * 1000).toISOString(), description: "Advance requested.",              done: true  },
-        { status: "Approved",        timestamp: new Date(Date.now() - 2.2 * 3600 * 1000).toISOString(), description: "Employer approved.",               done: true  },
-        { status: "Disbursed",       timestamp: new Date(Date.now() - 2   * 3600 * 1000).toISOString(), description: "Disbursed to bank account.",        done: true  },
-        { status: "Payment Scheduled", timestamp: new Date(new Date().getFullYear(), new Date().getMonth(), 30).toISOString(), description: "Payroll deduction scheduled.", done: false },
-        { status: "Paid",            timestamp: "", description: "Recovery complete.",                  done: false },
-      ],
-    },
-    {
-      id: "ADV-0984",
-      requestedAmount: 3000,
-      approvedAmount: 3000,
-      requestDate: new Date(2026, 4, 12, 15, 11).toISOString(),
-      status: "Paid",
-      remarks: "Recovered.",
-      principalAmount: 3000,
-      interestAmount: 45,
-      totalRecoveryAmount: 3045,
-      recoveryDate: new Date(2026, 4, 30, 9, 0).toISOString(),
-      recoveryStatus: "Completed",
-      disbursalDate: new Date(2026, 4, 12, 15, 11).toISOString(),
-      disbursalStatus: "Disbursed",
-      timeline: [
-        { status: "Submitted", timestamp: new Date(2026, 4, 12).toISOString(), description: "Advance requested.", done: true },
-        { status: "Approved",  timestamp: new Date(2026, 4, 12).toISOString(), description: "Employer approved.", done: true },
-        { status: "Disbursed", timestamp: new Date(2026, 4, 12).toISOString(), description: "Disbursed to bank.", done: true },
-        { status: "Payment Scheduled", timestamp: new Date(2026, 4, 30).toISOString(), description: "Payroll deduction.", done: true },
-        { status: "Paid",      timestamp: new Date(2026, 4, 30).toISOString(), description: "Recovery complete.", done: true },
-      ],
-    },
-  ],
-  notifications: [
-    "₹4,500 disbursed to your HDFC bank account.",
-    "Advance for June scheduled for recovery on 30 Jun.",
-  ]
-};
