@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { Check, Eye, EyeOff, KeyRound, Lock, ShieldCheck, X } from "lucide-react";
+import { SubPageHeader } from "../components/layout/SubPageHeader";
 
 type Props = {
   loading: boolean;
   error: string;
   onSubmit: (currentPassword: string, newPassword: string) => Promise<void>;
   onClearError: () => void;
+  onBack: () => void;
 };
 
 type Rule = {
@@ -13,7 +15,7 @@ type Rule = {
   passed: boolean;
 };
 
-export function ChangePasswordScreen({ loading, error, onSubmit, onClearError }: Props) {
+export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, onBack }: Props) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -64,6 +66,7 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError }:
 
   return (
     <div className="change-password-screen">
+      <SubPageHeader title="Change Password" onBack={onBack} />
       <div className="change-password-hero">
         <div className="change-password-icon">
           <KeyRound size={23} />

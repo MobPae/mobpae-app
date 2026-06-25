@@ -1,317 +1,267 @@
+import { CalendarDays, ChevronDown, ChevronRight, Download, Gift, Shield } from "lucide-react";
 import { useState } from "react";
-import {
-  CheckCircle2,
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
-  Clock3,
-  FileText,
-  IndianRupee,
-  Landmark,
-  ReceiptText,
-  ShieldCheck,
-  WalletCards,
-  XCircle,
-} from "lucide-react";
-import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
-import type { AdvanceRequest, RequestStatus } from "../types/app";
+import { formatMoney, formatRequestStatus } from "../utils/format";
+import type { AdvanceRequest } from "../types/app";
 
 type ActivityScreenProps = {
   requests: AdvanceRequest[];
 };
 
-const TIMELINE_STEPS: RequestStatus[] = [
-  "Submitted",
-  "Employer Approved",
-  "Admin Approved",
-  "Disbursed",
-  "Payment Scheduled",
-  "Paid",
-];
+type Tab = "all" | "advances" | "repayments";
 
-const FALLBACK_COLOR: Partial<Record<RequestStatus, string>> = {
-  Submitted:          "#185FA5",
-  "Employer Approved":"#185FA5",
-  "Admin Approved":   "#185FA5",
-  Disbursed:          "#3B6D11",
-  "Payment Scheduled":"#9A4910",
-  Paid:               "#3B6D11",
-  Rejected:           "#A32D2D",
+// Format: "15 May 2024 • 09:42 AM"
+function formatDatetime(iso?: string) {
+  if (!iso || iso === "Pending") return "Pending";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  const date = d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
+  return `${date} • ${time}`;
+}
+
+// Month label: "May 2024"
+function monthKey(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+}
+
+type TxEvent = {
+  id: string;
+  type: "request" | "disbursal" | "repayment";
+  title: string;
+  sub: string;
+  datetime: string;
+  sortTs: number;
+  amount: number;
+  prefix: "+" | "−" | "";
+  amountGreen: boolean;
+  iconBg: string;
+  iconColor: string;
+  iconType: "wallet" | "calendar" | "emi";
+  statusLabel: string;
+  done: boolean;
 };
 
-function hexToRgba(hex: string, alpha: number): string {
-  const h = hex.replace("#", "");
-  if (h.length !== 6) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+function expandRequest(req: AdvanceRequest): TxEvent[] {
+  const events: TxEvent[] = [];
+  const amount = req.approvedAmount || req.requestedAmount;
+  const id = req.id;
+
+  // 1. Advance Request event
+  events.push({
+    id: `${id}-req`,
+    type: "request",
+    title: "Advance Request",
+    sub: `Advance request of ${formatMoney(amount)}`,
+    datetime: formatDatetime(req.requestDate),
+    sortTs: new Date(req.requestDate).getTime(),
+    amount,
+    prefix: "−",
+    amountGreen: false,
+    iconBg: "#EEE9FF",
+    iconColor: "#5B3CE3",
+    iconType: "calendar",
+    statusLabel: formatRequestStatus(req.status, req.statusLabel),
+    done: req.disbursalStatus === "Disbursed" || req.recoveryStatus === "Completed",
+  });
+
+  // 2. Disbursal event (if disbursed)
+  if (req.disbursalStatus === "Disbursed") {
+    const disbursedAt = (req as unknown as Record<string, string>).disbursedAt || req.requestDate;
+    events.push({
+      id: `${id}-dis`,
+      type: "disbursal",
+      title: "Advance Disbursed",
+      sub: `Advance of ${formatMoney(amount)} credited to your account`,
+      datetime: formatDatetime(disbursedAt),
+      sortTs: new Date(disbursedAt).getTime() + 1,
+      amount,
+      prefix: "+",
+      amountGreen: true,
+      iconBg: "#DCFCE7",
+      iconColor: "#16A34A",
+      iconType: "wallet",
+      statusLabel: "Completed",
+      done: true,
+    });
+  }
+
+  // 3. Repayment event (if recovered)
+  if (req.recoveryStatus === "Completed" && req.recoveryDate) {
+    events.push({
+      id: `${id}-rep`,
+      type: "repayment",
+      title: "EMI Paid",
+      sub: `EMI for advance #${id.slice(-8).toUpperCase()}`,
+      datetime: formatDatetime(req.recoveryDate),
+      sortTs: new Date(req.recoveryDate).getTime(),
+      amount: req.totalRecoveryAmount || amount,
+      prefix: "−",
+      amountGreen: false,
+      iconBg: "#FEF3C7",
+      iconColor: "#D97706",
+      iconType: "emi",
+      statusLabel: "Completed",
+      done: true,
+    });
+  }
+
+  return events;
 }
 
-function getStatusColor(request: AdvanceRequest) {
-  const color = request.statusColor ?? FALLBACK_COLOR[request.status] ?? "#8D90A3";
-  return color.startsWith("#") ? color : "#8D90A3";
-}
-
-function getStatusLabel(request: AdvanceRequest) {
-  return formatRequestStatus(request.status, request.statusLabel);
-}
-
-function shortRequestId(id: string) {
-  return id ? `#${id.slice(0, 8).toUpperCase()}` : "—";
-}
-
-function isClosed(request: AdvanceRequest) {
-  return ["Paid", "Recovered", "Rejected"].includes(request.status);
-}
-
-function stepIndexOf(status: RequestStatus): number {
-  if (status === "Rejected") return 1;
-  const idx = TIMELINE_STEPS.indexOf(status);
-  return idx >= 0 ? idx : 0;
-}
-
-function compactStatusLabel(label: string) {
-  const normalized = label.toLowerCase();
-  if (normalized.includes("pending approval")) return "Pending approval";
-  if (normalized.includes("employer approved")) return "Employer OK";
-  if (normalized.includes("admin approved")) return "Admin OK";
-  if (normalized.includes("payment scheduled")) return "Scheduled";
-  return label;
-}
-
-function StatusPill({ request, compact = false }: { request: AdvanceRequest; compact?: boolean }) {
-  const color = getStatusColor(request);
-  const label = getStatusLabel(request);
+// SVG icons matching mockup
+function TxIcon({ type, bg, color }: { type: TxEvent["iconType"]; bg: string; color: string }) {
   return (
-    <span className={`tx-status-pill${compact ? " compact" : ""}`} style={{ color, background: hexToRgba(color, 0.1) }}>
-      {compact ? compactStatusLabel(label) : label}
-    </span>
-  );
-}
-
-function Timeline({ request }: { request: AdvanceRequest }) {
-  const currentIdx = stepIndexOf(request.status);
-  const isRejected = request.status === "Rejected";
-  const displaySteps = isRejected ? (["Submitted", "Rejected"] as RequestStatus[]) : TIMELINE_STEPS;
-
-  return (
-    <div className="tx-timeline">
-      {displaySteps.map((step, index) => {
-        const isLast = index === displaySteps.length - 1;
-        const timelineItem = request.timeline.find((item) => item.status === step);
-        const done = isRejected ? step === "Submitted" || step === "Rejected" : index <= currentIdx;
-        const active = !isRejected && index === currentIdx;
-        const color = step === request.status ? getStatusColor(request) : FALLBACK_COLOR[step] ?? "#98A2B3";
-
-        return (
-          <div className={`tx-timeline-row ${done ? "done" : ""} ${active ? "active" : ""}`} key={step}>
-            <div className="tx-timeline-marker">
-              <span style={{ background: done || active ? color : undefined }}>
-                {done && step !== "Rejected" && <CheckCircle2 size={12} />}
-                {done && step === "Rejected" && <XCircle size={12} />}
-              </span>
-              {!isLast && <i />}
-            </div>
-            <div className="tx-timeline-copy">
-              <div>
-                <strong>{step === request.status ? getStatusLabel(request) : step}</strong>
-                {timelineItem?.timestamp && <small>{formatShortDate(timelineItem.timestamp)}</small>}
-              </div>
-              {timelineItem?.description && <p>{timelineItem.description}</p>}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function RequestReceipt({ request }: { request: AdvanceRequest }) {
-  const amount = request.approvedAmount || request.requestedAmount;
-  return (
-    <div className="tx-receipt">
-      <div className="tx-receipt-head">
-        <div>
-          <span>Request receipt</span>
-          <strong>{shortRequestId(request.id)}</strong>
-        </div>
-        <StatusPill request={request} compact />
+    <div style={{ width: 46, height: 46, borderRadius: 14, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
+      {type === "wallet" && (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="5" width="20" height="14" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
+          <path d="M2 10h20" stroke={color} strokeWidth="1.8"/>
+          <circle cx="17" cy="14" r="1.2" fill={color}/>
+          <path d="M7 3l3 2-3 2" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {type === "calendar" && (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="17" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
+          <path d="M16 2v4M8 2v4M3 10h18" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+          <circle cx="12" cy="15" r="1.5" fill={color}/>
+        </svg>
+      )}
+      {type === "emi" && (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="17" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
+          <path d="M16 2v4M8 2v4M3 10h18" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M8 14h4M8 17h6" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      )}
+      {/* Green check badge */}
+      <div style={{ position: "absolute", bottom: -3, right: -3, width: 16, height: 16, borderRadius: "50%", background: "#16A34A", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
+        <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </div>
-      <div className="tx-receipt-grid">
-        <div>
-          <span>Amount</span>
-          <strong>{formatMoney(request.principalAmount || amount)}</strong>
-        </div>
-        <div>
-          <span>Tenure</span>
-          <strong>{request.interestDays ? `${request.interestDays} days` : "—"}</strong>
-        </div>
-        <div>
-          <span>Interest</span>
-          <strong>{formatMoney(request.interestAmount || 0)}</strong>
-        </div>
-        <div>
-          <span>Total payment</span>
-          <strong>{formatMoney(request.totalRecoveryAmount || amount)}</strong>
-        </div>
-      </div>
-      <div className="tx-receipt-date">
-        <CalendarDays size={14} />
-        <span>Payment date</span>
-        <strong>{request.recoveryDate ? formatShortDate(request.recoveryDate) : "—"}</strong>
-      </div>
-      <div className="tx-receipt-grid compact">
-        <div>
-          <span>Requested</span>
-          <strong>{formatShortDate(request.requestDate)}</strong>
-        </div>
-        <div>
-          <span>Recovery</span>
-          <strong>{request.recoveryDate ? formatShortDate(request.recoveryDate) : "—"}</strong>
-        </div>
-      </div>
-      <Timeline request={request} />
-    </div>
-  );
-}
-
-function CurrentRequestCard({ request, expanded, onToggle }: {
-  request: AdvanceRequest;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  const amount = request.approvedAmount || request.requestedAmount;
-  return (
-    <section className="tx-current-card">
-      <div className="tx-current-top">
-        <div>
-          <span>Live request · {shortRequestId(request.id)}</span>
-          <h2>{formatMoney(amount)}</h2>
-        </div>
-        <StatusPill request={request} compact />
-      </div>
-      <div className="tx-current-meta">
-        <div>
-          <Clock3 size={15} />
-          <span>Started {formatShortDate(request.requestDate)}</span>
-        </div>
-        <div>
-          <Landmark size={15} />
-          <span>{request.recoveryDate ? `Pays on ${formatShortDate(request.recoveryDate)}` : "Payment date pending"}</span>
-        </div>
-      </div>
-      <button type="button" className="tx-expand-btn" onClick={onToggle}>
-        {expanded ? "Hide details" : "View receipt"}
-        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
-      {expanded && <RequestReceipt request={request} />}
-    </section>
-  );
-}
-
-function TransactionRow({ request, expanded, onToggle }: {
-  request: AdvanceRequest;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  const amount = request.approvedAmount || request.requestedAmount;
-  const color = getStatusColor(request);
-  const positive = ["Paid", "Recovered"].includes(request.status);
-
-  return (
-    <div className="tx-row-wrap">
-      <button type="button" className="tx-row" onClick={onToggle}>
-        <span className="tx-row-icon" style={{ color, background: hexToRgba(color, 0.1) }}>
-          <IndianRupee size={18} />
-        </span>
-        <span className="tx-row-body">
-          <strong>{shortRequestId(request.id)}</strong>
-          <small>{formatShortDate(request.requestDate)} · {getStatusLabel(request)}</small>
-        </span>
-        <span className="tx-row-side">
-          <strong>{positive ? "+" : ""}{formatMoney(amount)}</strong>
-          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </span>
-      </button>
-      {expanded && <RequestReceipt request={request} />}
     </div>
   );
 }
 
 export function ActivityScreen({ requests }: ActivityScreenProps) {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const currentRequest = requests.find((request) => !isClosed(request));
-  const history = requests.filter((request) => request.id !== currentRequest?.id);
-  const totalDisbursed = requests
-    .filter((request) => ["Disbursed", "Payment Scheduled", "Paid", "Recovered"].includes(request.status))
-    .reduce((sum, request) => sum + Number(request.approvedAmount || request.requestedAmount || 0), 0);
+  const [tab, setTab] = useState<Tab>("all");
+
+  // Expand all requests into individual transaction events
+  const allEvents = requests.flatMap(expandRequest).sort((a, b) => b.sortTs - a.sortTs);
+
+  const filtered = allEvents.filter((e) => {
+    if (tab === "advances") return e.type === "request" || e.type === "disbursal";
+    if (tab === "repayments") return e.type === "repayment";
+    return true;
+  });
+
+  // Group by month
+  const grouped = new Map<string, TxEvent[]>();
+  for (const e of filtered) {
+    const ts = new Date(e.sortTs);
+    const key = isNaN(ts.getTime()) ? "Unknown" : ts.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(e);
+  }
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: "all", label: "All Transactions" },
+    { id: "advances", label: "Advances" },
+    { id: "repayments", label: "Repayments" },
+  ];
 
   return (
-    <div className="activity-screen-v2 tx-screen">
-      <div className="tx-header">
-        <div>
-          <span>Money movement</span>
-          <h1>Transactions</h1>
-        </div>
-        <div className="tx-header-icon">
-          <ReceiptText size={20} />
-        </div>
+    <div className="hist-screen">
+
+      {/* ── Tabs ── */}
+      <div className="hist-tabs-wrap">
+        {TABS.map(({ id, label }) => (
+          <button key={id} type="button" className={`hist-tab ${tab === id ? "active" : ""}`} onClick={() => setTab(id)}>
+            {label}
+          </button>
+        ))}
       </div>
 
-      <div className="tx-summary-strip">
-        <div>
-          <WalletCards size={17} />
-          <span>Total accessed</span>
-          <strong>{formatMoney(totalDisbursed)}</strong>
-        </div>
-        <div>
-          <FileText size={17} />
-          <span>Requests</span>
-          <strong>{requests.length}</strong>
-        </div>
+      {/* ── Filter bar ── */}
+      <div className="hist-filter-bar">
+        <button type="button" className="hist-filter-btn">
+          <CalendarDays size={13} /> All Dates <ChevronDown size={12} />
+        </button>
+        <button type="button" className="hist-filter-btn">
+          All Status <ChevronDown size={12} />
+        </button>
+        <button type="button" className="hist-export-btn">
+          <Download size={13} /> Export
+        </button>
       </div>
 
-      {currentRequest && (
-        <CurrentRequestCard
-          request={currentRequest}
-          expanded={expanded === currentRequest.id}
-          onToggle={() => setExpanded(expanded === currentRequest.id ? null : currentRequest.id)}
-        />
-      )}
+      {/* ── Body ── */}
+      <div className="screen-body hist-body">
 
-      <div className="tx-section-head">
-        <div>
-          <span>History</span>
-          <h2>{currentRequest ? "Past advances" : "Advance history"}</h2>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "48px 16px" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#6B7280", marginBottom: 4 }}>No transactions yet</div>
+            <div style={{ fontSize: 12, color: "#9CA3AF" }}>Your advance history will appear here</div>
+          </div>
+        ) : (
+          Array.from(grouped.entries()).map(([month, events]) => (
+            <div key={month}>
+              <div className="hist-month-label">{month}</div>
+              <div className="hist-tx-card">
+                {events.map((e, i) => (
+                  <div key={e.id}>
+                    {i > 0 && <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />}
+                    <div className="hist-tx-row">
+                      <TxIcon type={e.iconType} bg={e.iconBg} color={e.iconColor} />
+                      <div className="hist-tx-body">
+                        <div className="hist-tx-title">{e.title}</div>
+                        <div className="hist-tx-sub">{e.sub}</div>
+                        <div className="hist-tx-datetime">{e.datetime}</div>
+                      </div>
+                      <div className="hist-tx-right">
+                        <div className={`hist-tx-amount ${e.amountGreen ? "green" : ""}`}>
+                          {e.prefix} {formatMoney(e.amount)}
+                        </div>
+                        <span className={`chip ${e.statusLabel === "Completed" || e.statusLabel === "Disbursed" ? "chip-green" : "chip-amber"}`} style={{ fontSize: 10, marginTop: 4 }}>
+                          {e.statusLabel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+
+        {/* Security note */}
+        <div className="hist-security-note">
+          <Shield size={14} color="#9CA3AF" />
+          <div className="hist-security-text">
+            <span>All transactions are secure and encrypted</span>
+            <br />
+            <span>Need help? <a href="#help" style={{ color: "#5B3CE3", fontWeight: 700 }}>Contact our support team.</a></span>
+          </div>
+          <ChevronRight size={14} color="#9CA3AF" />
         </div>
-        <small>{history.length} total</small>
+
+        {/* Refer & Earn */}
+        <div className="hist-refer-card">
+          <div className="hist-refer-icon">🎁</div>
+          <div className="hist-refer-body">
+            <div className="hist-refer-title">Refer &amp; Earn Rewards!</div>
+            <div className="hist-refer-sub">Refer your friends and earn exciting rewards on every successful referral.</div>
+          </div>
+          <button type="button" className="hist-refer-btn">
+            <Gift size={13} /> Refer Now <ChevronRight size={13} />
+          </button>
+        </div>
+
+        <div className="mp-bottom-space" />
       </div>
-
-      {requests.length === 0 ? (
-        <div className="tx-empty">
-          <div><ShieldCheck size={28} /></div>
-          <h3>No transactions yet</h3>
-          <p>Your salary advance requests and repayments will appear here once you make your first request.</p>
-        </div>
-      ) : history.length === 0 ? (
-        <div className="tx-empty slim">
-          <p>No past advances yet. Your completed requests will appear here.</p>
-        </div>
-      ) : (
-        <div className="tx-list">
-          {history.map((request) => (
-            <TransactionRow
-              key={request.id}
-              request={request}
-              expanded={expanded === request.id}
-              onToggle={() => setExpanded(expanded === request.id ? null : request.id)}
-            />
-          ))}
-        </div>
-      )}
-
-      <div style={{ height: 42 }} />
     </div>
   );
 }

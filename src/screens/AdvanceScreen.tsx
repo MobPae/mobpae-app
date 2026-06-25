@@ -1,6 +1,22 @@
-import { AlertCircle, CalendarDays, IndianRupee, ReceiptText, ShieldCheck, WalletCards } from "lucide-react";
-import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
-import type { AdvanceRequest, RecoveryPreview } from "../types/app";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Banknote,
+  CalendarDays,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  CreditCard,
+  Gift,
+  IndianRupee,
+  Info,
+  RefreshCw,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
+import { useState } from "react";
+import { formatFullDate, formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
+import type { AdvanceRequest, RecoveryPreview, View } from "../types/app";
 
 const MIN_AMOUNT = 500;
 
@@ -13,16 +29,27 @@ type AdvanceScreenProps = {
   previewLoading: boolean;
   currentRequest?: AdvanceRequest;
   submitting: boolean;
+  salaryInHand?: number;
+  payrollDay?: number | null;
   onAmountChange: (amount: number) => void;
   onSubmit: () => void;
   blockerActionLabel: string;
   onResolveBlocker: () => void;
+  onNavigate?: (view: View) => void;
 };
 
-function makeChips(limit: number): number[] {
-  const step = Math.max(Math.round(limit / 4 / 500) * 500, MIN_AMOUNT);
-  return [step, step * 2, step * 3, limit];
+function nextPaydayDate(payrollDay?: number | null) {
+  if (!payrollDay) return null;
+  const today = new Date();
+  const offset = today.getDate() > payrollDay ? 1 : 0;
+  return new Date(today.getFullYear(), today.getMonth() + offset, payrollDay);
 }
+function formatPayday(d: Date | null) {
+  if (!d) return "—";
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+/* ── Page heading shared across all advance states ── */
 
 export function AdvanceScreen({
   amount,
@@ -33,256 +60,497 @@ export function AdvanceScreen({
   previewLoading,
   currentRequest,
   submitting,
+  salaryInHand,
+  payrollDay,
   onAmountChange,
   onSubmit,
   blockerActionLabel,
   onResolveBlocker,
+  onNavigate,
 }: AdvanceScreenProps) {
-  const chips    = makeChips(limit);
+  const [step, setStep] = useState<"calculator" | "review" | "success">("calculator");
+  const [agree1, setAgree1] = useState(false);
+  const [agree2, setAgree2] = useState(false);
+
   const hasActive = Boolean(
     currentRequest &&
     !["Paid", "Recovered", "Rejected"].includes(currentRequest.status)
   );
-  const canSubmit =
-    eligible &&
-    !hasActive &&
-    amount >= MIN_AMOUNT &&
-    amount <= limit &&
-    !submitting;
+  const canSubmit = eligible && !hasActive && amount >= MIN_AMOUNT && amount <= limit && !previewLoading;
 
-  const processingFee = preview?.processingFee;
-  const interest      = preview?.interest;
-  const youReceive    = preview?.youReceive;
-  const toRecover     = preview?.total;
-  const recoveryDate  = preview?.recoveryDate ?? currentRequest?.recoveryDate ?? "";
-  const interestRate  = preview?.interestRate;
-  const interestDays  = preview?.interestDays;
-  const activeAmount = currentRequest?.approvedAmount || currentRequest?.requestedAmount || 0;
-  const activeInterest = currentRequest?.interestAmount ?? 0;
-  const activeTotal = currentRequest?.totalRecoveryAmount || activeAmount + activeInterest;
-  const activeTenure = currentRequest?.interestDays;
-  const activeStatus = formatRequestStatus(currentRequest?.status, currentRequest?.statusLabel);
+  const nextPayday = nextPaydayDate(payrollDay);
+  const salary = salaryInHand ?? (limit > 0 ? Math.round(limit / 0.5) : 0);
 
-  const fmtFee = (v: number | undefined) =>
-    previewLoading ? "…" : v !== undefined ? formatMoney(v) : "—";
+  // ── Active advance overview (matches mockup) ──────────────
+  if (hasActive && currentRequest) {
+    const isPaid = currentRequest.recoveryStatus === "Completed";
+    const statusLabel = isPaid ? "Repaid" : formatRequestStatus(currentRequest.status, currentRequest.statusLabel);
+    const chipClass = isPaid ? "chip-green" : "chip-amber";
+    const iconBg = isPaid ? "#F0FDF4" : "#FFFBEB";
+    const iconColor = isPaid ? "var(--green)" : "var(--amber)";
 
-  const interestLabel =
-    interestRate !== undefined && interestDays !== undefined
-      ? `Interest (${interestRate}% p.a. · ${interestDays}d)`
-      : interestRate !== undefined
-        ? `Interest (${interestRate}% p.a.)`
-        : "Interest (1.5%)";
+    return (
+      <div className="adv-screen">
 
-  return (
-    <div className="advance-screen">
-
-      {/* ── Back header ───────────────────────────────────────────── */}
-      <div className="advance-page-header">
-        <div>
-          <span>Salary access</span>
-          <h2>{hasActive ? "Your advance" : "Request advance"}</h2>
-        </div>
-      </div>
-
-      {!eligible && !hasActive && nextBlocker && (
-        <div className="adv-blocker-card">
-          <div className="adv-blocker-icon"><AlertCircle size={18} /></div>
-          <div>
-            <span>Before you request</span>
-            <strong>{nextBlocker}</strong>
-            <p>Complete this step to unlock your salary advance request.</p>
-          </div>
-          <button type="button" onClick={onResolveBlocker}>{blockerActionLabel}</button>
-        </div>
-      )}
-
-      {/* ── Available limit card ──────────────────────────────────── */}
-      {!hasActive && eligible && <div className="advance-avail-card">
-        <div className="advance-avail-topline">
-          <div>
-            <div className="advance-avail-label">Available advance</div>
-            <div className="advance-avail-amount">
-              {limit > 0 ? formatMoney(limit) : "N/A"}
+        {/* Hero card */}
+        <div className="adv-hero-card">
+          <div className="adv-hero-circle adv-hero-circle--tl" />
+          <div className="adv-hero-circle adv-hero-circle--br" />
+          <div className="adv-hero-top">
+            <div className="adv-hero-left">
+              <div className="adv-hero-label">Total Available Salary</div>
+              <div className="adv-hero-amount">{salary > 0 ? formatMoney(salary) : "—"}</div>
+              <div className="adv-hero-updated">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+                Updated just now
+              </div>
+            </div>
+            <div className="adv-hero-divider" />
+            <div className="adv-hero-right">
+              <div>
+                <div className="adv-hero-stat-label">Available for Advance</div>
+                <div className="adv-hero-stat-val">{formatMoney(limit)}</div>
+              </div>
+              <div>
+                <div className="adv-hero-stat-label">Next Payday</div>
+                <div className="adv-hero-stat-val">{nextPayday ? formatPayday(nextPayday) : "—"}</div>
+              </div>
             </div>
           </div>
-          <div className="advance-card-icon">
-            <WalletCards size={22} />
-          </div>
-        </div>
-        <div className="advance-avail-meta-grid">
-          <span><IndianRupee size={14} /> Instant request</span>
-          <span><CalendarDays size={14} /> Payroll recovery</span>
-        </div>
-      </div>}
-
-      {/* ── Active advance summary ────────────────────────────────── */}
-      {hasActive && (
-        <div className="adv-current-card">
-          <div className="adv-current-head">
-            <div>
-              <span>Current advance</span>
-              <h3>{formatMoney(activeAmount)}</h3>
-            </div>
-            <strong>{activeStatus}</strong>
-          </div>
-
-          <div className="adv-current-grid">
-            <div>
-              <span>Amount</span>
-              <strong>{formatMoney(activeAmount)}</strong>
-            </div>
-            <div>
-              <span>Tenure</span>
-              <strong>{activeTenure ? `${activeTenure} days` : "—"}</strong>
-            </div>
-            <div>
-              <span>Interest</span>
-              <strong>{formatMoney(activeInterest)}</strong>
-            </div>
-            <div>
-              <span>Total payment</span>
-              <strong>{formatMoney(activeTotal)}</strong>
-            </div>
-          </div>
-
-          <div className="adv-current-date">
-            <CalendarDays size={15} />
-            <span>{currentRequest?.recoveryDate ? "Expected payment" : "Payment date"}</span>
-            <strong>{recoveryDate ? formatShortDate(recoveryDate) : "—"}</strong>
-          </div>
-
-          <div className="adv-current-note">
-            <AlertCircle size={14} />
-            <p>You can withdraw more after this payment is cleared.</p>
-          </div>
-
-          <button type="button" className="adv-current-track" onClick={onResolveBlocker}>
-            Track request
+          <button
+            type="button"
+            className="adv-hero-btn"
+            onClick={() => onNavigate?.("repayments")}
+          >
+            <CreditCard size={14} color="#5B3CE3" />
+            View Repayment Schedule
+            <ArrowRight size={13} color="#5B3CE3" style={{ marginLeft: "auto" }} />
           </button>
         </div>
-      )}
 
-      {/* ── Amount selector ───────────────────────────────────────── */}
-      {!hasActive && eligible && limit > 0 && (
-        <div className="advance-amount-box">
-          <div className="adv-amount-stack">
-            <div className="adv-amount-label">How much would you like to withdraw?</div>
-            <div className="adv-amount-display-value">{formatMoney(amount)}</div>
-            <div className="adv-range-wrap">
-              <input
-                className="adv-range"
-                type="range"
-                min={MIN_AMOUNT}
-                max={limit}
-                step={100}
-                value={amount}
-                onChange={(event) => onAmountChange(Number(event.target.value))}
-              />
-              <div className="adv-range-labels">
-                <span>{formatMoney(MIN_AMOUNT)}</span>
-                <span>{formatMoney(limit)}</span>
+        <div className="screen-body" style={{ padding: "0 0 16px" }}>
+
+          {/* Your Advances section */}
+          <div className="adv-ov-section-hdr">
+            <span className="adv-ov-section-title">Your Advances</span>
+            <button type="button" className="adv-ov-section-link" onClick={() => onNavigate?.("activity")}>
+              View History <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <div className="adv-ov-card">
+            {/* Main advance row */}
+            <div className="adv-ov-row" onClick={() => onNavigate?.("repayments")} style={{ cursor: "pointer" }}>
+              <div className="adv-ov-icon" style={{ background: iconBg, color: iconColor }}>
+                <Wallet size={22} />
+              </div>
+              <div className="adv-ov-info">
+                <div className="adv-ov-amount">
+                  Advance of {formatMoney(currentRequest.approvedAmount || currentRequest.requestedAmount)}
+                </div>
+                <div className="adv-ov-meta">
+                  <span className={`chip ${chipClass}`} style={{ fontSize: 11 }}>
+                    <span className="chip-dot" />{statusLabel}
+                  </span>
+                </div>
+                <div className="adv-ov-date">
+                  {formatFullDate(currentRequest.requestDate)}
+                </div>
+              </div>
+              <ChevronRight size={16} color="#9CA3AF" />
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: "#F3F1FF" }} />
+
+            {/* Stats row */}
+            <div className="adv-ov-stats">
+              <div className="adv-ov-stat">
+                <div className="adv-ov-stat-label">You Received</div>
+                <div className="adv-ov-stat-val">{formatMoney(currentRequest.principalAmount || currentRequest.approvedAmount || currentRequest.requestedAmount)}</div>
+              </div>
+              <div className="adv-ov-stat-sep" />
+              <div className="adv-ov-stat">
+                <div className="adv-ov-stat-label">Repayment on</div>
+                <div className="adv-ov-stat-val" style={{ fontWeight: 800 }}>{formatFullDate(currentRequest.recoveryDate)}</div>
+              </div>
+              <div className="adv-ov-stat-sep" />
+              <div className="adv-ov-stat">
+                <div className="adv-ov-stat-label">Total Repayment</div>
+                <div className="adv-ov-stat-val" style={{ color: "var(--P)" }}>
+                  {formatMoney(currentRequest.totalRecoveryAmount)}
+                </div>
+                {!isPaid && (
+                  <span className="chip chip-green" style={{ fontSize: 10, marginTop: 3 }}>
+                    <span className="chip-dot" /> On Payday
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="adv-chips">
-            {chips.map(chip => (
-              <button
-                key={chip}
-                type="button"
-                className={`adv-chip${amount === chip ? " active" : ""}`}
-                onClick={() => onAmountChange(chip)}
-              >
-                {formatMoney(chip)}
-              </button>
+          {/* Why salary advances */}
+          <div className="adv-why-card">
+            <div className="adv-why-body">
+              <div className="adv-why-title">Why salary advances?</div>
+              <div className="adv-why-sub">Access your earned salary anytime and manage your finances better.</div>
+            </div>
+            <div className="adv-why-illus">💰</div>
+          </div>
+
+          {/* Refer & Earn */}
+          <div className="adv-refer-card">
+            <div className="adv-refer-icon">🎁</div>
+            <div className="adv-refer-body">
+              <div className="adv-refer-title">Refer &amp; Earn Rewards!</div>
+              <div className="adv-refer-sub">Refer your friends and earn exciting rewards on every successful referral.</div>
+            </div>
+            <button type="button" className="adv-refer-btn">
+              <Gift size={14} /> Refer Now <ArrowRight size={13} />
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ── Setup required (not eligible, no active) ──────────────
+  if (!eligible) {
+    const blockerReasons = [
+      { label: "KYC Verification", done: nextBlocker !== "Complete KYC" && nextBlocker !== "Verify KYC" && nextBlocker !== "KYC under review" },
+      { label: "Bank Account", done: nextBlocker !== "Add bank account" && nextBlocker !== "Bank verification pending" },
+      { label: "Activate Membership", done: nextBlocker !== "Activate plan" && nextBlocker !== "Activate membership" },
+    ];
+    return (
+      <div className="adv-screen">
+        <div className="screen-body">
+          <div className="adv-blocked-hero">
+            <div className="adv-blocked-icon-wrap"><Wallet size={32} /></div>
+            <div className="adv-blocked-badge" style={{ background: "#FEF3C7", color: "#D97706" }}>Setup Required</div>
+            <div className="adv-blocked-title">Complete setup to access advances</div>
+            <div className="adv-blocked-sub">{nextBlocker || "Please complete all required steps below."}</div>
+          </div>
+          <div className="adv-step-card">
+            <div className="adv-step-hdr">Required steps</div>
+            {blockerReasons.map((r, i) => (
+              <div key={r.label} className="adv-step-row">
+                <div className={`adv-step-num ${r.done ? "done" : ""}`}>
+                  {r.done ? <CheckCircle size={14} /> : i + 1}
+                </div>
+                <div className="adv-step-body">
+                  <div className="adv-step-title">{r.label}</div>
+                  <div className="adv-step-sub">{r.done ? "Completed" : "Action required"}</div>
+                </div>
+                {r.done && <BadgeCheck size={16} color="#16A34A" />}
+              </div>
             ))}
           </div>
-
-          {(amount < MIN_AMOUNT || amount > limit) && (
-            <p className="adv-hint-err">
-              Enter an amount between {formatMoney(MIN_AMOUNT)} and {formatMoney(limit)}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* ── Repayment preview card ────────────────────────────────── */}
-      {!hasActive && eligible && limit > 0 && (
-        <div className="adv-breakdown">
-          <div className="adv-breakdown-head">
-            <div>
-              <div className="adv-breakdown-title">Repayment preview</div>
-              <p>Based on your selected amount</p>
-            </div>
-            <span><ReceiptText size={16} /></span>
-          </div>
-
-          <div className="adv-preview-grid">
-            <div>
-              <span>Amount</span>
-              <strong>{formatMoney(amount)}</strong>
-            </div>
-            <div>
-              <span>Tenure</span>
-              <strong>{previewLoading ? "…" : interestDays ? `${interestDays} days` : "—"}</strong>
-            </div>
-          </div>
-
-          <div className="adv-breakdown-row highlight">
-            <span>You receive</span>
-            <strong>{fmtFee(youReceive)}</strong>
-          </div>
-
-          <div className="adv-breakdown-row">
-            <span>{interestLabel}</span>
-            <strong>{fmtFee(interest)}</strong>
-          </div>
-
-          {processingFee !== undefined && (
-            <div className="adv-breakdown-row">
-              <span>Processing fee</span>
-              <strong>{fmtFee(processingFee)}</strong>
-            </div>
-          )}
-
-          <div style={{ height: 1, background: "var(--b1)", margin: "8px 0" }} />
-
-          <div className="adv-breakdown-row" style={{ fontWeight: 700, color: "var(--t1)" }}>
-            <span style={{ fontWeight: 700, color: "var(--t1)" }}>Total repayment</span>
-            <strong style={{ fontSize: 14 }}>{fmtFee(toRecover)}</strong>
-          </div>
-
-          <div className="adv-breakdown-row">
-            <span>Repayment date</span>
-            <strong>{recoveryDate ? formatShortDate(recoveryDate) : "—"}</strong>
+          <div style={{ padding: "0 16px 16px" }}>
+            <button type="button" className="mp-btn-primary" onClick={onResolveBlocker}>
+              {blockerActionLabel || "Complete Setup"} <ArrowRight size={16} />
+            </button>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* ── Note ──────────────────────────────────────────────────── */}
-      {!hasActive && eligible && limit > 0 && (
-        <div className="adv-info">
-          <ShieldCheck size={14} />
-          <p>Auto-debited from your next salary. No impact on your CIBIL score.</p>
+  // ── Success screen ────────────────────────────────────────
+  if (step === "success") {
+    return (
+      <div className="adv-success-screen">
+        <div className="adv-success-topbar">
+          <div className="adv-success-topbar-left">
+            <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+              <rect width="100" height="100" rx="12" fill="#5B3CE3"/>
+              <polygon points="12,88 24,88 62,12 50,12" fill="white"/>
+              <polygon points="36,88 48,88 86,12 74,12" fill="white"/>
+            </svg>
+            MobPae
+          </div>
+          <div className="adv-success-topbar-right">
+            <ShieldCheck size={14} /> Secured
+          </div>
         </div>
-      )}
+        <div className="adv-success-body">
+          <div className="adv-success-check"><CheckCircle size={40} /></div>
+          <div className="adv-success-title">Advance Requested! 🎉</div>
+          <div className="adv-success-sub">
+            Your salary advance request has been submitted and is under review.
+            Funds will be credited to your bank account once approved.
+          </div>
+          <div className="adv-success-amount-card">
+            <div className="adv-success-amount-label">Amount Requested</div>
+            <div className="adv-success-amount-val">{formatMoney(amount)}</div>
+            {preview && (
+              <div className="adv-success-bank-row">
+                <div className="adv-success-bank-col">
+                  <div className="adv-success-bank-lbl">You receive</div>
+                  <div className="adv-success-bank-val">{formatMoney(preview.youReceive)}</div>
+                </div>
+                <div className="adv-success-bank-col">
+                  <div className="adv-success-bank-lbl">Interest</div>
+                  <div className="adv-success-bank-val">{formatMoney(preview.interest)}</div>
+                </div>
+                <div className="adv-success-bank-col">
+                  <div className="adv-success-bank-lbl">Repay on</div>
+                  <div className="adv-success-bank-val">{formatShortDate(preview.recoveryDate)}</div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="adv-repayment-list">
+            <div className="adv-repayment-list-hdr">What happens next?</div>
+            {[
+              { icon: <Clock size={16} />, title: "Employer review", sub: "Your employer will review and approve" },
+              { icon: <BadgeCheck size={16} />, title: "Admin approval", sub: "MobPae team gives final approval" },
+              { icon: <CreditCard size={16} />, title: "Funds credited", sub: "Amount sent to your bank account" },
+              { icon: <CalendarDays size={16} />, title: "Auto repayment", sub: preview ? `Recovered on ${formatShortDate(preview.recoveryDate)}` : "Recovered on your next payday" },
+            ].map((item) => (
+              <div key={item.title} className="adv-repayment-list-row">
+                <div className="adv-repayment-list-icon">{item.icon}</div>
+                <div className="adv-repayment-list-body">
+                  <div className="adv-repayment-list-title">{item.title}</div>
+                  <div className="adv-repayment-list-sub">{item.sub}</div>
+                </div>
+                <CheckCircle size={14} color="#16A34A" />
+              </div>
+            ))}
+          </div>
+          <div className="adv-thankyou-card">
+            <div className="adv-thankyou-icon">✨</div>
+            <div className="adv-thankyou-text">Thank you for using MobPae! Track your advance status in the History tab.</div>
+          </div>
+        </div>
+        <div className="adv-success-footer">
+          <button type="button" className="mp-btn-primary" onClick={() => setStep("calculator")}>Done</button>
+        </div>
+      </div>
+    );
+  }
 
-      {/* ── Not eligible ──────────────────────────────────────────── */}
-      {/* ── CTA ───────────────────────────────────────────────────── */}
-      {!hasActive && eligible && <div className="adv-submit-bar">
-        <button
-          type="button"
-          className="adv-submit"
-          disabled={!canSubmit}
-          onClick={onSubmit}
-        >
-          {submitting ? (
-            <span className="cta-spinner" style={{ borderTopColor: "white", borderColor: "rgba(255,255,255,0.3)" }} />
-          ) : (
-            <>Preview &amp; Submit {amount >= MIN_AMOUNT && amount <= limit ? formatMoney(amount) : ""}</>
+  // ── Review screen ─────────────────────────────────────────
+  if (step === "review") {
+    const canConfirm = agree1 && agree2 && !submitting;
+    return (
+      <div className="adv-review-screen">
+        <div className="mp-topbar">
+          <button type="button" className="mp-topbar-back" onClick={() => setStep("calculator")}>
+            ← Back
+          </button>
+          <div className="mp-topbar-logo">
+            <span className="mp-topbar-logo-text" style={{ fontSize: 15 }}>Review Request</span>
+          </div>
+          <div style={{ width: 60 }} />
+        </div>
+        <div className="screen-body adv-review-body">
+          <div className="adv-summary-card">
+            <div className="adv-summary-hdr">
+              <div className="adv-summary-icon"><IndianRupee size={18} /></div>
+              <div className="adv-summary-title">Advance Summary</div>
+            </div>
+            <div className="adv-review-row">
+              <span className="adv-review-lbl">Requested amount</span>
+              <span className="adv-review-val">{formatMoney(amount)}</span>
+            </div>
+            {preview && (
+              <>
+                <div className="adv-review-row">
+                  <span className="adv-review-lbl">Processing fee</span>
+                  <span className="adv-review-val">{formatMoney(preview.processingFee)}</span>
+                </div>
+                <div className="adv-review-row">
+                  <span className="adv-review-lbl">Interest ({preview.interestDays} days{preview.interestRate ? ` @ ${preview.interestRate}% p.a.` : ""})</span>
+                  <span className="adv-review-val">{formatMoney(preview.interest)}</span>
+                </div>
+                <div className="adv-review-row">
+                  <span className="adv-review-lbl">You will receive</span>
+                  <span className="adv-review-val" style={{ color: "#16A34A", fontWeight: 800 }}>{formatMoney(preview.youReceive)}</span>
+                </div>
+                <div className="adv-review-row">
+                  <span className="adv-review-lbl">Repayment date</span>
+                  <span className="adv-review-val">{formatShortDate(preview.recoveryDate)}</span>
+                </div>
+              </>
+            )}
+            <div className="adv-review-total">
+              <span className="adv-review-total-lbl">Total repayment</span>
+              <span className="adv-review-total-val">{preview ? formatMoney(preview.total) : formatMoney(amount)}</span>
+            </div>
+          </div>
+          {preview && (
+            <div className="adv-important-note">
+              <div className="adv-important-note-row">
+                <CheckCircle size={16} color="#16A34A" />
+                <div className="adv-important-note-title">How this works</div>
+              </div>
+              <div className="adv-flow-row">
+                <div className="adv-flow-col">
+                  <div className="adv-flow-when">Today</div>
+                  <div className="adv-flow-action">You request</div>
+                  <div className="adv-flow-amt">{formatMoney(amount)}</div>
+                </div>
+                <div className="adv-flow-arrow">→</div>
+                <div className="adv-flow-col">
+                  <div className="adv-flow-when">After approval</div>
+                  <div className="adv-flow-action">Receive</div>
+                  <div className="adv-flow-amt">{formatMoney(preview.youReceive)}</div>
+                </div>
+                <div className="adv-flow-arrow">→</div>
+                <div className="adv-flow-col">
+                  <div className="adv-flow-when">{formatShortDate(preview.recoveryDate)}</div>
+                  <div className="adv-flow-action">Repay</div>
+                  <div className="adv-flow-amt">{formatMoney(preview.total)}</div>
+                </div>
+              </div>
+            </div>
           )}
+          <div className="adv-agree-box">
+            <div className="adv-agree-title">Please confirm</div>
+            <label className="adv-agree-item" style={{ display: "flex", cursor: "pointer" }}>
+              <input type="checkbox" checked={agree1} onChange={e => setAgree1(e.target.checked)} style={{ marginTop: 2, accentColor: "#5B3CE3", width: 16, height: 16, flexShrink: 0 }} />
+              <span className="adv-agree-text" style={{ marginLeft: 8 }}>
+                I agree to the <a href="#terms">Terms &amp; Conditions</a> and understand that {preview ? formatMoney(preview.total) : "the full amount"} will be deducted from my salary on the due date.
+              </span>
+            </label>
+            <label className="adv-agree-item" style={{ display: "flex", cursor: "pointer" }}>
+              <input type="checkbox" checked={agree2} onChange={e => setAgree2(e.target.checked)} style={{ marginTop: 2, accentColor: "#5B3CE3", width: 16, height: 16, flexShrink: 0 }} />
+              <span className="adv-agree-text" style={{ marginLeft: 8 }}>I authorize MobPae and my employer to recover the repayment amount from my salary.</span>
+            </label>
+          </div>
+          <div className="mp-bottom-space" />
+        </div>
+        <div className="adv-sticky-btn">
+          <button type="button" className="mp-btn-primary" disabled={!canConfirm} onClick={async () => { await onSubmit(); setStep("success"); }}>
+            {submitting ? <span className="mp-spinner" /> : <>Confirm Advance <ArrowRight size={16} /></>}
+          </button>
+          <div className="adv-secure-note"><ShieldCheck size={12} /> 256-bit SSL encrypted</div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Calculator ────────────────────────────────────────────
+  return (
+    <div className="adv-screen">
+      <div className="screen-body adv-page-body">
+
+        {/* Salary info card */}
+        <div className="adv-salary-card">
+          <div className="adv-salary-left">
+            <div className="adv-salary-icon"><Wallet size={20} /></div>
+            <div className="adv-salary-label">Monthly Salary</div>
+            <div className="adv-salary-amount">{limit > 0 ? formatMoney(limit / 0.5) : "—"}</div>
+            <div className="adv-salary-updated"><RefreshCw size={10} /> Updated today</div>
+          </div>
+          <div className="adv-salary-right">
+            <div>
+              <div className="adv-avail-label">Available for Advance</div>
+              <div className="adv-avail-amount">{formatMoney(limit)}</div>
+              <span className="chip chip-green"><span className="chip-dot" /> Active</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Amount slider */}
+        <div className="adv-slider-card">
+          <div className="adv-slider-title">How much do you need?</div>
+          <div className="adv-slider-sub">Select an amount up to {formatMoney(limit)}</div>
+          <div className="adv-slider-amount">{formatMoney(amount)}</div>
+          <input type="range" className="adv-range" min={MIN_AMOUNT} max={limit} step={500} value={amount} onChange={e => onAmountChange(Number(e.target.value))} />
+          <div className="adv-range-labels">
+            <span className="adv-range-lbl">{formatMoney(MIN_AMOUNT)}</span>
+            <span className="adv-range-lbl">{formatMoney(limit)}</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
+            {[Math.round(limit * 0.25 / 500) * 500, Math.round(limit * 0.5 / 500) * 500, Math.round(limit * 0.75 / 500) * 500, limit]
+              .filter(v => v >= MIN_AMOUNT)
+              .map(v => (
+                <button key={v} type="button" onClick={() => onAmountChange(v)} style={{ padding: "6px 12px", borderRadius: 99, background: amount === v ? "#5B3CE3" : "#F4F3FF", color: amount === v ? "white" : "#5B3CE3", border: "1.5px solid", borderColor: amount === v ? "#5B3CE3" : "#C4BBFF", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {formatMoney(v)}
+                </button>
+              ))}
+          </div>
+        </div>
+
+        {/* Interest & details */}
+        <div className="adv-detail-card">
+          <div className="adv-detail-hdr">
+            <span className="adv-detail-hdr-title">Advance details</span>
+            {previewLoading && <RefreshCw size={14} color="#9CA3AF" className="spin" />}
+          </div>
+          <div className="adv-detail-grid">
+            <div className="adv-detail-item">
+              <div className="adv-detail-item-label"><IndianRupee size={12} /> You receive</div>
+              <div className="adv-detail-item-val purple">{preview ? formatMoney(preview.youReceive) : "—"}</div>
+            </div>
+            <div className="adv-detail-item">
+              <div className="adv-detail-item-label"><Info size={12} /> Interest</div>
+              <div className="adv-detail-item-val">{preview ? formatMoney(preview.interest) : "—"}</div>
+            </div>
+            <div className="adv-detail-item">
+              <div className="adv-detail-item-label"><CalendarDays size={12} /> Repay on</div>
+              <div className="adv-detail-item-val">{preview ? formatShortDate(preview.recoveryDate) : "—"}</div>
+            </div>
+            <div className="adv-detail-item">
+              <div className="adv-detail-item-label"><CreditCard size={12} /> Total repayment</div>
+              <div className="adv-detail-item-val">{preview ? formatMoney(preview.total) : "—"}</div>
+            </div>
+          </div>
+          {preview && (
+            <div className="adv-hiw-box">
+              <div className="adv-hiw-label">How it works</div>
+              <div className="adv-hiw-row">
+                <div className="adv-hiw-col">
+                  <div className="adv-hiw-when">Today</div>
+                  <div className="adv-hiw-action">You request</div>
+                  <div className="adv-hiw-amt">{formatMoney(amount)}</div>
+                </div>
+                <div className="adv-hiw-arrow">→</div>
+                <div className="adv-hiw-col">
+                  <div className="adv-hiw-when">After approval</div>
+                  <div className="adv-hiw-action">Receive</div>
+                  <div className="adv-hiw-amt">{formatMoney(preview.youReceive)}</div>
+                </div>
+                <div className="adv-hiw-arrow">→</div>
+                <div className="adv-hiw-col">
+                  <div className="adv-hiw-when">{formatShortDate(preview.recoveryDate)}</div>
+                  <div className="adv-hiw-action">Repay</div>
+                  <div className="adv-hiw-amt">{formatMoney(preview.total)}</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Feature highlights */}
+        <div className="adv-features">
+          {[
+            { icon: <CheckCircle size={16} />, label: "Zero hidden", sub: "fees" },
+            { icon: <CheckCircle size={16} />, label: "Instant", sub: "approval" },
+            { icon: <CheckCircle size={16} />, label: "Flexible", sub: "amounts" },
+            { icon: <CheckCircle size={16} />, label: "Auto", sub: "repayment" },
+            { icon: <CheckCircle size={16} />, label: "Secure", sub: "transfer" },
+            { icon: <CheckCircle size={16} />, label: "No credit", sub: "score check" },
+          ].map((f) => (
+            <div key={f.label} className="adv-feature-item">
+              <div className="adv-feature-icon">{f.icon}</div>
+              <div className="adv-feature-label">{f.label}</div>
+              <div className="adv-feature-sub">{f.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mp-bottom-space" />
+      </div>
+
+      <div className="adv-sticky-btn">
+        <button type="button" className="mp-btn-primary" disabled={!canSubmit} onClick={() => setStep("review")}>
+          Continue <ArrowRight size={16} />
         </button>
-      </div>}
+        <div className="adv-secure-note"><ShieldCheck size={12} /> Your request is encrypted and secure</div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,9 @@
+import { useRef } from "react";
+import type { View } from "../types/app";
 import { AppShell } from "../components/layout/AppShell";
 import { ActivityScreen } from "./ActivityScreen";
 import { AdvanceScreen } from "./AdvanceScreen";
+import { RepaymentScheduleScreen } from "./RepaymentScheduleScreen";
 import { DashboardScreen } from "./DashboardScreen";
 import { LoginScreen } from "./LoginScreen";
 import { ChangePasswordScreen } from "./ChangePasswordScreen";
@@ -17,6 +20,7 @@ import { AppToast } from "../components/ui/AppToast";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
+  const notifBackRef = useRef<View>("home");
 
   const resolveAdvanceBlocker = () => {
     if (app.activeRequest) return app.setActiveView("activity");
@@ -96,12 +100,20 @@ export function EmployeeApp() {
     );
   }
 
+  const navigate = (view: View) => {
+    if (view === "notifications") notifBackRef.current = app.activeView as View;
+    app.setActiveView(view);
+  };
+
   return (
     <>
     <AppShell
       activeView={app.activeView}
       profile={app.appState.profile}
-      onNavigate={app.setActiveView}
+      unreadCount={app.appState.rawNotifications.filter((n) => !n.isRead).length}
+      refreshing={app.refreshing}
+      onRefresh={app.refresh}
+      onNavigate={navigate}
     >
       {/* ── Onboarding flow ─────────────────────────────────── */}
       {app.activeView === "onboarding-kyc" && (
@@ -141,9 +153,7 @@ export function EmployeeApp() {
           eligibleForAdvance={app.eligibleForAdvance}
           nextBlocker={app.nextBlocker}
           notice={app.notice}
-          refreshing={app.refreshing}
-          onRefresh={app.refresh}
-          onNavigate={app.setActiveView}
+          onNavigate={navigate}
         />
       )}
 
@@ -158,7 +168,7 @@ export function EmployeeApp() {
           onActivateMembership={app.activateMembership}
           onValidateCoupon={app.validateCoupon}
           onClearCoupon={app.clearCoupon}
-          onNavigate={app.setActiveView}
+          onNavigate={navigate}
         />
       )}
 
@@ -172,7 +182,7 @@ export function EmployeeApp() {
           onActivateMembership={app.activateMembership}
           onValidateCoupon={app.validateCoupon}
           onClearCoupon={app.clearCoupon}
-          onNavigate={app.setActiveView}
+          onNavigate={navigate}
         />
       )}
 
@@ -186,10 +196,23 @@ export function EmployeeApp() {
           previewLoading={app.previewLoading}
           currentRequest={app.activeRequest}
           submitting={app.submittingAdvance}
+          salaryInHand={app.appState.dashboard?.salaryInHand}
+          payrollDay={app.appState.dashboard?.payrollDay}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
           blockerActionLabel={advanceBlockerActionLabel}
           onResolveBlocker={resolveAdvanceBlocker}
+          onNavigate={navigate}
+        />
+      )}
+
+      {app.activeView === "repayments" && (
+        <RepaymentScheduleScreen
+          requests={app.appState.requests}
+          bankAccount={app.appState.bankAccount}
+          profile={app.appState.profile}
+          unreadCount={app.appState.rawNotifications.filter((n) => !n.isRead).length}
+          onNavigate={navigate}
         />
       )}
 
@@ -203,13 +226,14 @@ export function EmployeeApp() {
           error={app.changePasswordError}
           onSubmit={app.changePassword}
           onClearError={() => app.setChangePasswordError("")}
+          onBack={() => app.setActiveView("profile")}
         />
       )}
 
       {app.activeView === "notifications" && (
         <NotificationsScreen
           notifications={app.appState.rawNotifications}
-          onBack={() => app.setActiveView("home")}
+          onBack={() => app.setActiveView(notifBackRef.current)}
           onMarkRead={app.markNotificationRead}
           onMarkAllRead={app.markAllNotificationsRead}
         />
@@ -221,7 +245,7 @@ export function EmployeeApp() {
         <ProfileScreen
           appState={app.appState}
           onLogout={app.logout}
-          onNavigate={app.setActiveView}
+          onNavigate={navigate}
           uploadKycDocument={app.uploadKycDocument}
           uploadingKycType={app.uploadingKycType}
           uploadProfilePhoto={app.uploadProfilePhoto}

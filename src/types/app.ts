@@ -4,6 +4,7 @@ import type { AppNotification } from "../services/api";
 export type View =
   | "home"
   | "advance"
+  | "repayments"
   | "activity"
   | "profile"
   | "profile-kyc"
@@ -15,7 +16,8 @@ export type View =
   | "onboarding-done"
   | "forgot-password"
   | "reset-password"
-  | "notifications";
+  | "notifications"
+  | "help";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
 export type RequestStatus = "Submitted" | "Employer Approved" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
@@ -55,6 +57,7 @@ export type EmployeeDashboard = {
   activeRepaymentStatus?: string | null;
   earnedSoFar?: number;
   payrollDay?: number;
+  payrollCutoffDate?: number;
 };
 
 export type KycDocument = {

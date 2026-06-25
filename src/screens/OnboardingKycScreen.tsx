@@ -1,5 +1,15 @@
 import { useRef } from "react";
-import { FileText, ShieldCheck, UploadCloud } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  CheckCircle,
+  Clock,
+  FileText,
+  Loader2,
+  ShieldCheck,
+  UploadCloud,
+  XCircle,
+} from "lucide-react";
 import type { KycDocument, KycDocumentType, View } from "../types/app";
 
 type Props = {
@@ -7,171 +17,162 @@ type Props = {
   uploadingKycType: KycDocumentType | null;
   onUpload: (type: KycDocumentType, file: File) => void;
   onContinue: (view: View) => void;
+  showProgress?: boolean;
 };
 
 const KYC_DOCS: { type: KycDocumentType; label: string; hint: string }[] = [
-  { type: "PAN",         label: "PAN Card",    hint: "PDF or image of your PAN card" },
-  { type: "AADHAR",      label: "Aadhaar",     hint: "Front & back of your Aadhaar" },
-  { type: "SALARY_SLIP", label: "Salary Slip", hint: "Last 1–3 months salary slip" },
+  { type: "PAN",         label: "PAN Card",    hint: "Clear image of front side" },
+  { type: "AADHAR",      label: "Aadhaar Card", hint: "Front & back of Aadhaar" },
+  { type: "SALARY_SLIP", label: "Salary Slip",  hint: "Last 1–3 months slip" },
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-  Verified:       "#3B6D11",
-  "Under Review": "#92600A",
-  Rejected:       "#A32D2D",
-  "Not Uploaded": "#62657A",
-};
-const STATUS_BG: Record<string, string> = {
-  Verified:       "#EBF6E3",
-  "Under Review": "#FEF9EE",
-  Rejected:       "#FCEEEE",
-  "Not Uploaded": "#F0F0F8",
-};
-
-function UploadCard({
-  docType, label, hint, doc, uploading, onUpload,
-}: {
-  docType: KycDocumentType;
-  label: string;
-  hint: string;
-  doc?: KycDocument;
-  uploading: boolean;
-  onUpload: (type: KycDocumentType, file: File) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const status = doc?.status ?? "Not Uploaded";
-  const color  = STATUS_COLOR[status] ?? "#8D90A3";
-  const bg     = STATUS_BG[status]    ?? "#F0F0F8";
-  const isVerified = status === "Verified";
-
-  return (
-    <div className="ob-kyc-card">
-      <div className="ob-kyc-card-left">
-        <div className="ob-kyc-icon" style={{ background: isVerified ? "#ECEBFF" : "var(--brand-pale)" }}>
-          <FileText size={17} color={isVerified ? "#7679FF" : "var(--brand)"} />
-        </div>
-        <div>
-          <div className="ob-kyc-label">{label}</div>
-          <div className="ob-kyc-hint">{doc?.note || hint}</div>
-        </div>
-      </div>
-
-      <div className="ob-kyc-card-right">
-        <span className="ob-kyc-status-pill" style={{ color, background: bg }}>
-          {status === "Not Uploaded" ? "Pending" : status}
-        </span>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf,image/jpeg,image/png,image/jpg"
-          style={{ display: "none" }}
-          disabled={uploading}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) onUpload(docType, file);
-            e.target.value = "";
-          }}
-        />
-        <button
-          type="button"
-          className={`ob-kyc-upload-btn ${uploading ? "ob-kyc-upload-btn--loading" : ""}`}
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-        >
-          <UploadCloud size={13} />
-          {uploading ? "Uploading…" : isVerified ? "Re-upload" : "Upload"}
-        </button>
-      </div>
-    </div>
-  );
+function StatusChip({ status }: { status: string }) {
+  if (status === "Verified")
+    return <span className="chip chip-green"><span className="chip-dot" /> Verified</span>;
+  if (status === "Under Review")
+    return <span className="chip chip-amber"><span className="chip-dot" /> Under Review</span>;
+  if (status === "Rejected")
+    return <span className="chip chip-red"><span className="chip-dot" /> Rejected</span>;
+  return <span className="chip chip-gray">Not Uploaded</span>;
 }
 
-export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onContinue }: Props) {
-  // Count how many of the 3 required types have been uploaded.
-  // API only returns uploaded docs (no "Not Uploaded" placeholders),
-  // so we check per-type rather than array length.
-  const uploadedCount = KYC_DOCS.filter(({ type }) => {
-    const doc = documents.find(
-      (d) =>
-        d.documentType === type ||
-        d.label?.toUpperCase().replace("AADHAAR", "AADHAR").replaceAll(" ", "_") === type
-    );
-    return doc && doc.status !== "Not Uploaded";
-  }).length;
-  const canContinue = uploadedCount === KYC_DOCS.length;
+function StatusIcon({ status }: { status: string }) {
+  if (status === "Verified") return <CheckCircle size={18} color="#16A34A" />;
+  if (status === "Under Review") return <Clock size={18} color="#D97706" />;
+  if (status === "Rejected") return <XCircle size={18} color="#DC2626" />;
+  return <UploadCloud size={18} color="#5B3CE3" />;
+}
+
+export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onContinue, showProgress = true }: Props) {
+  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const allVerified = documents.length > 0 && documents.every((d) => d.status === "Verified");
+  const doneCount = documents.filter((d) => d.status !== "Not Uploaded").length;
+
+  function getDoc(type: KycDocumentType) {
+    return documents.find((d) => d.documentType === type);
+  }
 
   return (
-    <div className="ob-screen">
-      {/* Step indicator */}
-      <div className="ob-step-bar">
-        <div className="ob-step-dot ob-step-dot--active" />
-        <div className="ob-step-line" />
-        <div className="ob-step-dot" />
-      </div>
+    <div className="onb-screen">
 
-      {/* Header */}
-      <div className="ob-header">
-        <div className="ob-header-icon">
-          <ShieldCheck size={28} color="var(--brand)" strokeWidth={1.8} />
-        </div>
-        <div className="ob-step-label">Step 1 of 2</div>
-        <h1 className="ob-title">Let's verify you</h1>
-        <p className="ob-subtitle">
-          Upload your documents so we can set up your account. Verification usually takes 24 hours.
-        </p>
-      </div>
-
-      {/* Document cards */}
-      <div className="ob-kyc-list">
-        {KYC_DOCS.map(({ type, label, hint }) => {
-          const doc = documents.find(
-            (d) =>
-              d.documentType === type ||
-              d.label.toUpperCase().replace("AADHAAR", "AADHAR").replaceAll(" ", "_") === type
-          );
-          return (
-            <UploadCard
-              key={type}
-              docType={type}
-              label={label}
-              hint={hint}
-              doc={doc}
-              uploading={uploadingKycType === type}
-              onUpload={onUpload}
-            />
-          );
-        })}
-      </div>
-
-      {uploadedCount > 0 && (
-        <div className="ob-progress-note">
-          <ShieldCheck size={14} color="#7679FF" />
-          {uploadedCount} of {KYC_DOCS.length} documents submitted · pending admin review
+      {/* Progress bar */}
+      {showProgress && (
+        <div style={{ display: "flex", alignItems: "center", padding: "14px 16px 0", background: "white" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0, flex: 1 }}>
+            {["KYC", "Bank", "Done"].map((label, i) => (
+              <div key={label} style={{ flex: 1, display: "flex", alignItems: "center" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    background: i === 0 ? "#5B3CE3" : "#F3F1FF",
+                    color: i === 0 ? "white" : "#9CA3AF",
+                    fontSize: 12, fontWeight: 800, border: i === 0 ? "none" : "1.5px solid #E5E7EB",
+                  }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: i === 0 ? "#5B3CE3" : "#9CA3AF", textTransform: "uppercase" }}>{label}</div>
+                </div>
+                {i < 2 && <div style={{ flex: 1, height: 2, background: "#F3F1FF", margin: "0 4px", marginBottom: 16 }} />}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* CTA */}
-      <div className="ob-cta-area">
-        {!canContinue && (
-          <p className="ob-cta-gate-note">
-            All 3 documents must be uploaded before you can continue
-          </p>
-        )}
+      {/* Hero */}
+      <div className="onb-hero" style={{ background: "white" }}>
+        <div className="onb-hero-text">
+          <div className="onb-hero-title">KYC Verification</div>
+          <div className="onb-hero-sub">
+            Upload your documents to verify your identity and unlock salary advances.
+          </div>
+          {doneCount > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+              <span className="chip chip-purple">{doneCount}/{KYC_DOCS.length} uploaded</span>
+            </div>
+          )}
+        </div>
+        <div className="onb-hero-illus-box">
+          <ShieldCheck size={36} color="#5B3CE3" />
+        </div>
+      </div>
+
+      <div className="screen-body onb-body" style={{ padding: "12px 16px" }}>
+
+        {/* Document list */}
+        <div className="onb-doc-card">
+          {KYC_DOCS.map(({ type, label, hint }) => {
+            const doc = getDoc(type);
+            const status = doc?.status ?? "Not Uploaded";
+            const isUploading = uploadingKycType === type;
+            const canUpload = status !== "Verified";
+            return (
+              <div key={type} className="onb-doc-row">
+                <div className="onb-doc-icon">
+                  {isUploading ? <Loader2 size={18} className="spin" /> : <StatusIcon status={status} />}
+                </div>
+                <div className="onb-doc-body">
+                  <div className="onb-doc-title">{label}</div>
+                  <div className="onb-doc-sub">{doc?.note || hint}</div>
+                  <StatusChip status={status} />
+                </div>
+                {canUpload && !isUploading && (
+                  <button
+                    type="button"
+                    className="mp-link-btn"
+                    onClick={() => fileRefs.current[type]?.click()}
+                    style={{ fontSize: 12, flexShrink: 0 }}
+                  >
+                    <UploadCloud size={14} /> Upload
+                  </button>
+                )}
+                <input
+                  ref={(el) => { fileRefs.current[type] = el; }}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  style={{ display: "none" }}
+                  onChange={(e) => { if (e.target.files?.[0]) onUpload(type, e.target.files[0]); }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tips */}
+        <div className="onb-tips-card">
+          <div className="onb-tips-hdr"><FileText size={14} /> Document tips</div>
+          {[
+            "Use clear, well-lit photos",
+            "All text must be readable",
+            "No blurry or cropped images",
+            "Max file size: 5 MB",
+          ].map((tip) => (
+            <div key={tip} className="onb-tip-row">
+              <CheckCircle size={12} className="onb-tip-check" color="#16A34A" />
+              {tip}
+            </div>
+          ))}
+        </div>
+
+        <div className="mp-bottom-space" />
+      </div>
+
+      {/* Footer */}
+      <div className="onb-footer">
         <button
           type="button"
-          className="ob-cta-btn"
-          disabled={!canContinue}
+          className="mp-btn-primary"
           onClick={() => onContinue("onboarding-bank")}
         >
-            {canContinue
-            ? <>All documents uploaded — Continue
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </>
-            : `Upload all 3 documents to continue (${uploadedCount}/${KYC_DOCS.length} done)`
-          }
+          {allVerified ? (
+            <><BadgeCheck size={16} /> All Verified — Continue</>
+          ) : (
+            <>Continue to Bank Account <ArrowRight size={16} /></>
+          )}
         </button>
+        <div className="onb-secure-note">
+          <ShieldCheck size={12} /> Documents are encrypted and stored securely
+        </div>
       </div>
     </div>
   );

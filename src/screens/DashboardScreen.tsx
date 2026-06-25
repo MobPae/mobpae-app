@@ -1,18 +1,12 @@
 import {
   ArrowUpRight,
   Banknote,
-  Bell,
-  Crown,
-  FileCheck2,
+  CreditCard,
+  Gift,
+  HelpCircle,
   History,
-  Landmark,
-  RefreshCw,
-  Send,
-  ShieldCheck,
-  Sparkles,
-  Wallet,
+  TrendingUp,
 } from "lucide-react";
-import { getFileUrl } from "../services/api";
 import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
 import type { AppState, View } from "../types/app";
 
@@ -21,333 +15,265 @@ type DashboardScreenProps = {
   eligibleForAdvance: boolean;
   nextBlocker: string;
   notice: string;
-  refreshing?: boolean;
-  onRefresh: () => void;
   onNavigate: (view: View) => void;
 };
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((n) => n[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function daysUntilPayday(payrollDay?: number | null) {
-  if (!payrollDay) return null;
-  const today = new Date();
-  let target = new Date(today.getFullYear(), today.getMonth(), payrollDay);
-  if (target <= today) {
-    target = new Date(today.getFullYear(), today.getMonth() + 1, payrollDay);
-  }
-  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
-}
 
 function nextPaydayDate(payrollDay?: number | null) {
   if (!payrollDay) return null;
   const today = new Date();
-  const monthOffset = today.getDate() > payrollDay ? 1 : 0;
-  return new Date(today.getFullYear(), today.getMonth() + monthOffset, payrollDay);
+  const offset = today.getDate() > payrollDay ? 1 : 0;
+  return new Date(today.getFullYear(), today.getMonth() + offset, payrollDay);
+}
+
+function daysUntilPayday(payrollDay?: number | null): number | null {
+  const d = nextPaydayDate(payrollDay);
+  if (!d) return null;
+  return Math.ceil((d.getTime() - Date.now()) / 86_400_000);
+}
+
+function formatPayday(d: Date | null) {
+  if (!d) return "—";
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
 export function DashboardScreen({
   appState,
-  refreshing,
-  onRefresh,
+  eligibleForAdvance,
+  notice,
   onNavigate,
 }: DashboardScreenProps) {
-  const profile = appState.profile;
-  const dashboard = appState.dashboard;
-  const firstName = profile.name.split(" ")[0] || profile.name || "there";
-  const payrollDay = dashboard?.payrollDay ?? null;
+  const { profile, dashboard, requests } = appState;
+  const salaryInHand = dashboard?.salaryInHand ?? 0;
+  const availableAdvance = dashboard?.availableAdvance ?? 0;
+  const payrollDay = dashboard?.payrollDay;
+  const earnedSoFar = dashboard?.earnedSoFar ?? 0;
   const nextPayday = nextPaydayDate(payrollDay);
   const daysLeft = daysUntilPayday(payrollDay);
-
-  const salaryInHand = Number(dashboard?.salaryInHand ?? 0);
-  const available = Number(dashboard?.availableAdvance ?? profile.salaryLimit ?? 0);
-  const baseLimit = Number(dashboard?.approvedLimit ?? profile.salaryLimit ?? salaryInHand ?? 0);
-  const activeRequest = appState.requests.find(
-    (request) => !["Paid", "Recovered", "Rejected"].includes(request.status)
+  const activeRequest = requests.find(
+    (r) => r.disbursalStatus === "Pending" || r.recoveryStatus === "Scheduled"
   );
-  const withdrawn = activeRequest
-    ? Number(activeRequest.approvedAmount || activeRequest.requestedAmount)
-    : Number(dashboard?.activeRequestAmount ?? 0);
-  const availablePct = baseLimit > 0 ? Math.min(100, Math.max(4, Math.round((available / baseLimit) * 100))) : 0;
 
-  const verifiedDocs = appState.documents.filter((document) => document.status === "Verified").length;
-  const reviewingDocs = appState.documents.filter((document) => document.status === "Under Review").length;
-  const kycDone = verifiedDocs >= 3 && profile.selfieStatus === "VERIFIED";
-  const kycLabel = kycDone
-    ? "Verified"
-    : reviewingDocs > 0
-      ? "Reviewing"
-      : verifiedDocs > 0
-        ? `${verifiedDocs}/3`
-        : "Pending";
+  const recentRequests = [...requests]
+    .sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
+    .slice(0, 3);
 
-  const bankDone = Boolean(appState.bankAccount?.verified);
-  const memberActive = appState.membershipActive;
+  const kycDone = appState.documents.length > 0 && appState.documents.every((d) => d.status === "Verified");
+  const bankDone = !!appState.bankAccount?.verified;
+  const memberDone = appState.membershipActive;
 
-  const journey = [
-    {
-      label: "Submitted",
-      sub: "Request sent",
-      icon: <Send size={17} />,
-      done: Boolean(activeRequest),
-    },
-    {
-      label: "Employer",
-      sub: "Approval",
-      icon: <ShieldCheck size={17} />,
-      done: ["Employer Approved", "Admin Approved", "Disbursed", "Payment Scheduled", "Paid"].includes(activeRequest?.status ?? ""),
-    },
-    {
-      label: "Admin",
-      sub: "Review",
-      icon: <FileCheck2 size={17} />,
-      done: ["Admin Approved", "Disbursed", "Payment Scheduled", "Paid"].includes(activeRequest?.status ?? ""),
-    },
-    {
-      label: "Payout",
-      sub: "Transfer",
-      icon: <Wallet size={17} />,
-      done: ["Disbursed", "Payment Scheduled", "Paid"].includes(activeRequest?.status ?? ""),
-    },
+  const quickActions = [
+    { label: "Advance", icon: <Banknote size={22} />, view: "advance" as View },
+    { label: "Repayments", icon: <CreditCard size={22} />, view: "repayments" as View },
+    { label: "History", icon: <History size={22} />, view: "activity" as View },
+    { label: "Help", icon: <HelpCircle size={22} />, view: "help" as View },
   ];
 
-  const setupItems = [
-    {
-      label: "KYC",
-      value: kycLabel,
-      icon: <FileCheck2 size={21} />,
-      active: kycDone,
-      view: "profile-kyc" as View,
-    },
-    {
-      label: "Bank",
-      value: bankDone ? "Verified" : appState.bankAccount ? "Pending" : "Add now",
-      icon: <Landmark size={21} />,
-      active: bankDone,
-      view: "profile-bank" as View,
-    },
-    {
-      label: "Plan",
-      value: memberActive ? "Active" : "Inactive",
-      icon: <Crown size={21} />,
-      active: memberActive,
-      view: "profile-membership" as View,
-    },
-  ];
-
-  const recentRequests = appState.requests.slice(0, 3);
+  const statusColor = activeRequest?.recoveryStatus === "Completed" ? "var(--green)" : "var(--amber)";
+  const statusBg = activeRequest?.recoveryStatus === "Completed" ? "#F0FDF4" : "#FFFBEB";
 
   return (
-    <div className="mp-dashboard">
-      <section className="mp-home-hero">
-        <div className="mp-home-top">
-          <button type="button" className="mp-avatar-btn" onClick={() => onNavigate("profile")}>
-            {profile.profilePhotoUrl ? (
-              <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} />
-            ) : (
-              getInitials(profile.name || "M")
-            )}
-          </button>
-          <div className="mp-home-greeting">
-            <span>{profile.employer || "MobPae"}</span>
-            <strong>{getGreeting()}, {firstName}</strong>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              type="button"
-              className="mp-icon-btn mp-bell-btn"
-              aria-label="Notifications"
-              onClick={() => onNavigate("notifications")}
-            >
-              <Bell size={17} />
-              {appState.rawNotifications.filter((n) => !n.isRead).length > 0 && (
-                <span className="mp-bell-badge">
-                  {appState.rawNotifications.filter((n) => !n.isRead).length > 9
-                    ? "9+"
-                    : appState.rawNotifications.filter((n) => !n.isRead).length}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              className="mp-icon-btn"
-              aria-label="Refresh dashboard"
-              onClick={onRefresh}
-            >
-              <RefreshCw size={17} className={refreshing ? "spin" : ""} />
-            </button>
-          </div>
-        </div>
+    <div className="home-screen">
 
-        <div className="mp-limit-card">
-          <div className="mp-limit-orb" />
-          <div className="mp-limit-top">
-            <span>Available to withdraw</span>
-            <button
-              type="button"
-              className={`mp-member-pill ${memberActive ? "active" : ""}`}
-              onClick={() => onNavigate("profile-membership")}
-            >
-              <ShieldCheck size={15} />
-              {memberActive ? "Member" : "Activate"}
-            </button>
-          </div>
-          <div className="mp-limit-amount">{formatMoney(available)}</div>
-          <div className="mp-limit-sub">of {baseLimit > 0 ? formatMoney(baseLimit) : "no"} limit</div>
-          <div className="mp-limit-track">
-            <span style={{ width: `${availablePct}%` }} />
-          </div>
-          {activeRequest && available <= 500 && (
-            <div className="mp-limit-note">
-              <Sparkles size={14} />
-              More advance opens after your scheduled payment is cleared.
-            </div>
-          )}
+      {/* ── Notice banner ── */}
+      {notice && (
+        <div style={{ background: "#FEF3C7", color: "#92400E", padding: "10px 16px", fontSize: 12, fontWeight: 600 }}>
+          ⚠ {notice}
         </div>
-
-        <div className="mp-salary-strip">
-          <div>
-            <span>Total salary</span>
-            <strong>{salaryInHand > 0 ? formatMoney(salaryInHand) : "N/A"}</strong>
-          </div>
-          <div>
-            <span>Withdrawn</span>
-            <strong>{withdrawn > 0 ? formatMoney(withdrawn) : "₹0"}</strong>
-          </div>
-          <div>
-            <span>Next payday</span>
-            <strong>{nextPayday ? formatShortDate(nextPayday.toISOString()) : daysLeft !== null ? `${daysLeft}d` : "N/A"}</strong>
-          </div>
-        </div>
-      </section>
-
-      {activeRequest ? (
-        <section className="mp-section mp-journey-card">
-          <div className="mp-section-title-row">
-            <div>
-              <span>Live request</span>
-              <h2>Your request journey</h2>
-            </div>
-            <button type="button" className="mp-slim-link" onClick={() => onNavigate("activity")}>
-              Track <ArrowUpRight size={14} />
-            </button>
-          </div>
-          <div className="mp-journey">
-            {journey.map((step, index) => (
-              <div className={`mp-journey-step ${step.done ? "done" : ""}`} key={step.label}>
-                {index < journey.length - 1 && <span className="mp-journey-line" />}
-                <div className="mp-journey-dot">{step.icon}</div>
-                <strong>{step.label}</strong>
-                <small>{step.sub}</small>
-              </div>
-            ))}
-          </div>
-          <div className="mp-live-request">
-            <div>
-              <span>Current request</span>
-              <strong>{formatMoney(activeRequest.approvedAmount || activeRequest.requestedAmount)}</strong>
-            </div>
-            <div>
-              <span>Status</span>
-              <strong>{formatRequestStatus(activeRequest.status, activeRequest.statusLabel)}</strong>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="mp-empty-action">
-          <div>
-            <span>Ready when you are</span>
-            <strong>No active salary request</strong>
-          </div>
-          <button type="button" onClick={() => onNavigate("advance")}>
-            Request <ArrowUpRight size={15} />
-          </button>
-        </section>
       )}
 
-      <section className="mp-section mp-setup-section">
-        <div className="mp-section-title-row">
-          <div>
-            <span>Account</span>
-            <h2>Setup status</h2>
+      {/* ── Salary hero card with graphics ── */}
+      <div className="home-salary-card">
+        {/* Decorative circles */}
+        <div className="home-salary-circle home-salary-circle--tl" />
+        <div className="home-salary-circle home-salary-circle--br" />
+        <div className="home-salary-circle home-salary-circle--mid" />
+
+        <div className="home-salary-top">
+          <div className="home-salary-left">
+            <div className="home-salary-label">Available Salary</div>
+            <div className="home-salary-amount">{formatMoney(salaryInHand)}</div>
+            <div className="home-salary-updated">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+              Updated today
+            </div>
+            <button type="button" className="home-access-btn" onClick={() => onNavigate("advance")}>
+              <Banknote size={13} color="#5B3CE3" />
+              Access Advance
+            </button>
+          </div>
+          <div className="home-salary-divider" />
+          <div className="home-salary-right">
+            <div>
+              <div className="home-salary-stat-label">Next Payday</div>
+              <div className="home-salary-stat-val">
+                {nextPayday ? formatPayday(nextPayday) : "—"}
+                {daysLeft !== null ? <span className="home-salary-days-pill">{daysLeft}d</span> : null}
+              </div>
+            </div>
+            <div>
+              <div className="home-salary-stat-label">For Advance</div>
+              <div className="home-salary-stat-val">{formatMoney(availableAdvance)}</div>
+            </div>
+            <div>
+              <div className="home-salary-stat-label">Earned So Far</div>
+              <div className="home-salary-stat-val">{earnedSoFar > 0 ? formatMoney(earnedSoFar) : "—"}</div>
+            </div>
           </div>
         </div>
-        <div className="mp-setup-row">
-          {setupItems.map((item, index) => (
+      </div>
+
+      {/* ── Setup banners ── */}
+      {(!kycDone || !bankDone || !memberDone) && (
+        <div className="home-card" style={{ padding: "14px 0 4px" }}>
+          <div style={{ padding: "0 16px 8px", fontSize: 12, fontWeight: 800, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".05em" }}>Complete Setup</div>
+          {[
+            { done: kycDone, label: "KYC Verification", sub: "Upload Aadhaar, PAN & Selfie", view: "onboarding-kyc" as View },
+            { done: bankDone, label: "Bank Account", sub: "Add your salary account", view: "onboarding-bank" as View },
+            { done: memberDone, label: "Activate Plan", sub: "Enable salary advance access", view: "profile-membership" as View },
+          ].filter(s => !s.done).map((step, i, arr) => (
             <button
-              key={item.label}
+              key={step.label}
               type="button"
-              className="mp-setup-item"
-              onClick={() => onNavigate(item.view)}
+              onClick={() => onNavigate(step.view)}
+              className="home-setup-row"
+              style={{ borderBottom: i < arr.length - 1 ? "1px solid #F3F1FF" : "none" }}
             >
-              {index > 0 && <span className="mp-setup-divider" />}
-              <span className={`mp-setup-icon ${item.active ? "active" : ""}`}>{item.icon}</span>
-              <strong>{item.label}</strong>
-              <small className={item.active ? "ok" : ""}>{item.value}</small>
+              <div className="home-setup-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div className="home-setup-title">{step.label}</div>
+                <div className="home-setup-sub">{step.sub}</div>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           ))}
         </div>
-      </section>
+      )}
 
-      <section className="mp-section">
-        <div className="mp-section-title-row">
-          <div>
-            <span>Money movement</span>
-            <h2>My transactions</h2>
-          </div>
-          <button type="button" className="mp-slim-link" onClick={() => onNavigate("activity")}>
-            View all <ArrowUpRight size={14} />
+      {/* ── Quick actions ── */}
+      <div className="home-card home-quick-grid">
+        {quickActions.map((a) => (
+          <button key={a.label} type="button" className="home-quick-item" onClick={() => onNavigate(a.view)}>
+            <div className="home-quick-icon">{a.icon}</div>
+            <span className="home-quick-label">{a.label}</span>
           </button>
-        </div>
+        ))}
+      </div>
 
-        {recentRequests.length > 0 ? (
-          <div className="mp-transaction-list">
-            {recentRequests.map((request) => {
-              const amount = request.approvedAmount || request.requestedAmount;
-              return (
-                <button key={request.id} type="button" className="mp-transaction-row" onClick={() => onNavigate("activity")}>
-                  <span className="mp-transaction-icon">
-                    <Banknote size={18} />
-                  </span>
-                  <span className="mp-transaction-body">
-                    <strong>Salary advance</strong>
-                    <small>{formatRequestStatus(request.status, request.statusLabel)} · {formatShortDate(request.requestDate)}</small>
-                  </span>
-                  <span className="mp-transaction-amount">{formatMoney(amount)}</span>
-                </button>
-              );
-            })}
+      {/* ── Current Advance ── */}
+      {activeRequest && (
+        <div className="home-card">
+          <div className="home-section-hdr">
+            <span className="home-section-title">Current Advance</span>
+            <button type="button" className="home-section-link" onClick={() => onNavigate("repayments")}>
+              View details <ArrowUpRight size={13} />
+            </button>
+          </div>
+
+          {/* Main advance row: icon | amount | status right */}
+          <div className="home-adv-row">
+            <div className="home-adv-icon" style={{ background: statusBg, color: statusColor }}>
+              <TrendingUp size={19} />
+            </div>
+            <div className="home-adv-info">
+              <div className="home-adv-amount">
+                {formatMoney(activeRequest.approvedAmount || activeRequest.requestedAmount)}
+              </div>
+              <div className="home-adv-due">Due {formatShortDate(activeRequest.recoveryDate)}</div>
+            </div>
+            <div className="home-adv-status">
+              <span className={`chip ${activeRequest.recoveryStatus === "Completed" ? "chip-green" : "chip-amber"}`} style={{ fontSize: 11 }}>
+                <span className="chip-dot" />
+                {activeRequest.recoveryStatus === "Completed" ? "Repaid" : formatRequestStatus(activeRequest.status, activeRequest.statusLabel)}
+              </span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
+
+          {/* Principal / Interest / Total Due */}
+          <div className="home-adv-details">
+            <div className="home-adv-detail-item">
+              <div className="home-adv-detail-label">Principal</div>
+              <div className="home-adv-detail-val">{formatMoney(activeRequest.principalAmount)}</div>
+            </div>
+            <div className="home-adv-detail-sep" />
+            <div className="home-adv-detail-item">
+              <div className="home-adv-detail-label">Interest</div>
+              <div className="home-adv-detail-val">{formatMoney(activeRequest.interestAmount)}</div>
+            </div>
+            <div className="home-adv-detail-sep" />
+            <div className="home-adv-detail-item home-adv-detail-highlight">
+              <div className="home-adv-detail-label" style={{ color: "var(--P)" }}>Total Due</div>
+              <div className="home-adv-detail-val" style={{ color: "var(--P)", fontSize: 15 }}>
+                {formatMoney(activeRequest.totalRecoveryAmount)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Recent Activity ── */}
+      <div className="home-card">
+        <div className="home-section-hdr">
+          <span className="home-section-title">Recent Activity</span>
+          {recentRequests.length > 0 && (
+            <button type="button" className="home-section-link" onClick={() => onNavigate("activity")}>
+              View all <ArrowUpRight size={13} />
+            </button>
+          )}
+        </div>
+        {recentRequests.length === 0 ? (
+          <div className="home-empty-row">
+            <div className="home-empty-icon">💸</div>
+            <div className="home-empty-title">No transactions yet</div>
+            <div className="home-empty-sub">Request your first salary advance to get started</div>
           </div>
         ) : (
-          <div className="mp-transaction-empty">
-            <History size={18} />
-            <span>Your advance history will appear here.</span>
-          </div>
+          recentRequests.map((req, i) => {
+            const amount = req.approvedAmount || req.requestedAmount;
+            const isDisbursed = req.disbursalStatus === "Disbursed";
+            const isPaid = req.recoveryStatus === "Completed";
+            return (
+              <div key={req.id}>
+                {i > 0 && <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />}
+                <div
+                  className="home-activity-row"
+                  onClick={() => onNavigate("activity")}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className={`home-activity-icon ${isDisbursed ? "green" : isPaid ? "" : "amber"}`}>
+                    <Banknote size={18} />
+                  </div>
+                  <div className="home-activity-body">
+                    <div className="home-activity-title">Salary Advance</div>
+                    <div className="home-activity-sub">{formatShortDate(req.requestDate)} · {formatRequestStatus(req.status, req.statusLabel)}</div>
+                  </div>
+                  <div className="home-activity-right">
+                    <div className={`home-activity-amount ${isDisbursed ? "green" : isPaid ? "red" : ""}`}>
+                      {formatMoney(amount)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
         )}
-      </section>
+      </div>
 
-      {!memberActive && (
-        <section className="mp-member-nudge">
-          <Crown size={20} />
-          <div>
-            <strong>Unlock full MobPae access</strong>
-            <span>Activate your plan to request salary advances.</span>
-          </div>
-          <button type="button" onClick={() => onNavigate("profile-membership")}>Activate</button>
-        </section>
-      )}
+      {/* ── Refer & Earn ── */}
+      <div className="home-refer-banner">
+        <div className="home-refer-icon">🎁</div>
+        <div className="home-refer-body">
+          <div className="home-refer-title">Refer & Earn</div>
+          <div className="home-refer-sub">Invite colleagues to MobPae</div>
+        </div>
+        <button type="button" className="home-refer-btn">
+          <Gift size={14} /> Invite
+        </button>
+      </div>
 
       <div className="mp-bottom-space" />
     </div>

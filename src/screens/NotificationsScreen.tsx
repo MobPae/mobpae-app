@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, BellOff, Check, ChevronLeft, Info, ShieldCheck, Wallet } from "lucide-react";
+import { Banknote, Bell, BellOff, Check, CheckCheck, CreditCard, Info, ShieldCheck } from "lucide-react";
 import type { AppNotification } from "../services/api";
+import { SubPageHeader } from "../components/layout/SubPageHeader";
 
 type Props = {
   notifications: AppNotification[];
@@ -19,122 +19,109 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function NotifIcon({ type }: { type: string | null }) {
-  if (type === "ALERT")   return <AlertTriangle size={14} />;
-  if (type === "SUCCESS") return <ShieldCheck size={14} />;
-  if (type === "WARNING") return <Wallet size={14} />;
-  return <Info size={14} />;
+function getNotifIcon(title: string) {
+  const t = title.toLowerCase();
+  if (t.includes("advance") || t.includes("salary") || t.includes("disburse")) return <Banknote size={18} />;
+  if (t.includes("repayment") || t.includes("payment") || t.includes("recovery")) return <CreditCard size={18} />;
+  if (t.includes("approved") || t.includes("success")) return <Check size={18} />;
+  return <Info size={18} />;
 }
 
-function typeTag(type: string | null): string {
-  if (type === "ALERT")   return "Alert";
-  if (type === "SUCCESS") return "Success";
-  if (type === "WARNING") return "Warning";
-  return "Update";
+function getNotifIconClass(title: string) {
+  const t = title.toLowerCase();
+  if (t.includes("approved") || t.includes("disburse") || t.includes("success")) return "notif-icon-green";
+  if (t.includes("repayment") || t.includes("payment") || t.includes("recovery")) return "notif-icon-purple";
+  return "notif-icon-amber";
+}
+
+function groupByDate(notifications: AppNotification[]) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const map = new Map<string, AppNotification[]>();
+  for (const n of notifications) {
+    const d = new Date(n.createdAt); d.setHours(0, 0, 0, 0);
+    let key: string;
+    if (d.getTime() === today.getTime()) key = "Today";
+    else if (d.getTime() === yesterday.getTime()) key = "Yesterday";
+    else key = d.toLocaleDateString("en-IN", { day: "numeric", month: "long" });
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(n);
+  }
+  return map;
 }
 
 export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkAllRead }: Props) {
-  const [items, setItems] = useState<AppNotification[]>(notifications);
-  const unread = items.filter((n) => !n.isRead).length;
-
-  useEffect(() => { setItems(notifications); }, [notifications]);
-
-  const handleMarkRead = async (id: string) => {
-    setItems((prev) => prev.map((n) => n.id === id ? { ...n, isRead: true } : n));
-    try { await onMarkRead(id); } catch { /* non-critical */ }
-  };
-
-  const handleMarkAllRead = async () => {
-    setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    try { await onMarkAllRead(); } catch { /* non-critical */ }
-  };
+  const sorted = [...notifications].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  const unread = sorted.filter((n) => !n.isRead);
+  const grouped = groupByDate(sorted);
 
   return (
     <div className="notif-screen">
+
       {/* Header */}
-      <div className="notif-header">
-        <button type="button" className="notif-back-btn" onClick={onBack}>
-          <ChevronLeft size={20} />
-        </button>
-        <div>
-          <p className="notif-header-eyebrow">Updates</p>
-          <h1 className="notif-header-title">Notifications</h1>
-        </div>
-        {unread > 0 && (
-          <span className="notif-count-pill">{unread}</span>
+      <div style={{ position: "relative" }}>
+        <SubPageHeader
+          title={`Notifications${unread.length > 0 ? ` (${unread.length})` : ""}`}
+          onBack={onBack}
+        />
+        {unread.length > 0 && (
+          <button
+            type="button"
+            className="mp-link-btn"
+            style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12 }}
+            onClick={onMarkAllRead}
+          >
+            <CheckCheck size={14} /> All read
+          </button>
         )}
       </div>
 
-      {/* Mark all read */}
-      {unread > 0 && (
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 16px 0" }}>
-          <button
-            type="button"
-            onClick={handleMarkAllRead}
-            style={{
-              display: "flex", alignItems: "center", gap: 4,
-              fontSize: 11, fontWeight: 600, color: "var(--brand)",
-              background: "none", border: "none", cursor: "pointer", padding: "4px 0",
-            }}
-          >
-            <Check size={12} /> Mark all as read
-          </button>
-        </div>
-      )}
+      <div className="screen-body notif-body">
 
-      {/* List */}
-      {items.length === 0 ? (
-        <div className="notif-empty">
-          <div className="notif-empty-icon">
-            <BellOff size={26} />
+        {sorted.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "56px 24px" }}>
+            <BellOff size={40} color="#D1D5DB" style={{ margin: "0 auto 16px", display: "block" }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#6B7280", marginBottom: 6 }}>No notifications yet</div>
+            <div style={{ fontSize: 13, color: "#9CA3AF" }}>You'll see advance updates and alerts here.</div>
           </div>
-          <p className="notif-empty-title">All caught up</p>
-          <p className="notif-empty-sub">
-            New updates about your advances and account will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="notif-list">
-          {items.map((n) => (
-            <div
-              key={n.id}
-              className="notif-item"
-              style={{ opacity: n.isRead ? 0.72 : 1, cursor: n.isRead ? "default" : "pointer" }}
-              onClick={() => { if (!n.isRead) void handleMarkRead(n.id); }}
-            >
-              <div className="notif-item-icon">
-                <NotifIcon type={n.type} />
-              </div>
-              <div className="notif-item-body">
-                {n.title && n.title !== "Notification" && (
-                  <p style={{
-                    fontSize: 12, fontWeight: n.isRead ? 500 : 700,
-                    color: "var(--t1)", marginBottom: 2, lineHeight: 1.3,
-                  }}>
-                    {n.title}
-                  </p>
-                )}
-                <p className="notif-item-text" style={{ fontWeight: n.isRead ? 400 : 500 }}>
-                  {n.message || n.title}
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                  <span className="notif-item-tag">{typeTag(n.type)}</span>
-                  <span style={{ fontSize: 10, color: "var(--t3)" }}>{timeAgo(n.createdAt)}</span>
-                  {!n.isRead && (
-                    <span style={{
-                      width: 6, height: 6, borderRadius: "50%",
-                      background: "var(--brand)", display: "inline-block", marginLeft: "auto",
-                      flexShrink: 0,
-                    }} />
-                  )}
-                </div>
+        ) : (
+          Array.from(grouped.entries()).map(([dateLabel, items]) => (
+            <div key={dateLabel}>
+              <div className="notif-date-label">{dateLabel}</div>
+              <div className="notif-card">
+                {items.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`notif-row${!n.isRead ? " unread" : ""}`}
+                    onClick={() => { if (!n.isRead) void onMarkRead(n.id); }}
+                    style={{ cursor: !n.isRead ? "pointer" : "default" }}
+                  >
+                    <div className={`notif-icon ${getNotifIconClass(n.title)}`}>
+                      {getNotifIcon(n.title)}
+                    </div>
+                    <div className="notif-body-col">
+                      <div className="notif-title">{n.title}</div>
+                      <div className="notif-sub">{n.message}</div>
+                      <div className="notif-time">{timeAgo(n.createdAt)}</div>
+                    </div>
+                    {!n.isRead && <div className="notif-unread-dot" />}
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
 
-      <div style={{ height: 40 }} />
+        {/* Security note */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0 4px", fontSize: 11, color: "#9CA3AF" }}>
+          <ShieldCheck size={12} color="#16A34A" />
+          Notifications are encrypted and private
+        </div>
+
+        <div className="mp-bottom-space" />
+      </div>
     </div>
   );
 }

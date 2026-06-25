@@ -60,6 +60,7 @@ type BackendSalaryRequest = {
   repaymentDate?: string | null;
   dueDate?: string | null;
   recoveryDate?: string | null;
+  disbursedAt?: string | null;  // when admin actually disbursed the advance
   status?: string;
   statusLabel?: string;   // human-readable label from backend
   statusColor?: string;   // hex or CSS color from backend
@@ -106,6 +107,15 @@ type BackendNotification = {
   createdAt?: string;
   isRead?: boolean;
   type?: string | null;
+};
+
+export type AppInfoItem = {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  version?: number;
+  updatedAt?: string;
 };
 
 export type AppNotification = {
@@ -382,6 +392,7 @@ const normalizeRequests = (
     const requestedAmount = toAmount(request.amount);
     const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
     const requestDate = request.requestedAt ?? request.createdAt ?? todayIso();
+    const disbursedAt = request.disbursedAt ?? null;
     const recoveryDate =
       repayment?.dueDate ??
       request.repaymentDate ??
@@ -428,13 +439,15 @@ const normalizeRequests = (
       timeline: [
         {
           status: "Submitted" as RequestStatus,
+          // requestedAt is always present — this is the most accurate timestamp
           timestamp: requestDate,
           description: "Advance request submitted successfully.",
           done: true,
         },
         {
           status: "Employer Approved" as RequestStatus,
-          timestamp: requestDate,
+          // No separate approvedAt on the salary request — leave blank until backend adds it
+          timestamp: "",
           description: "Approved by your employer.",
           done: [
             "EMPLOYER_APPROVED",
@@ -446,7 +459,8 @@ const normalizeRequests = (
         },
         {
           status: "Admin Approved" as RequestStatus,
-          timestamp: requestDate,
+          // READY_FOR_DISBURSAL is set when admin creates the disbursal record
+          timestamp: "",
           description: "Reviewed and approved by MobPae admin.",
           done: [
             "READY_FOR_DISBURSAL",
@@ -457,7 +471,8 @@ const normalizeRequests = (
         },
         {
           status: "Disbursed" as RequestStatus,
-          timestamp: requestDate,
+          // disbursedAt comes from the Disbursal record — real timestamp
+          timestamp: disbursedAt ?? "",
           description: "Funds disbursed to your bank account.",
           done: ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(
             request.status ?? ""
@@ -465,6 +480,7 @@ const normalizeRequests = (
         },
         {
           status: "Payment Scheduled" as RequestStatus,
+          // recoveryDate is the repayment dueDate — real date
           timestamp: recoveryDate,
           description: "Recovery scheduled from next payroll.",
           done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(
@@ -926,8 +942,9 @@ export const employeeApi = {
           type:      n.type     ?? null,
         })),
       };
-    } catch {
-      return emptyState;
+    } catch (err) {
+      // Re-throw so callers (useEmployeeApp) can surface the error to the user
+      throw err;
     }
   },
 
@@ -948,7 +965,7 @@ export const employeeApi = {
   },
 
   async updateUpiId(employeeId: string, upiId: string) {
-    return await request<BankAccount>("/bank-account/upi", {
+    return await request<BankAccount>(`/bank-accounts/employee/${employeeId}/upi`, {
       method: "POST",
       body: JSON.stringify({ upiId }),
     });
@@ -1125,6 +1142,19 @@ export const employeeApi = {
 
   async markNotificationRead(id: string): Promise<void> {
     await request(`/notifications/${id}/read`, { method: "POST" });
+  },
+
+  async getAppInformation(): Promise<AppInfoItem[]> {
+    try {
+      const data = await request<AppInfoItem[] | { data?: AppInfoItem[]; items?: AppInfoItem[] }>(
+        "/app-information"
+      );
+      if (Array.isArray(data)) return data;
+      return (data as { data?: AppInfoItem[]; items?: AppInfoItem[] }).data ??
+        (data as { data?: AppInfoItem[]; items?: AppInfoItem[] }).items ?? [];
+    } catch {
+      return [];
+    }
   },
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {
