@@ -286,63 +286,76 @@ export function ProfileScreen({
     <div className="prof-screen">
       <div className="screen-body" style={{ background: "var(--bg)" }}>
 
-        {/* ── Purple hero ── */}
-        <div style={{ background: "linear-gradient(135deg, #5B3CE3 0%, #7B5CF0 100%)", padding: "20px 16px 28px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {/* ── Profile hero card ── */}
+        <div style={{ padding: "14px 16px 4px" }}>
+          <div style={{
+            position: "relative", overflow: "hidden",
+            background: "linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 55%, #EEF2FF 100%)",
+            borderRadius: 20, border: "1px solid #DDD6FE",
+            padding: "20px 18px 18px",
+            boxShadow: "0 4px 16px rgba(91,60,227,.10)",
+          }}>
+            {/* Decorative circles */}
+            <div style={{ position: "absolute", top: -24, right: -24, width: 110, height: 110, borderRadius: "50%", background: "rgba(91,60,227,.08)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -28, right: 30, width: 80, height: 80, borderRadius: "50%", background: "rgba(91,60,227,.05)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: 18, right: 64, width: 36, height: 36, borderRadius: "50%", background: "rgba(91,60,227,.07)", pointerEvents: "none" }} />
 
-            {/* Avatar */}
-            <div style={{ position: "relative", flexShrink: 0 }}>
-              <div style={{
-                width: 68, height: 68, borderRadius: "50%",
-                background: "rgba(255,255,255,.2)", border: "2.5px solid rgba(255,255,255,.5)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 24, fontWeight: 800, color: "white", overflow: "hidden"
-              }}>
-                {profile.profilePhotoUrl ? (
-                  <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : getInitials(profile.name || "M")}
-              </div>
-              <button
-                type="button"
-                onClick={() => photoRef.current?.click()}
-                style={{
-                  position: "absolute", bottom: 1, right: 1, width: 22, height: 22,
-                  borderRadius: "50%", background: "white", border: "none", cursor: "pointer",
+            <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
+
+              {/* Avatar */}
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: "50%",
+                  background: "#DDD6FE", border: "2.5px solid #7C3AED",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 1px 4px rgba(0,0,0,.15)"
-                }}
-              >
-                <Camera size={11} color="#5B3CE3" />
-              </button>
-              <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }}
-                onChange={e => { if (e.target.files?.[0]) uploadProfilePhoto(e.target.files[0]); }} />
-            </div>
-
-            {/* Name + badge + details */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <div style={{ fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.2 }}>
-                  {profile.name || "Employee"}
+                  fontSize: 22, fontWeight: 800, color: "#5B3CE3", overflow: "hidden"
+                }}>
+                  {profile.profilePhotoUrl ? (
+                    <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : getInitials(profile.name || "M")}
                 </div>
-                {membershipActive && (
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 3,
-                    background: "#16A34A", color: "white",
-                    fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
-                    letterSpacing: ".02em"
-                  }}>
-                    <Crown size={9} /> Member
-                  </span>
+                <button
+                  type="button"
+                  onClick={() => photoRef.current?.click()}
+                  style={{
+                    position: "absolute", bottom: 1, right: 1, width: 22, height: 22,
+                    borderRadius: "50%", background: "#5B3CE3", border: "2px solid white", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 2px 6px rgba(91,60,227,.35)"
+                  }}
+                >
+                  <Camera size={11} color="white" />
+                </button>
+                <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }}
+                  onChange={e => { if (e.target.files?.[0]) uploadProfilePhoto(e.target.files[0]); }} />
+              </div>
+
+              {/* Name + badge + details */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 2 }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F0A3C", lineHeight: 1.2 }}>
+                    {profile.name || "Employee"}
+                  </div>
+                  {membershipActive && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 3,
+                      background: "#16A34A", color: "white",
+                      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
+                      letterSpacing: ".02em"
+                    }}>
+                      <Crown size={9} /> Member
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 12, color: "#5B3CE3", fontWeight: 700, marginTop: 1 }}>
+                  {profile.employer || "MobPae"}
+                </div>
+                {profile.employeeCode && (
+                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                    ID: {profile.employeeCode}
+                  </div>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", marginTop: 3 }}>
-                {profile.employer || "MobPae"}
-              </div>
-              {profile.employeeCode && (
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,.55)", marginTop: 2 }}>
-                  ID: {profile.employeeCode}
-                </div>
-              )}
             </div>
           </div>
         </div>
