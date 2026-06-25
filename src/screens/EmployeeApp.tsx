@@ -150,8 +150,6 @@ export function EmployeeApp() {
       {app.activeView === "home" && (
         <DashboardScreen
           appState={app.appState}
-          eligibleForAdvance={app.eligibleForAdvance}
-          nextBlocker={app.nextBlocker}
           notice={app.notice}
           onNavigate={navigate}
         />
@@ -210,14 +208,12 @@ export function EmployeeApp() {
         <RepaymentScheduleScreen
           requests={app.appState.requests}
           bankAccount={app.appState.bankAccount}
-          profile={app.appState.profile}
-          unreadCount={app.appState.rawNotifications.filter((n) => !n.isRead).length}
           onNavigate={navigate}
         />
       )}
 
       {app.activeView === "activity" && (
-        <ActivityScreen requests={app.appState.requests} />
+        <ActivityScreen requests={app.appState.requests} onNavigate={navigate} />
       )}
 
       {app.activeView === "change-password" && (

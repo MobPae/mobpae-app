@@ -639,6 +639,7 @@ button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
 .hist-tx-right { text-align: right; flex-shrink: 0; }
 .hist-tx-amount { font-size: 13px; font-weight: 800; color: var(--t1); white-space: nowrap; }
 .hist-tx-amount.green { color: var(--green); }
+.hist-tx-amount.red { color: var(--red); }
 
 /* Security note card */
 .hist-security-note { display: flex; align-items: center; gap: 10px; background: white; border-radius: var(--r-lg); border: 1px solid #F0EEFF; padding: 14px 14px; margin-bottom: 10px; }

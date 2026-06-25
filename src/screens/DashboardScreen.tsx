@@ -2,7 +2,6 @@ import {
   ArrowUpRight,
   Banknote,
   CreditCard,
-  Gift,
   HelpCircle,
   History,
   TrendingUp,
@@ -12,8 +11,6 @@ import type { AppState, View } from "../types/app";
 
 type DashboardScreenProps = {
   appState: AppState;
-  eligibleForAdvance: boolean;
-  nextBlocker: string;
   notice: string;
   onNavigate: (view: View) => void;
 };
@@ -38,7 +35,6 @@ function formatPayday(d: Date | null) {
 
 export function DashboardScreen({
   appState,
-  eligibleForAdvance,
   notice,
   onNavigate,
 }: DashboardScreenProps) {
@@ -90,7 +86,7 @@ export function DashboardScreen({
 
         <div className="home-salary-top">
           <div className="home-salary-left">
-            <div className="home-salary-label">Available Salary</div>
+            <div className="home-salary-label">Monthly Salary</div>
             <div className="home-salary-amount">{formatMoney(salaryInHand)}</div>
             <div className="home-salary-updated">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
@@ -167,49 +163,26 @@ export function DashboardScreen({
           <div className="home-section-hdr">
             <span className="home-section-title">Current Advance</span>
             <button type="button" className="home-section-link" onClick={() => onNavigate("repayments")}>
-              View details <ArrowUpRight size={13} />
+              View schedule <ArrowUpRight size={13} />
             </button>
           </div>
-
-          {/* Main advance row: icon | amount | status right */}
           <div className="home-adv-row">
             <div className="home-adv-icon" style={{ background: statusBg, color: statusColor }}>
               <TrendingUp size={19} />
             </div>
             <div className="home-adv-info">
               <div className="home-adv-amount">
-                {formatMoney(activeRequest.approvedAmount || activeRequest.requestedAmount)}
+                {formatMoney(activeRequest.totalRecoveryAmount || activeRequest.approvedAmount || activeRequest.requestedAmount)}
               </div>
-              <div className="home-adv-due">Due {formatShortDate(activeRequest.recoveryDate)}</div>
+              <div className="home-adv-due">
+                {activeRequest.recoveryDate ? `Due ${formatShortDate(activeRequest.recoveryDate)}` : "Due date TBD"}
+              </div>
             </div>
             <div className="home-adv-status">
               <span className={`chip ${activeRequest.recoveryStatus === "Completed" ? "chip-green" : "chip-amber"}`} style={{ fontSize: 11 }}>
                 <span className="chip-dot" />
                 {activeRequest.recoveryStatus === "Completed" ? "Repaid" : formatRequestStatus(activeRequest.status, activeRequest.statusLabel)}
               </span>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
-
-          {/* Principal / Interest / Total Due */}
-          <div className="home-adv-details">
-            <div className="home-adv-detail-item">
-              <div className="home-adv-detail-label">Principal</div>
-              <div className="home-adv-detail-val">{formatMoney(activeRequest.principalAmount)}</div>
-            </div>
-            <div className="home-adv-detail-sep" />
-            <div className="home-adv-detail-item">
-              <div className="home-adv-detail-label">Interest</div>
-              <div className="home-adv-detail-val">{formatMoney(activeRequest.interestAmount)}</div>
-            </div>
-            <div className="home-adv-detail-sep" />
-            <div className="home-adv-detail-item home-adv-detail-highlight">
-              <div className="home-adv-detail-label" style={{ color: "var(--P)" }}>Total Due</div>
-              <div className="home-adv-detail-val" style={{ color: "var(--P)", fontSize: 15 }}>
-                {formatMoney(activeRequest.totalRecoveryAmount)}
-              </div>
             </div>
           </div>
         </div>
@@ -248,12 +221,14 @@ export function DashboardScreen({
                     <Banknote size={18} />
                   </div>
                   <div className="home-activity-body">
-                    <div className="home-activity-title">Salary Advance</div>
+                    <div className="home-activity-title">
+                      {isDisbursed ? "Advance Credited" : isPaid ? "Advance Repaid" : "Advance Requested"}
+                    </div>
                     <div className="home-activity-sub">{formatShortDate(req.requestDate)} · {formatRequestStatus(req.status, req.statusLabel)}</div>
                   </div>
                   <div className="home-activity-right">
                     <div className={`home-activity-amount ${isDisbursed ? "green" : isPaid ? "red" : ""}`}>
-                      {formatMoney(amount)}
+                      {isDisbursed ? "+" : isPaid ? "−" : ""}{formatMoney(amount)}
                     </div>
                   </div>
                 </div>
@@ -261,18 +236,6 @@ export function DashboardScreen({
             );
           })
         )}
-      </div>
-
-      {/* ── Refer & Earn ── */}
-      <div className="home-refer-banner">
-        <div className="home-refer-icon">🎁</div>
-        <div className="home-refer-body">
-          <div className="home-refer-title">Refer & Earn</div>
-          <div className="home-refer-sub">Invite colleagues to MobPae</div>
-        </div>
-        <button type="button" className="home-refer-btn">
-          <Gift size={14} /> Invite
-        </button>
       </div>
 
       <div className="mp-bottom-space" />

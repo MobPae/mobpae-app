@@ -1,23 +1,23 @@
+import { useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
   Banknote,
   CalendarDays,
   CheckCircle,
+  ChevronDown,
   HelpCircle,
   RefreshCw,
   ShieldCheck,
   Wallet,
 } from "lucide-react";
-import { formatMoney, formatShortDate } from "../utils/format";
-import type { AdvanceRequest, BankAccount, EmployeeProfile, View } from "../types/app";
+import { formatMoney } from "../utils/format";
+import type { AdvanceRequest, BankAccount, View } from "../types/app";
 import { SUPPORT_EMAIL } from "../config";
 
 type RepaymentScheduleScreenProps = {
   requests: AdvanceRequest[];
   bankAccount?: BankAccount | null;
-  profile: Pick<EmployeeProfile, "name" | "profilePhotoUrl">;
-  unreadCount: number;
   onNavigate: (view: View) => void;
 };
 
@@ -45,8 +45,6 @@ function getMonth(dateStr: string) {
 export function RepaymentScheduleScreen({
   requests,
   bankAccount,
-  profile,
-  unreadCount,
   onNavigate,
 }: RepaymentScheduleScreenProps) {
   const activeRequest = requests.find(
@@ -65,6 +63,8 @@ export function RepaymentScheduleScreen({
 
   const completedRequests = requests.filter((r) => r.recoveryStatus === "Completed");
   const totalPaid = completedRequests.reduce((s, r) => s + r.totalRecoveryAmount, 0);
+  const [showAllPaid, setShowAllPaid] = useState(false);
+  const visibleCompleted = showAllPaid ? completedRequests : completedRequests.slice(0, 5);
 
   return (
     <div className="rep-screen">
@@ -127,7 +127,7 @@ export function RepaymentScheduleScreen({
             <div className="rep-sch-hdr">
               <CalendarDays size={16} color="#5B3CE3" />
               <span className="rep-sch-title">Repayment Schedule</span>
-              <span className="chip chip-amber">1 upcoming</span>
+              <span className="chip chip-amber">{isActive ? "1 upcoming" : "None"}</span>
             </div>
             <div className="rep-sch-row">
               <div className="rep-sch-date">
@@ -151,7 +151,7 @@ export function RepaymentScheduleScreen({
               <span className="rep-sch-title">Repayment History</span>
               <span className="chip chip-green">{completedRequests.length} paid</span>
             </div>
-            {completedRequests.slice(0, 5).map((r) => (
+            {visibleCompleted.map((r) => (
               <div key={r.id} className="rep-sch-row">
                 <div className="rep-sch-date">
                   <div className="rep-sch-day" style={{ fontSize: 18 }}>{getDay(r.recoveryDate)}</div>
@@ -164,6 +164,17 @@ export function RepaymentScheduleScreen({
                 <span className="chip chip-green"><CheckCircle size={10} /> Paid</span>
               </div>
             ))}
+            {completedRequests.length > 5 && (
+              <button
+                type="button"
+                className="mp-link-btn"
+                style={{ display: "flex", justifyContent: "center", width: "100%", padding: "10px 0", fontSize: 13, gap: 4 }}
+                onClick={() => setShowAllPaid(p => !p)}
+              >
+                <ChevronDown size={14} style={{ transform: showAllPaid ? "rotate(180deg)" : undefined, transition: "transform 0.2s" }} />
+                {showAllPaid ? "Show less" : `Show all ${completedRequests.length} repayments`}
+              </button>
+            )}
           </div>
         )}
 

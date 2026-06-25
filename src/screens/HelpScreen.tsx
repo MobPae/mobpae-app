@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   ArrowRight,
   Banknote,
   ChevronRight,
@@ -9,16 +8,14 @@ import {
   Lock,
   Mail,
   MessageCircle,
-  Phone,
   ShieldCheck,
   Wallet,
 } from "lucide-react";
-import type { View } from "../types/app";
+import { SubPageHeader } from "../components/layout/SubPageHeader";
 import { SUPPORT_EMAIL } from "../config";
 
 type HelpScreenProps = {
   onBack: () => void;
-  onNavigate: (view: View) => void;
 };
 
 const TOPICS = [
@@ -30,80 +27,86 @@ const TOPICS = [
   { icon: <HelpCircle size={20} />, title: "General", desc: "Other questions" },
 ];
 
-const FAQS = [
-  "How do I request a salary advance?",
-  "When will the money reach my account?",
-  "How is interest calculated?",
-  "What documents do I need for KYC?",
-  "How is repayment deducted?",
-  "Can I repay early?",
+const FAQS: { q: string; a: string }[] = [
+  { q: "How do I request a salary advance?", a: "Go to the Advance tab, enter the amount you need, and submit your request. Your employer will review and approve it." },
+  { q: "When will the money reach my account?", a: "Once your employer approves the advance, funds are typically credited within 24 hours to your linked bank account." },
+  { q: "How is interest calculated?", a: "Interest is calculated on the principal amount from the date of disbursal to your next payday. The exact rate is shown before you confirm your request." },
+  { q: "What documents do I need for KYC?", a: "You need to upload your PAN card, Aadhaar card (front & back), and a recent salary slip. All files must be clear and under 5 MB." },
+  { q: "How is repayment deducted?", a: "Repayment is automatically deducted from your salary account on your payday. Ensure your account has sufficient funds." },
+  { q: "Can I repay early?", a: "Early repayment is not yet supported. Your advance will be recovered on the scheduled payday date." },
 ];
 
+import { useState } from "react";
+
 export function HelpScreen({ onBack }: HelpScreenProps) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
     <div className="help-screen">
-
-      {/* Header */}
-      <div className="mp-topbar">
-        <button type="button" className="mp-topbar-back" onClick={onBack}>
-          <ArrowLeft size={16} /> Back
-        </button>
-        <div style={{ fontSize: 15, fontWeight: 800, color: "#0F0A3C" }}>Help & Support</div>
-        <div style={{ width: 60 }} />
-      </div>
+      <SubPageHeader title="Help & Support" onBack={onBack} />
 
       <div className="screen-body" style={{ padding: "12px 0" }}>
 
         {/* Contact card */}
         <div className="help-contact-card">
           <div className="help-contact-icon">
-            <MessageCircle size={40} color="#5B3CE3" />
+            <MessageCircle size={36} color="#5B3CE3" />
           </div>
           <div className="help-contact-body">
             <div className="help-contact-title">Talk to Support</div>
             <div className="help-contact-sub">
               Our team is available Mon–Sat, 9am–6pm IST to help with any questions.
             </div>
-            <button
-              type="button"
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
               className="help-contact-btn"
-              onClick={() => { window.location.href = `mailto:${SUPPORT_EMAIL}`; }}
             >
-              <Mail size={14} /> Email Support
-            </button>
-            <div className="help-contact-online">
-              <span className="help-contact-dot" /> Online now
-            </div>
+              <Mail size={14} /> {SUPPORT_EMAIL}
+            </a>
           </div>
         </div>
 
-        {/* Section label */}
+        {/* Browse Topics */}
         <div style={{ padding: "4px 16px 8px", fontSize: 12, fontWeight: 800, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".06em" }}>
           Browse Topics
         </div>
-
-        {/* Topic grid */}
         <div className="help-topic-grid">
           {TOPICS.map((t) => (
-            <button key={t.title} type="button" className="help-topic-card">
+            <div key={t.title} className="help-topic-card">
               <div className="help-topic-icon">{t.icon}</div>
               <div className="help-topic-title">{t.title}</div>
               <div className="help-topic-desc">{t.desc}</div>
               <div className="help-topic-arrow"><ChevronRight size={12} /></div>
-            </button>
+            </div>
           ))}
         </div>
 
-        {/* FAQ card */}
-        <div style={{ padding: "0 0 8px", fontSize: 12, fontWeight: 800, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".06em", margin: "4px 16px 8px" }}>
+        {/* FAQ */}
+        <div style={{ padding: "0", fontSize: 12, fontWeight: 800, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".06em", margin: "4px 16px 8px" }}>
           Frequently Asked Questions
         </div>
         <div className="help-faq-card">
-          {FAQS.map((q) => (
-            <div key={q} className="help-faq-row">
-              <HelpCircle size={16} className="help-faq-q-icon" />
-              <span className="help-faq-q-text">{q}</span>
-              <ChevronRight size={14} className="help-faq-arrow" />
+          {FAQS.map((faq, i) => (
+            <div key={i} style={{ borderBottom: i < FAQS.length - 1 ? "1px solid #F3F1FF" : "none" }}>
+              <button
+                type="button"
+                className="help-faq-row"
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                style={{ width: "100%", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
+              >
+                <HelpCircle size={16} className="help-faq-q-icon" />
+                <span className="help-faq-q-text">{faq.q}</span>
+                <ChevronRight
+                  size={14}
+                  className="help-faq-arrow"
+                  style={{ transform: openFaq === i ? "rotate(90deg)" : undefined, transition: "transform 0.2s", flexShrink: 0 }}
+                />
+              </button>
+              {openFaq === i && (
+                <div style={{ padding: "0 16px 12px 44px", fontSize: 13, color: "#6B7280", lineHeight: 1.6 }}>
+                  {faq.a}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -117,15 +120,15 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
           </div>
         </div>
 
-        {/* Phone contact */}
+        {/* Email contact row */}
         <div style={{ margin: "0 16px 16px", background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-          <Phone size={20} color="#5B3CE3" />
+          <Mail size={20} color="#5B3CE3" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>Call Us</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>Email Us</div>
             <div style={{ fontSize: 12, color: "#6B7280" }}>Mon–Sat · 9am–6pm IST</div>
           </div>
-          <a href="tel:+918000000000" style={{ color: "#5B3CE3", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-            Call <ArrowRight size={14} />
+          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: "#5B3CE3", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+            Email <ArrowRight size={14} />
           </a>
         </div>
 
