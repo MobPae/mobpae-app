@@ -246,11 +246,16 @@ export function useEmployeeApp() {
 
   const updateUpiId = async () => {
     setSavingBank(true);
-    const savedBank = await employeeApi.updateUpiId(appState.profile.id, bankForm.upiId ?? "");
-    setAppState((current) => ({ ...current, bankAccount: savedBank }));
-    setBankForm(savedBank);
-    setSavingBank(false);
-    setNotice("UPI ID updated.");
+    try {
+      const savedBank = await employeeApi.updateUpiId(appState.profile.id, bankForm.upiId ?? "");
+      setAppState((current) => ({ ...current, bankAccount: savedBank }));
+      setBankForm(savedBank);
+      setNotice("UPI ID updated.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to update UPI ID.");
+    } finally {
+      setSavingBank(false);
+    }
   };
 
   const uploadProfilePhoto = async (file: File) => {

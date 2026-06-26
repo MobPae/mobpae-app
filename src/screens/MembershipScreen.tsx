@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, BadgeCheck, Check, CheckCircle, Crown, ShieldCheck, Tag, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, CheckCircle, Crown, Gift, ShieldCheck, Sparkles, Tag, X } from "lucide-react";
 import type { AppState, CouponValidation, View } from "../types/app";
 import { SubPageHeader } from "../components/layout/SubPageHeader";
 
@@ -43,6 +43,7 @@ export function MembershipScreen({
 
   const payable = couponValidation?.payableAmount ?? amountPayable ?? fee;
   const discount = couponValidation?.discountAmount ?? 0;
+  const listPrice = fee || payable;
 
   const BENEFITS = membershipBenefits?.length
     ? membershipBenefits
@@ -64,14 +65,12 @@ export function MembershipScreen({
         <div className="screen-body mem-body">
           {/* Active card */}
           <div className="mem-active-card">
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <Crown size={22} color="white" />
-              <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,.85)" }}>
-                {planName || "MobPae Member"}
+            <div className="mem-active-top">
+              <div className="mem-active-icon"><Crown size={22} /></div>
+              <div>
+                <div className="mem-active-card-title">{planName || "MobPae Member"}</div>
+                <div className="mem-active-badge">Active membership</div>
               </div>
-            </div>
-            <div className="mem-active-badge" style={{ fontSize: 22, fontWeight: 800, color: "white", marginBottom: 14 }}>
-              Active ✓
             </div>
             <div className="mem-active-details">
               <div>
@@ -95,7 +94,7 @@ export function MembershipScreen({
 
           {/* Benefits */}
           <div className="mem-benefits-card">
-            <div className="mem-benefits-title">Your Benefits</div>
+            <div className="mem-benefits-title">Your benefits</div>
             {BENEFITS.map((b) => (
               <div key={b} className="mem-benefit-item">
                 <div className="mem-benefit-icon"><Check size={16} /></div>
@@ -112,7 +111,7 @@ export function MembershipScreen({
             <ShieldCheck size={18} color="#16A34A" />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#14532D" }}>Your membership is secure</div>
-              <div style={{ fontSize: 12, color: "#166534" }}>RBI compliant · Auto-renewable</div>
+              <div style={{ fontSize: 12, color: "#166534" }}>One-time activation · No recurring charge</div>
             </div>
           </div>
 
@@ -129,7 +128,7 @@ export function MembershipScreen({
 
       {/* Hero */}
       <div className="mem-hero">
-        <div className="mem-crown-ring"><Crown size={32} /></div>
+        <div className="mem-crown-ring"><Sparkles size={30} /></div>
         <div className="mem-hero-title">{membershipTitle || "Unlock MobPae"}</div>
         <div className="mem-hero-sub">{membershipSubtitle || "Activate your plan to access salary advances and exclusive benefits."}</div>
       </div>
@@ -138,7 +137,7 @@ export function MembershipScreen({
 
         {/* Plan card */}
         <div className="mem-plan-card">
-          <div className="mem-plan-badge">Recommended Plan</div>
+          <div className="mem-plan-badge">One-time activation</div>
           <div style={{ marginTop: 8 }}>
             <div className="mem-plan-name">{planName || "MobPae Plus"}</div>
             <div className="mem-plan-price">
@@ -190,6 +189,21 @@ export function MembershipScreen({
           {couponError && <div style={{ fontSize: 12, color: "#DC2626", marginBottom: 8 }}>⚠ {couponError}</div>}
         </div>
 
+        <div className="mem-price-card">
+          <div className="mem-price-row">
+            <span>Membership fee</span>
+            <strong>₹{listPrice.toLocaleString("en-IN")}</strong>
+          </div>
+          <div className="mem-price-row">
+            <span>Coupon discount</span>
+            <strong className={discount > 0 ? "green" : ""}>{discount > 0 ? `− ₹${discount.toLocaleString("en-IN")}` : "Optional"}</strong>
+          </div>
+          <div className="mem-price-total">
+            <span>Final payable</span>
+            <strong>₹{payable.toLocaleString("en-IN")}</strong>
+          </div>
+        </div>
+
         {activationError && (
           <div style={{ background: "#FEE2E2", color: "#B91C1C", borderRadius: 10, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>
             ⚠ {activationError}
@@ -198,7 +212,7 @@ export function MembershipScreen({
 
         {/* Benefits list */}
         <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: "16px", marginBottom: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#0F0A3C", marginBottom: 10 }}>All Benefits Included</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#0F0A3C", marginBottom: 10 }}>All benefits included</div>
           {BENEFITS.map((b) => (
             <div key={b} className="mem-benefit-item">
               <Check size={15} color="#5B3CE3" />
@@ -208,7 +222,7 @@ export function MembershipScreen({
         </div>
 
         <div style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", marginBottom: 12 }}>
-          One-time activation fee · Valid for 365 days · Auto-renewal optional
+          One-time activation fee · Valid for {membershipConfig.membershipValidityDays || 365} days
         </div>
 
         <div className="mp-bottom-space" />
@@ -231,7 +245,7 @@ export function MembershipScreen({
           {activatingMembership ? <span className="mp-spinner" /> : <>Activate for ₹{payable.toLocaleString("en-IN")} <ArrowRight size={16} /></>}
         </button>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, color: "#9CA3AF", marginTop: 8 }}>
-          <ShieldCheck size={12} /> Secure payment · RBI compliant
+          <Gift size={12} /> Coupon optional · Secure activation
         </div>
       </div>
     </div>

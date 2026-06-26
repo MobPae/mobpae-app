@@ -31,6 +31,9 @@ type AdvanceScreenProps = {
   submitting: boolean;
   salaryInHand?: number;
   payrollDay?: number | null;
+  kycComplete: boolean;
+  bankComplete: boolean;
+  membershipActive: boolean;
   onAmountChange: (amount: number) => void;
   onSubmit: () => void;
   blockerActionLabel: string;
@@ -62,6 +65,9 @@ export function AdvanceScreen({
   submitting,
   salaryInHand,
   payrollDay,
+  kycComplete,
+  bankComplete,
+  membershipActive,
   onAmountChange,
   onSubmit,
   blockerActionLabel,
@@ -79,7 +85,13 @@ export function AdvanceScreen({
   const canSubmit = eligible && !hasActive && amount >= MIN_AMOUNT && amount <= limit && !previewLoading;
 
   const nextPayday = nextPaydayDate(payrollDay);
-  const salary = salaryInHand ?? (limit > 0 ? Math.round(limit / 0.5) : 0);
+  const salary = salaryInHand ?? 0;
+  const sliderMax = Math.max(limit, MIN_AMOUNT);
+  const quickAmounts = Array.from(new Set(
+    [0.25, 0.5, 0.75, 1]
+      .map((ratio) => Math.round((limit * ratio) / 500) * 500)
+      .filter((value) => value >= MIN_AMOUNT && value <= limit)
+  ));
 
   // Show net salary only for the month the recovery actually hits
   const recoveryDate = hasActive && currentRequest?.recoveryDate
@@ -242,9 +254,9 @@ export function AdvanceScreen({
   // ── Setup required (not eligible, no active) ──────────────
   if (!eligible) {
     const blockerReasons = [
-      { label: "KYC Verification", done: nextBlocker !== "Complete KYC" && nextBlocker !== "Verify KYC" && nextBlocker !== "KYC under review" },
-      { label: "Bank Account", done: nextBlocker !== "Add bank account" && nextBlocker !== "Bank verification pending" },
-      { label: "Activate Membership", done: nextBlocker !== "Activate plan" && nextBlocker !== "Activate membership" },
+      { label: "KYC Verification", done: kycComplete },
+      { label: "Bank Account", done: bankComplete },
+      { label: "Activate Membership", done: membershipActive },
     ];
     return (
       <div className="adv-screen">
@@ -461,7 +473,7 @@ export function AdvanceScreen({
           <div className="adv-salary-left">
             <div className="adv-salary-icon"><Wallet size={20} /></div>
             <div className="adv-salary-label">Monthly Salary</div>
-            <div className="adv-salary-amount">{limit > 0 ? formatMoney(limit / 0.5) : "—"}</div>
+            <div className="adv-salary-amount">{salary > 0 ? formatMoney(salary) : "—"}</div>
             <div className="adv-salary-updated"><RefreshCw size={10} /> Updated today</div>
           </div>
           <div className="adv-salary-right">
@@ -478,15 +490,13 @@ export function AdvanceScreen({
           <div className="adv-slider-title">How much do you need?</div>
           <div className="adv-slider-sub">Select an amount up to {formatMoney(limit)}</div>
           <div className="adv-slider-amount">{formatMoney(amount)}</div>
-          <input type="range" className="adv-range" min={MIN_AMOUNT} max={limit} step={500} value={amount} onChange={e => onAmountChange(Number(e.target.value))} />
+          <input type="range" className="adv-range" min={MIN_AMOUNT} max={sliderMax} step={500} value={Math.min(amount, sliderMax)} disabled={limit < MIN_AMOUNT} onChange={e => onAmountChange(Number(e.target.value))} />
           <div className="adv-range-labels">
             <span className="adv-range-lbl">{formatMoney(MIN_AMOUNT)}</span>
             <span className="adv-range-lbl">{formatMoney(limit)}</span>
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
-            {[Math.round(limit * 0.25 / 500) * 500, Math.round(limit * 0.5 / 500) * 500, Math.round(limit * 0.75 / 500) * 500, limit]
-              .filter(v => v >= MIN_AMOUNT)
-              .map(v => (
+            {quickAmounts.map(v => (
                 <button key={v} type="button" onClick={() => onAmountChange(v)} style={{ padding: "6px 12px", borderRadius: 99, background: amount === v ? "#5B3CE3" : "#F4F3FF", color: amount === v ? "white" : "#5B3CE3", border: "1.5px solid", borderColor: amount === v ? "#5B3CE3" : "#C4BBFF", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                   {formatMoney(v)}
                 </button>
@@ -502,21 +512,28 @@ export function AdvanceScreen({
           </div>
           <div className="adv-detail-grid">
             <div className="adv-detail-item">
-              <div className="adv-detail-item-label"><IndianRupee size={12} /> You receive</div>
+              <div className="adv-detail-item-label"><IndianRupee size={12} /> Amount</div>
               <div className="adv-detail-item-val purple">{preview ? formatMoney(preview.youReceive) : "—"}</div>
+            </div>
+            <div className="adv-detail-item">
+              <div className="adv-detail-item-label"><Clock size={12} /> Tenure</div>
+              <div className="adv-detail-item-val">{preview ? `${preview.interestDays} days` : "—"}</div>
             </div>
             <div className="adv-detail-item">
               <div className="adv-detail-item-label"><Info size={12} /> Interest</div>
               <div className="adv-detail-item-val">{preview ? formatMoney(preview.interest) : "—"}</div>
             </div>
             <div className="adv-detail-item">
-              <div className="adv-detail-item-label"><CalendarDays size={12} /> Repay on</div>
-              <div className="adv-detail-item-val">{preview ? formatShortDate(preview.recoveryDate) : "—"}</div>
-            </div>
-            <div className="adv-detail-item">
-              <div className="adv-detail-item-label"><CreditCard size={12} /> Total repayment</div>
+              <div className="adv-detail-item-label"><CreditCard size={12} /> Total payment</div>
               <div className="adv-detail-item-val">{preview ? formatMoney(preview.total) : "—"}</div>
             </div>
+          </div>
+          <div className="adv-payment-date-row">
+            <div>
+              <span>Payment scheduled</span>
+              <strong>{preview ? formatShortDate(preview.recoveryDate) : "—"}</strong>
+            </div>
+            <CalendarDays size={18} />
           </div>
           {preview && (
             <div className="adv-hiw-box">

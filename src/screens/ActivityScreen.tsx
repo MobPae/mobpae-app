@@ -87,7 +87,7 @@ function expandRequest(req: AdvanceRequest): TxEvent[] {
       id: `${id}-rep`,
       type: "repayment",
       title: "Advance Repaid",
-      sub: `EMI deducted from your bank account`,
+      sub: "Recovered from salary settlement",
       datetime: formatDatetime(req.recoveryDate),
       sortTs: new Date(req.recoveryDate).getTime(),
       amount: req.totalRecoveryAmount || amount,
@@ -304,14 +304,15 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
                           {e.prefix}{formatMoney(e.amount)}
                         </div>
                         <span
-                          className={`chip ${
+                          className={`hist-tx-status ${
                             e.statusLabel === "Credited" || e.statusLabel === "Repaid"
                               ? "chip-green"
                               : e.statusLabel === "Pending"
                               ? "chip-amber"
                               : "chip-purple"
                           }`}
-                          style={{ fontSize: 10, marginTop: 4 }}
+                          title={e.statusLabel}
+                          style={{ marginTop: 4 }}
                         >
                           {e.statusLabel}
                         </span>

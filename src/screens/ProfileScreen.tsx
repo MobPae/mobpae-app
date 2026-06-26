@@ -45,6 +45,7 @@ type ProfileScreenProps = {
   onStartBankEdit: () => void;
   onCancelBankEdit: () => void;
   onSaveBank: () => void;
+  onUpdateUpiId: () => void;
   onBankFormChange: (field: keyof BankAccount, value: string) => void;
   initialSection?: "kyc" | "bank" | "membership";
 };
@@ -165,10 +166,13 @@ export function ProfileScreen({
   onNavigate,
   uploadProfilePhoto,
   uploadKycDocument,
+  uploadSelfie,
   uploadingKycType,
+  uploadingSelfie,
   bankForm,
   savingBank,
   onSaveBank,
+  onUpdateUpiId,
   onBankFormChange,
   initialSection,
 }: ProfileScreenProps) {
@@ -180,7 +184,10 @@ export function ProfileScreen({
     employeeApi.getAppInformation().then(setAppInfo).catch(() => {});
   }, []);
 
-  const kycVerified = appState.documents.every((d) => d.status === "Verified") && appState.documents.length > 0;
+  const kycVerified =
+    appState.documents.every((d) => d.status === "Verified") &&
+    appState.documents.length > 0 &&
+    appState.profile.selfieStatus === "VERIFIED";
   const bankLinked = !!appState.bankAccount?.accountNumber;
 
   // ── KYC sub-page ──────────────────────────────────────────
@@ -193,6 +200,10 @@ export function ProfileScreen({
             documents={appState.documents}
             uploadingKycType={uploadingKycType}
             onUpload={uploadKycDocument}
+            selfieStatus={appState.profile.selfieStatus}
+            selfieUrl={appState.profile.selfieUrl}
+            uploadingSelfie={uploadingSelfie}
+            onUploadSelfie={uploadSelfie}
             onContinue={() => onNavigate("profile")}
             showProgress={false}
           />
@@ -256,14 +267,29 @@ export function ProfileScreen({
                 <div style={{ fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
                   <ShieldCheck size={12} color="#16A34A" /> Account verified and linked for salary advances
                 </div>
-                <button
-                  type="button"
-                  className="mp-btn-outline"
-                  onClick={() => { /* no-op — editing not supported in profile view */ }}
-                  style={{ width: "100%", fontSize: 14 }}
-                >
-                  Request Account Change
-                </button>
+                <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: 14, marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0F0A3C", marginBottom: 8 }}>UPI ID</div>
+                  <div className="mp-field" style={{ marginBottom: 10 }}>
+                    <input
+                      className="mp-input"
+                      value={bankForm.upiId ?? ""}
+                      placeholder="name@bank"
+                      onChange={(event) => onBankFormChange("upiId", event.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="mp-btn-secondary"
+                    disabled={savingBank}
+                    onClick={onUpdateUpiId}
+                    style={{ width: "100%", height: 42, fontSize: 13, fontWeight: 800 }}
+                  >
+                    {savingBank ? "Saving..." : "Update UPI ID"}
+                  </button>
+                </div>
+                <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 14, padding: "12px 14px", color: "#92400E", fontSize: 12, lineHeight: 1.55 }}>
+                  To change your verified bank account, contact MobPae support. A new account will need verification before future advances.
+                </div>
               </div>
             </>
           ) : (

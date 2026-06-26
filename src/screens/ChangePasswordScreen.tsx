@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Eye, EyeOff, KeyRound, Lock, ShieldCheck, X } from "lucide-react";
+import { Check, Eye, EyeOff, KeyRound, Lock, X } from "lucide-react";
 import { SubPageHeader } from "../components/layout/SubPageHeader";
 
 type Props = {
@@ -23,7 +23,6 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, o
   const [showNext, setShowNext] = useState(false);
   const [showCon, setShowCon] = useState(false);
   const [localErr, setLocalErr] = useState("");
-  const [success, setSuccess] = useState(false);
 
   const rules = useMemo<Rule[]>(
     () => [
@@ -58,9 +57,8 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, o
 
     try {
       await onSubmit(current, next);
-      setSuccess(true);
     } catch {
-      setSuccess(false);
+      // Error state is owned by the app hook.
     }
   };
 
@@ -78,20 +76,17 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, o
         </div>
       </div>
 
-      {success ? (
-        <div className="change-success-card">
-          <div>
-            <ShieldCheck size={26} />
-          </div>
-          <h3>Password changed</h3>
-          <p>Your session has been refreshed. Please log in again.</p>
-        </div>
-      ) : (
-        <form className="change-password-card" onSubmit={handleSubmit}>
+      <form className="change-password-card" onSubmit={handleSubmit}>
           <PasswordField
             label="Current password"
             value={current}
-            onChange={setCurrent}
+            onChange={(value) => {
+              setCurrent(value);
+              if (displayError) {
+                setLocalErr("");
+                onClearError();
+              }
+            }}
             show={showCur}
             onToggle={() => setShowCur((value) => !value)}
             placeholder="Enter current password"
@@ -101,7 +96,13 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, o
           <PasswordField
             label="New password"
             value={next}
-            onChange={setNext}
+            onChange={(value) => {
+              setNext(value);
+              if (displayError) {
+                setLocalErr("");
+                onClearError();
+              }
+            }}
             show={showNext}
             onToggle={() => setShowNext((value) => !value)}
             placeholder="Create a strong password"
@@ -120,7 +121,13 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, o
           <PasswordField
             label="Confirm new password"
             value={confirm}
-            onChange={setConfirm}
+            onChange={(value) => {
+              setConfirm(value);
+              if (displayError) {
+                setLocalErr("");
+                onClearError();
+              }
+            }}
             show={showCon}
             onToggle={() => setShowCon((value) => !value)}
             placeholder="Re-enter new password"
@@ -144,7 +151,6 @@ export function ChangePasswordScreen({ loading, error, onSubmit, onClearError, o
             {loading ? <span className="cta-spinner" /> : "Update password"}
           </button>
         </form>
-      )}
     </div>
   );
 }

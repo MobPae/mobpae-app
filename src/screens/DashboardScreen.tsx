@@ -3,9 +3,6 @@ import {
   Banknote,
   Building2,
   Check,
-  CreditCard,
-  HelpCircle,
-  History,
   ShieldCheck,
   TrendingUp,
   XCircle,
@@ -148,10 +145,11 @@ export function DashboardScreen({
   onNavigate,
 }: DashboardScreenProps) {
   const { profile, dashboard, requests } = appState;
-  const salaryInHand = dashboard?.salaryInHand ?? 0;
-  const availableAdvance = dashboard?.availableAdvance ?? 0;
+  const salaryInHand = dashboard?.salaryInHand;
+  const availableAdvance = dashboard?.availableAdvance;
   const payrollDay = dashboard?.payrollDay;
-  const earnedSoFar = dashboard?.earnedSoFar ?? 0;
+  const earnedSoFar = dashboard?.earnedSoFar;
+  const hasDashboardData = Boolean(dashboard);
   const nextPayday = nextPaydayDate(payrollDay);
   const daysLeft = daysUntilPayday(payrollDay);
   const activeRequest = requests.find(
@@ -162,16 +160,12 @@ export function DashboardScreen({
     .sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
     .slice(0, 3);
 
-  const kycDone = appState.documents.length > 0 && appState.documents.every((d) => d.status === "Verified");
+  const kycDone =
+    appState.documents.length > 0 &&
+    appState.documents.every((d) => d.status === "Verified") &&
+    appState.profile.selfieStatus === "VERIFIED";
   const bankDone = !!appState.bankAccount?.verified;
   const memberDone = appState.membershipActive;
-
-  const quickActions = [
-    { label: "Advance", icon: <Banknote size={22} />, view: "advance" as View },
-    { label: "Repayments", icon: <CreditCard size={22} />, view: "repayments" as View },
-    { label: "History", icon: <History size={22} />, view: "activity" as View },
-    { label: "Help", icon: <HelpCircle size={22} />, view: "help" as View },
-  ];
 
   const statusColor = activeRequest?.recoveryStatus === "Completed" ? "var(--green)" : "var(--amber)";
   const statusBg = activeRequest?.recoveryStatus === "Completed" ? "#F0FDF4" : "#FFFBEB";
@@ -196,10 +190,10 @@ export function DashboardScreen({
         <div className="home-salary-top">
           <div className="home-salary-left">
             <div className="home-salary-label">Monthly Salary</div>
-            <div className="home-salary-amount">{formatMoney(salaryInHand)}</div>
+            <div className="home-salary-amount">{salaryInHand ? formatMoney(salaryInHand) : "—"}</div>
             <div className="home-salary-updated">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-              Updated today
+              {hasDashboardData ? "Updated today" : "Syncing salary data"}
             </div>
             <button type="button" className="home-access-btn" onClick={() => onNavigate("advance")}>
               <Banknote size={13} color="#5B3CE3" />
@@ -217,7 +211,7 @@ export function DashboardScreen({
             </div>
             <div>
               <div className="home-salary-stat-label">For Advance</div>
-              <div className="home-salary-stat-val">{formatMoney(availableAdvance)}</div>
+              <div className="home-salary-stat-val">{availableAdvance !== undefined ? formatMoney(availableAdvance) : "—"}</div>
             </div>
             <div>
               <div className="home-salary-stat-label">
@@ -226,7 +220,7 @@ export function DashboardScreen({
               <div className="home-salary-stat-val">
                 {activeRequest
                   ? formatMoney(activeRequest.approvedAmount || activeRequest.requestedAmount)
-                  : (earnedSoFar > 0 ? formatMoney(earnedSoFar) : "—")}
+                  : (earnedSoFar && earnedSoFar > 0 ? formatMoney(earnedSoFar) : "—")}
               </div>
             </div>
           </div>
@@ -261,16 +255,6 @@ export function DashboardScreen({
           ))}
         </div>
       )}
-
-      {/* ── Quick actions ── */}
-      <div className="home-card home-quick-grid">
-        {quickActions.map((a) => (
-          <button key={a.label} type="button" className="home-quick-item" onClick={() => onNavigate(a.view)}>
-            <div className="home-quick-icon">{a.icon}</div>
-            <span className="home-quick-label">{a.label}</span>
-          </button>
-        ))}
-      </div>
 
       {/* ── Advance Tracker (pre-disbursed) ── */}
       {activeRequest && activeRequest.disbursalStatus === "Pending" && (

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -10,7 +10,8 @@ import {
   UploadCloud,
   XCircle,
 } from "lucide-react";
-import type { KycDocument, KycDocumentType, View } from "../types/app";
+import { getFileUrl } from "../services/api";
+import type { KycDocument, KycDocumentType, SelfieStatus, View } from "../types/app";
 
 type Props = {
   documents: KycDocument[];
@@ -18,6 +19,10 @@ type Props = {
   onUpload: (type: KycDocumentType, file: File) => void;
   onContinue: (view: View) => void;
   showProgress?: boolean;
+  selfieStatus?: SelfieStatus;
+  selfieUrl?: string;
+  uploadingSelfie?: boolean;
+  onUploadSelfie?: (file: File) => void;
 };
 
 const KYC_DOCS: { type: KycDocumentType; label: string; hint: string }[] = [
@@ -43,10 +48,39 @@ function StatusIcon({ status }: { status: string }) {
   return <UploadCloud size={18} color="#5B3CE3" />;
 }
 
-export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onContinue, showProgress = true }: Props) {
+function selfieLabel(status?: SelfieStatus) {
+  if (status === "VERIFIED") return "Verified";
+  if (status === "PENDING") return "Under Review";
+  if (status === "REJECTED") return "Rejected";
+  return "Not Uploaded";
+}
+
+export function OnboardingKycScreen({
+  documents,
+  uploadingKycType,
+  onUpload,
+  onContinue,
+  showProgress = true,
+  selfieStatus,
+  selfieUrl,
+  uploadingSelfie = false,
+  onUploadSelfie,
+}: Props) {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const allVerified = documents.length > 0 && documents.every((d) => d.status === "Verified");
-  const doneCount = documents.filter((d) => d.status !== "Not Uploaded").length;
+  const selfieRef = useRef<HTMLInputElement | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState("");
+  const normalizedSelfieStatus = selfieLabel(selfieStatus);
+  const allDocsVerified = documents.length > 0 && documents.every((d) => d.status === "Verified");
+  const allVerified = allDocsVerified && selfieStatus === "VERIFIED";
+  const docDoneCount = documents.filter((d) => d.status !== "Not Uploaded").length;
+  const doneCount = docDoneCount + (selfieStatus ? 1 : 0);
+  const totalRequirements = KYC_DOCS.length + 1;
+
+  useEffect(() => {
+    return () => {
+      if (selfiePreview) URL.revokeObjectURL(selfiePreview);
+    };
+  }, [selfiePreview]);
 
   function getDoc(type: KycDocumentType) {
     return documents.find((d) => d.documentType === type);
@@ -88,7 +122,7 @@ export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onC
           </div>
           {doneCount > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-              <span className="chip chip-purple">{doneCount}/{KYC_DOCS.length} uploaded</span>
+              <span className="chip chip-purple">{doneCount}/{totalRequirements} uploaded</span>
             </div>
           )}
         </div>
@@ -138,6 +172,56 @@ export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onC
           })}
         </div>
 
+        {/* Selfie verification */}
+        <div className="onb-selfie-card">
+          <div className="onb-selfie-main">
+            <div className="onb-selfie-preview">
+              {uploadingSelfie ? (
+                <Loader2 size={22} className="spin" />
+              ) : selfiePreview || selfieUrl ? (
+                <img src={selfiePreview || getFileUrl(selfieUrl)} alt="Selfie preview" />
+              ) : (
+                <ShieldCheck size={24} />
+              )}
+            </div>
+            <div className="onb-selfie-body">
+              <div className="onb-doc-title">Selfie Verification</div>
+              <div className="onb-doc-sub">
+                Open camera and capture a clear selfie for identity verification.
+              </div>
+              <StatusChip status={normalizedSelfieStatus} />
+            </div>
+          </div>
+          {selfieStatus !== "VERIFIED" && (
+            <div className="onb-selfie-actions">
+              <button
+                type="button"
+                className="mp-btn-secondary"
+                disabled={uploadingSelfie || !onUploadSelfie}
+                onClick={() => selfieRef.current?.click()}
+              >
+                {uploadingSelfie ? <Loader2 size={14} className="spin" /> : <UploadCloud size={14} />}
+                {selfieStatus === "REJECTED" ? "Retake Selfie" : selfieUrl || selfiePreview ? "Retake Selfie" : "Open Camera"}
+              </button>
+              <input
+                ref={selfieRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="user"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !onUploadSelfie) return;
+                  if (selfiePreview) URL.revokeObjectURL(selfiePreview);
+                  setSelfiePreview(URL.createObjectURL(file));
+                  onUploadSelfie(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Tips */}
         <div className="onb-tips-card">
           <div className="onb-tips-hdr"><FileText size={14} /> Document tips</div>
@@ -145,6 +229,7 @@ export function OnboardingKycScreen({ documents, uploadingKycType, onUpload, onC
             "Use clear, well-lit photos",
             "All text must be readable",
             "No blurry or cropped images",
+            "Selfie should show your face clearly",
             "Max file size: 5 MB",
           ].map((tip) => (
             <div key={tip} className="onb-tip-row">

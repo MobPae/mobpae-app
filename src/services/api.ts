@@ -284,7 +284,7 @@ const refreshSession = async (): Promise<string | null> => {
 
 const getAccessTokenForRequest = async () => {
   const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) return null;
+  if (!token) return refreshSession();
   if (!shouldRefreshAccessToken(token)) return token;
   return (await refreshSession()) ?? token;
 };
@@ -482,7 +482,7 @@ const normalizeRequests = (
           status: "Payment Scheduled" as RequestStatus,
           // recoveryDate is the repayment dueDate — real date
           timestamp: recoveryDate,
-          description: "Recovery scheduled from next payroll.",
+          description: "Payment scheduled on salary date.",
           done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(
             request.status ?? ""
           ),

@@ -121,6 +121,10 @@ export function EmployeeApp() {
           documents={app.appState.documents}
           uploadingKycType={app.uploadingKycType}
           onUpload={app.uploadKycDocument}
+          selfieStatus={app.appState.profile.selfieStatus}
+          selfieUrl={app.appState.profile.selfieUrl}
+          uploadingSelfie={app.uploadingSelfie}
+          onUploadSelfie={app.uploadSelfie}
           onContinue={app.setActiveView}
         />
       )}
@@ -196,6 +200,9 @@ export function EmployeeApp() {
           submitting={app.submittingAdvance}
           salaryInHand={app.appState.dashboard?.salaryInHand}
           payrollDay={app.appState.dashboard?.payrollDay}
+          kycComplete={app.kycComplete}
+          bankComplete={app.bankComplete}
+          membershipActive={app.appState.membershipActive}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
           blockerActionLabel={advanceBlockerActionLabel}
@@ -254,6 +261,7 @@ export function EmployeeApp() {
           onStartBankEdit={app.startBankEdit}
           onCancelBankEdit={app.cancelBankEdit}
           onSaveBank={app.saveBankAccount}
+          onUpdateUpiId={app.updateUpiId}
           onBankFormChange={(field, value) =>
             app.setBankForm((prev) => ({ ...prev, [field]: value }))
           }
