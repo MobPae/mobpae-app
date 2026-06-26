@@ -89,9 +89,8 @@ export function EmployeeApp() {
     return (
       <div className="app-root">
         <div className="phone-shell">
-          <div className="splash-screen">
-            <div className="splash-mark">M</div>
-            <div className="splash-dots">
+          <div className="boot-screen">
+            <div className="boot-loader" aria-label="Loading MobPae">
               <span /><span /><span />
             </div>
           </div>

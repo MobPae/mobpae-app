@@ -5,7 +5,7 @@
 
 /* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Manrope", system-ui, sans-serif; background: #F4F3FF; color: #0F0A3C; font-size: 14px; -webkit-font-smoothing: antialiased; }
+body { font-family: "Manrope", system-ui, sans-serif; background: #FAFAF8; color: #0F0A3C; font-size: 14px; -webkit-font-smoothing: antialiased; }
 button { cursor: pointer; border: none; background: none; font-family: inherit; }
 input, textarea, select { font-family: inherit; outline: none; }
 a { text-decoration: none; color: inherit; }
@@ -41,16 +41,16 @@ a { text-decoration: none; color: inherit; }
    ============================================================ */
 .app-root {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100dvh; background: #D8D4FF;
+  min-height: 100dvh; background: #FAFAF8;
 }
 .phone-shell {
   width: 390px; height: 100dvh; max-height: 900px;
-  background: var(--bg); display: flex; flex-direction: column;
+  background: #FAFAF8; display: flex; flex-direction: column;
   position: relative; overflow: hidden;
   box-shadow: 0 0 60px rgba(91,60,227,0.25);
 }
 @media (max-width: 480px) {
-  .app-root { background: var(--bg); }
+  .app-root { background: #FAFAF8; }
   .phone-shell { position: fixed; inset: 0; width: 100%; height: 100%; max-height: none; box-shadow: none; }
   .bottom-nav { position: fixed !important; bottom: 0; left: 0; right: 0; z-index: 200; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .screen-body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -58,9 +58,39 @@ a { text-decoration: none; color: inherit; }
 .screen-body {
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  background: #FAFAF8;
 }
 .screen-body-onboarding { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
+
+/* ── App boot loader ─────────────────────────────────────── */
+.boot-screen {
+  flex: 1;
+  min-height: 100%;
+  background: #FAFAF8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boot-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.boot-loader span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7679FF;
+  opacity: .35;
+  animation: bootPulse 1s ease-in-out infinite;
+}
+.boot-loader span:nth-child(2) { animation-delay: .14s; }
+.boot-loader span:nth-child(3) { animation-delay: .28s; }
+@keyframes bootPulse {
+  0%, 100% { opacity: .3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
 
 /* ── Bottom navigation ─────────────────────────────────────── */
 .bottom-nav {
@@ -291,17 +321,65 @@ button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
    GLOBAL HEADER (shared across all 5 tab views)
    ============================================================ */
 .global-header {
-  background: var(--bg);
-  padding: 14px 16px 10px;
+  background: #FAFAF8;
+  padding: 16px 20px 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
 }
 .global-header-left { flex: 1; min-width: 0; }
-.global-header-title { font-size: 18px; font-weight: 800; color: var(--t1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.global-header-sub { font-size: 12px; color: var(--t2); margin-top: 1px; }
-.global-header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.global-header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #171715;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.global-header-sub {
+  font-size: 12px;
+  color: #8A847B;
+  margin-top: 3px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.global-header-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.global-header-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #C7A98D, #98795E);
+  border: 2px solid #EFECEA;
+  box-shadow: 0 1px 4px rgba(23, 23, 21, .12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.global-header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.global-header .mp-topbar-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: transparent;
+  color: #171715;
+}
+.global-header .mp-topbar-icon-btn:active {
+  background: #F1EFEA;
+}
 
 /* ============================================================
    HOME / DASHBOARD
@@ -508,6 +586,524 @@ button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
 .home-empty-icon { font-size: 28px; margin-bottom: 8px; opacity: .4; }
 .home-empty-title { font-size: 14px; font-weight: 700; color: var(--t2); margin-bottom: 4px; }
 .home-empty-sub { font-size: 12px; color: var(--t3); }
+
+/* ============================================================
+   HOME SCREEN V2 — editorial salary dashboard
+   ============================================================ */
+.home-screen-v2 {
+  min-height: 100%;
+  background: #FAFAF8;
+  padding: 8px 14px 0;
+  color: #171715;
+  font-family: inherit;
+}
+
+.home-notice-v2 {
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border-radius: 18px;
+  background: #FFF2D9;
+  color: #C74610;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.home-profile-v2 {
+  display: grid;
+  grid-template-columns: 44px 1fr 54px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 6px;
+}
+
+.home-avatar-v2 {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #C7A98D, #98795E);
+  border: 2px solid #EFECEA;
+  box-shadow: 0 1px 4px rgba(23, 23, 21, .12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.home-avatar-v2 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-profile-copy-v2 { min-width: 0; }
+.home-profile-name-v2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #171715;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-profile-company-v2 {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8A847B;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-bell-v2 {
+  width: 48px;
+  height: 48px;
+  justify-self: end;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: #171715;
+  border: 1px solid #ECE9E4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(23, 23, 21, .04);
+}
+.home-bell-v2 span {
+  position: absolute;
+  right: 15px;
+  top: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6B45F4;
+  border: 1.5px solid #FFFFFF;
+}
+
+.home-greeting-v2 {
+  padding: 14px 6px 14px;
+}
+.home-greeting-v2 h1 {
+  margin: 0;
+  color: #171715;
+  font-size: 20px;
+  line-height: 1.08;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.home-greeting-v2 em {
+  color: #6B45F4;
+  font-style: italic;
+  font-weight: 500;
+}
+.home-greeting-v2 p {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #8A847B;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.home-greeting-v2 strong {
+  color: #171715;
+  font-weight: 600;
+}
+
+.home-salary-v2 {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 22px 20px 18px;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(107, 69, 244, .20) 0 22%, transparent 23%),
+    radial-gradient(circle at 96% 84%, rgba(107, 69, 244, .16) 0 28%, transparent 29%),
+    linear-gradient(110deg, #171615 0%, #171615 54%, #261C3A 100%);
+  color: #F9F6EE;
+  box-shadow: 0 18px 36px rgba(23, 23, 21, .10);
+}
+.home-salary-ink-v2 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 72% 32%, rgba(255,255,255,.05), transparent 28%);
+  pointer-events: none;
+}
+.home-salary-top-v2 {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: start;
+  gap: 42px;
+}
+.home-usage-ring-v2 {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: conic-gradient(#704CF4 0deg var(--usage), #3A3938 var(--usage) 360deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.home-usage-ring-v2::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: #171615;
+}
+.home-usage-ring-v2 div {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.home-usage-ring-v2 strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: #FFFDF7;
+}
+.home-usage-ring-v2 span {
+  display: block;
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #9A948C;
+  letter-spacing: .04em;
+}
+
+.home-salary-main-v2 {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  justify-self: stretch;
+  padding-left: 4px;
+}
+.home-eyebrow-v2,
+.home-section-top-v2 > span,
+.home-members-head-v2 span {
+  text-transform: uppercase;
+  color: #8C877F;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: .09em;
+}
+.home-salary-amount-v2 {
+  margin-top: 8px;
+  font-size: 32px;
+  line-height: .98;
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  color: #FFFDF7;
+}
+.home-updated-v2 {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #A8A096;
+  font-size: 12px;
+  font-weight: 500;
+}
+.home-updated-v2 span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #61D79C;
+}
+.home-salary-line-v2 {
+  position: relative;
+  z-index: 1;
+  height: 1px;
+  background: rgba(255, 253, 247, .14);
+  margin: 18px 0 14px;
+}
+.home-salary-bottom-v2 {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: .78fr .92fr 1.02fr;
+  align-items: end;
+  gap: 8px;
+}
+.home-salary-bottom-v2 div {
+  min-width: 0;
+}
+.home-salary-bottom-v2 span {
+  display: block;
+  color: #A8A096;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+.home-salary-bottom-v2 strong {
+  display: block;
+  margin-top: 6px;
+  color: #FFFDF7;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.07em;
+}
+.home-salary-bottom-v2 button {
+  height: 40px;
+  border-radius: 999px;
+  background: #6B45F4;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  box-shadow: 0 10px 22px rgba(107, 69, 244, .20);
+}
+
+.home-repayment-section-v2 {
+  margin-top: 26px;
+}
+.home-repayment-v2 {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr .9fr;
+  align-items: center;
+  gap: 22px;
+  padding: 6px 0 4px;
+}
+.home-repayment-v2 > div:not(.home-repayment-amount-wrap-v2) {
+  text-align: right;
+}
+.home-repayment-v2 > div:not(.home-repayment-amount-wrap-v2) > span,
+.home-repayment-amount-wrap-v2 > div > span {
+  display: block;
+  color: #8C877F;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.home-repayment-v2 > div:not(.home-repayment-amount-wrap-v2) > strong,
+.home-repayment-amount-wrap-v2 > div > strong {
+  display: block;
+  margin-top: 5px;
+  color: #171715;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.home-repayment-amount-wrap-v2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.home-deduct-icon-v2 {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF5A5F 0%, #EF4444 100%);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, .18);
+}
+.home-deduct-icon-v2 svg {
+  display: block;
+  stroke-width: 2.4;
+}
+.home-section-top-v2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.home-section-top-v2 button,
+.home-repayment-section-v2 .home-section-top-v2 button {
+  color: #6B45F4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+
+.home-activity-v2 {
+  margin-top: 28px;
+}
+.home-activity-row-v2 {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  margin-top: 14px;
+}
+.home-activity-icon-v2 {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(22, 163, 74, .18);
+}
+.home-activity-icon-v2 svg {
+  display: block;
+  stroke-width: 2.4;
+}
+.home-activity-text-v2 {
+  min-width: 0;
+}
+.home-activity-text-v2 strong {
+  display: block;
+  color: #171715;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.home-activity-text-v2 small {
+  display: block;
+  margin-top: 5px;
+  color: #8A847B;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.home-activity-money-v2 {
+  color: #1F9A5F;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.home-empty-v2 {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #FFFFFF;
+  border: 1px solid #ECE9E4;
+  color: #8A847B;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.home-members-v2 {
+  margin-top: 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  border: 1px solid #EEECE7;
+  padding: 13px 15px;
+  box-shadow: 0 2px 10px rgba(23, 23, 21, .03);
+}
+.home-members-head-v2 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.home-members-head-v2 strong {
+  display: block;
+  margin-top: 8px;
+  color: #171715;
+  font-size: 12px;
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -0.06em;
+}
+.home-member-stack-v2 {
+  display: flex;
+  align-items: center;
+}
+.home-member-stack-v2 span {
+  width: 24px;
+  height: 24px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: #6B45F4;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.home-member-stack-v2 span:nth-child(2) { background: #A491F2; }
+.home-member-stack-v2 span:nth-child(3) { background: #5432D8; }
+.home-member-stack-v2 span:nth-child(4) {
+  background: #EFEAFF;
+  color: #5432D8;
+}
+.home-member-divider-v2 {
+  height: 0;
+  margin: 16px 0 0;
+}
+.home-invite-v2 {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.home-invite-icon-v2 {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: #EFEAFF;
+  color: #6B45F4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.home-invite-v2 strong {
+  color: #6E675F;
+  font-size: 11px;
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+.home-invite-v2 button {
+  min-width: 56px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #6B45F4;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+@media (max-width: 360px) {
+  .home-screen-v2 { padding-left: 12px; padding-right: 12px; }
+  .home-greeting-v2 h1 { font-size: 19px; }
+  .home-salary-v2 { padding-left: 16px; padding-right: 16px; }
+  .home-salary-top-v2 { grid-template-columns: 76px minmax(0, 1fr); gap: 28px; }
+  .home-usage-ring-v2 { width: 76px; height: 76px; }
+  .home-salary-amount-v2 { font-size: 29px; }
+}
 
 /* ============================================================
    ADVANCE SCREEN
