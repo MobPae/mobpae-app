@@ -64,17 +64,23 @@ button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
 
 /* ── Bottom navigation ─────────────────────────────────────── */
 .bottom-nav {
-  display: flex; background: white; border-top: 1px solid #EFEDFF;
-  padding: 8px 0 12px; flex-shrink: 0;
+  display: flex; background: white;
+  box-shadow: 0 -1px 0 #F0EEFF, 0 -6px 20px rgba(91,60,227,0.07);
+  padding: 6px 4px max(14px, env(safe-area-inset-bottom)) 4px;
+  flex-shrink: 0;
 }
 .nav-tab {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 4px; background: none; border: none; cursor: pointer;
-  padding: 4px 0;
+  gap: 3px; background: none; border: none; cursor: pointer; padding: 4px 0;
 }
-.nav-tab-icon { display: flex; align-items: center; justify-content: center; }
-.nav-tab-label { font-size: 10px; font-weight: 600; color: #9CA3AF; }
-.nav-tab.active .nav-tab-label { color: var(--P); }
+.nav-tab-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 54px; height: 30px; border-radius: 999px;
+  transition: background 0.18s;
+}
+.nav-tab.active .nav-tab-icon { background: #ECEAFF; }
+.nav-tab-label { font-size: 10px; font-weight: 600; color: #9CA3AF; letter-spacing: 0.1px; }
+.nav-tab.active .nav-tab-label { color: var(--P); font-weight: 700; }
 
 /* ── Page-level topbar (MobPae logo bar) ─────────────────── */
 .mp-topbar {
@@ -204,35 +210,81 @@ button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
    LOGIN SCREEN
    ============================================================ */
 .login-screen {
-  display: flex; flex-direction: column; min-height: 100%;
-  padding: 40px 24px 32px; background: white;
+  display: flex; flex-direction: column;
+  flex: 1;
+  background: var(--P);
 }
-.login-logo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; }
-.login-logo-icon { display: flex; align-items: center; justify-content: center; }
-.login-brand { font-size: 20px; font-weight: 800; color: var(--t1); }
-.login-heading { font-size: 28px; font-weight: 800; color: var(--t1); margin-bottom: 6px; }
-.login-sub { font-size: 15px; color: var(--t2); margin-bottom: 28px; line-height: 1.5; }
-.login-form { display: flex; flex-direction: column; }
-.login-footer-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; margin-top: -4px; }
+
+/* Hero — purple section */
+.login-hero {
+  padding: 52px 28px 48px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.login-hero-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+}
+.login-hero-title {
+  font-size: 34px; font-weight: 800; color: white;
+  line-height: 1.18; margin: 0; letter-spacing: -.5px;
+}
+
+.login-body {
+  flex: 1; background: white;
+  border-radius: 50% 50% 0 0 / 40px 40px 0 0;
+  padding: 44px 24px 24px;
+  display: flex; flex-direction: column;
+}
+.login-form { display: flex; flex-direction: column; flex: 1; }
+
+/* Icon inputs (no labels) */
+.login-input-group {
+  display: flex; align-items: center; gap: 12px;
+  background: #F5F3FF; border-radius: 14px;
+  padding: 15px 16px; margin-bottom: 14px;
+  border: 1.5px solid transparent; transition: border-color 0.15s, background 0.15s;
+}
+.login-input-group:focus-within { border-color: var(--P); background: white; box-shadow: 0 0 0 4px rgba(91,60,227,.08); }
+.login-input {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 15px; color: var(--t1); font-family: Inter, sans-serif;
+}
+.login-input::placeholder { color: #9CA3AF; }
+.login-eye-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; flex-shrink: 0;
+}
+
+/* Remember + forgot row */
+.login-footer-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; margin-top: -2px; }
 .login-remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--t2); cursor: pointer; }
-.login-remember input[type="checkbox"] { accent-color: var(--P); width: 16px; height: 16px; }
+.login-remember input[type="checkbox"] { accent-color: var(--P); width: 16px; height: 16px; border-radius: 4px; }
 .login-forgot { background: none; border: none; color: var(--P); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.login-error { background: #FEE2E2; color: #B91C1C; border-radius: var(--r-md); padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
-.login-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
-.login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: #E5E7EB; }
-.login-divider span { font-size: 12px; color: var(--t3); font-weight: 500; }
-.login-google-btn {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 14px; border-radius: var(--r-lg); background: white;
-  border: 1.5px solid #E5E7EB; font-size: 14px; font-weight: 600; color: var(--t1);
-  cursor: pointer; font-family: inherit; margin-bottom: 20px;
+
+/* Error */
+.login-error { background: #FEE2E2; color: #B91C1C; border-radius: var(--r-md); padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+
+/* Pill login button */
+.login-btn {
+  width: 100%; background: var(--P); color: white; border: none;
+  border-radius: 999px; padding: 16px; font-size: 16px; font-weight: 700;
+  cursor: pointer; font-family: Inter, sans-serif;
+  margin-top: 4px; margin-bottom: 20px;
+  transition: opacity 0.15s; display: flex; align-items: center; justify-content: center;
 }
+.login-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.login-btn:not(:disabled):active { opacity: 0.88; }
+
+/* Security note */
 .login-security-note {
   display: flex; align-items: flex-start; gap: 8px; background: #F9F8FF;
   border-radius: var(--r-md); padding: 12px 14px; font-size: 12px; color: var(--t2);
   line-height: 1.5; margin-bottom: 20px;
 }
-.login-new-row { text-align: center; font-size: 13px; color: var(--t2); margin-top: auto; padding-top: 16px; }
+
+/* Bottom "Contact HR" */
+.login-new-row { text-align: center; font-size: 13px; color: var(--t2); margin-top: auto; padding-top: 8px; }
 .login-new-row a { color: var(--P); font-weight: 700; }
 
 /* ============================================================
@@ -356,6 +408,66 @@ button:focus-visible { outline: 2px solid var(--P); outline-offset: 2px; }
 .home-adv-detail-sep { width: 1px; background: #F0EEFF; margin: 4px 0; }
 .home-adv-detail-label { font-size: 10px; color: var(--t2); font-weight: 500; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
 .home-adv-detail-val { font-size: 13px; font-weight: 800; color: var(--t1); }
+
+/* ── Advance status tracker ── */
+.home-tracker-steps {
+  display: flex;
+  align-items: flex-start;
+  padding: 2px 16px 6px;
+}
+.home-tracker-step {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.home-tracker-line {
+  flex: 1;
+  height: 2px;
+  border-radius: 1px;
+  background: #E9E7FF;
+  margin-top: 13px;
+  transition: background 0.3s;
+}
+.home-tracker-line.done { background: var(--P); }
+.home-tracker-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.home-tracker-dot.done { background: var(--P); color: #fff; }
+.home-tracker-dot.active {
+  background: #fff; border: 2px solid var(--P); color: var(--P);
+  animation: tpulse 2s ease-in-out infinite;
+}
+.home-tracker-dot.pending { background: #F3F4F6; color: #9CA3AF; }
+.home-tracker-label {
+  font-size: 10px; font-weight: 600; color: #9CA3AF;
+  text-align: center; white-space: nowrap;
+}
+.home-tracker-label.done { color: var(--P); }
+.home-tracker-label.active { color: var(--t1); font-weight: 700; }
+.home-tracker-status {
+  display: flex; align-items: center; gap: 8px;
+  margin: 2px 16px 14px;
+  background: #F5F3FF; border-radius: 10px; padding: 10px 12px;
+  font-size: 12px; font-weight: 600; color: var(--P);
+}
+.home-tracker-pulse-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--P); flex-shrink: 0;
+  animation: tpulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes tpulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91,60,227,.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(91,60,227,0); }
+}
+@keyframes tpulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.8); }
+}
 
 /* Activity list */
 .home-activity-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }

@@ -81,6 +81,28 @@ export function AdvanceScreen({
   const nextPayday = nextPaydayDate(payrollDay);
   const salary = salaryInHand ?? (limit > 0 ? Math.round(limit / 0.5) : 0);
 
+  // Show net salary only for the month the recovery actually hits
+  const recoveryDate = hasActive && currentRequest?.recoveryDate
+    ? new Date(currentRequest.recoveryDate)
+    : null;
+  const today = new Date();
+  const recoveryIsThisMonth = recoveryDate
+    && recoveryDate.getMonth() === today.getMonth()
+    && recoveryDate.getFullYear() === today.getFullYear();
+  const activeRecovery = hasActive && currentRequest?.disbursalStatus === "Disbursed" && recoveryIsThisMonth
+    ? (currentRequest.totalRecoveryAmount || 0)
+    : 0;
+  const salaryThisMonth = Math.max(0, salary - activeRecovery);
+  // Sub-label for the hero card
+  const recoveryMonthName = recoveryDate
+    ? recoveryDate.toLocaleDateString("en-IN", { month: "long" })
+    : null;
+  const salarySubLabel = hasActive && currentRequest?.disbursalStatus === "Disbursed" && recoveryDate
+    ? recoveryIsThisMonth
+      ? `After −${formatMoney(currentRequest.totalRecoveryAmount || 0)} deduction`
+      : `Full pay · deduction in ${recoveryMonthName}`
+    : "Updated just now";
+
   // ── Active advance overview (matches mockup) ──────────────
   if (hasActive && currentRequest) {
     const isPaid = currentRequest.recoveryStatus === "Completed";
@@ -98,11 +120,13 @@ export function AdvanceScreen({
           <div className="adv-hero-circle adv-hero-circle--br" />
           <div className="adv-hero-top">
             <div className="adv-hero-left">
-              <div className="adv-hero-label">Total Available Salary</div>
-              <div className="adv-hero-amount">{salary > 0 ? formatMoney(salary) : "—"}</div>
+              <div className="adv-hero-label">
+                {activeRecovery > 0 ? "Salary This Month" : "Monthly Salary"}
+              </div>
+              <div className="adv-hero-amount">{salaryThisMonth > 0 ? formatMoney(salaryThisMonth) : "—"}</div>
               <div className="adv-hero-updated">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-                Updated just now
+                {salarySubLabel}
               </div>
             </div>
             <div className="adv-hero-divider" />
@@ -262,11 +286,7 @@ export function AdvanceScreen({
       <div className="adv-success-screen">
         <div className="adv-success-topbar">
           <div className="adv-success-topbar-left">
-            <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
-              <rect width="100" height="100" rx="12" fill="#5B3CE3"/>
-              <polygon points="12,88 24,88 62,12 50,12" fill="white"/>
-              <polygon points="36,88 48,88 86,12 74,12" fill="white"/>
-            </svg>
+            <img src="/logo-icon.svg" alt="MobPae" width="22" height="14" style={{ objectFit: "contain" }} />
             MobPae
           </div>
           <div className="adv-success-topbar-right">

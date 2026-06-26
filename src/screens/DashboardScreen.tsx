@@ -1,13 +1,17 @@
 import {
   ArrowUpRight,
   Banknote,
+  Building2,
+  Check,
   CreditCard,
   HelpCircle,
   History,
+  ShieldCheck,
   TrendingUp,
+  XCircle,
 } from "lucide-react";
 import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
-import type { AppState, View } from "../types/app";
+import type { AdvanceRequest, AppState, View } from "../types/app";
 
 type DashboardScreenProps = {
   appState: AppState;
@@ -31,6 +35,111 @@ function daysUntilPayday(payrollDay?: number | null): number | null {
 function formatPayday(d: Date | null) {
   if (!d) return "—";
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+/* ── Advance Status Tracker ─────────────────────────────────────────── */
+const TRACKER_STEPS = [
+  { label: "Requested",  tIdx: 0, icon: <Banknote   size={13} /> },
+  { label: "Employer",   tIdx: 1, icon: <Building2  size={13} /> },
+  { label: "MobPae",     tIdx: 2, icon: <ShieldCheck size={13} /> },
+  { label: "Credited",   tIdx: 3, icon: <Banknote   size={13} /> },
+] as const;
+
+const STATUS_MSGS: Record<number, string> = {
+  0: "Advance placed — waiting for employer review",
+  1: "Employer is reviewing your request",
+  2: "MobPae team is processing your advance",
+  3: "Funds are on the way to your account",
+};
+
+function AdvanceTracker({ request, onNavigate }: { request: AdvanceRequest; onNavigate: (v: View) => void }) {
+  const t = request.timeline;
+  const isRejected = t[5]?.done === true && t[5]?.status === "Rejected";
+  const activeStepIdx = TRACKER_STEPS.findIndex(s => !t[s.tIdx]?.done);
+
+  if (isRejected) {
+    return (
+      <div className="home-card">
+        <div className="home-section-hdr">
+          <span className="home-section-title">Advance Request</span>
+          <button type="button" className="home-section-link" onClick={() => onNavigate("activity")}>
+            View history <ArrowUpRight size={13} />
+          </button>
+        </div>
+        <div style={{ padding: "0 16px 16px" }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "#FFF1F2", borderRadius: 12, padding: "14px 16px", border: "1px solid #FFE4E6" }}>
+            <XCircle size={22} color="var(--red)" style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--red)", marginBottom: 4 }}>Request Not Approved</div>
+              <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6 }}>
+                {request.remarks || "Your advance request was declined. You can request again or contact support for more details."}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="mp-btn-secondary"
+            style={{ marginTop: 12, width: "100%", padding: "10px 0" }}
+            onClick={() => onNavigate("advance")}
+          >
+            Request Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="home-card">
+      <div className="home-section-hdr">
+        <span className="home-section-title">Advance Request</span>
+        <button type="button" className="home-section-link" onClick={() => onNavigate("activity")}>
+          Details <ArrowUpRight size={13} />
+        </button>
+      </div>
+
+      {/* Amount row */}
+      <div style={{ padding: "0 16px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--t1)", lineHeight: 1 }}>
+            {formatMoney(request.requestedAmount)}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 3 }}>
+            Requested {formatShortDate(request.requestDate)}
+          </div>
+        </div>
+        <span className="chip chip-amber" style={{ fontSize: 11 }}>
+          <span className="chip-dot" /> In Progress
+        </span>
+      </div>
+
+      {/* Step tracker */}
+      <div className="home-tracker-steps">
+        {TRACKER_STEPS.flatMap((step, i) => {
+          const done = t[step.tIdx]?.done ?? false;
+          const isActive = i === activeStepIdx;
+          const nodes = [
+            <div key={`step-${i}`} className="home-tracker-step">
+              <div className={`home-tracker-dot ${done ? "done" : isActive ? "active" : "pending"}`}>
+                {done ? <Check size={13} strokeWidth={3} /> : isActive ? step.icon : <span style={{ fontSize: 10, fontWeight: 700 }}>{i + 1}</span>}
+              </div>
+              <div className={`home-tracker-label ${done ? "done" : isActive ? "active" : ""}`}>{step.label}</div>
+            </div>,
+          ];
+          if (i < TRACKER_STEPS.length - 1) {
+            nodes.push(<div key={`line-${i}`} className={`home-tracker-line ${done ? "done" : ""}`} />);
+          }
+          return nodes;
+        })}
+      </div>
+
+      {/* Current status message */}
+      <div className="home-tracker-status">
+        <div className="home-tracker-pulse-dot" />
+        <span>{STATUS_MSGS[activeStepIdx < 0 ? 3 : activeStepIdx]}</span>
+      </div>
+    </div>
+  );
 }
 
 export function DashboardScreen({
@@ -111,8 +220,14 @@ export function DashboardScreen({
               <div className="home-salary-stat-val">{formatMoney(availableAdvance)}</div>
             </div>
             <div>
-              <div className="home-salary-stat-label">Earned So Far</div>
-              <div className="home-salary-stat-val">{earnedSoFar > 0 ? formatMoney(earnedSoFar) : "—"}</div>
+              <div className="home-salary-stat-label">
+                {activeRequest ? "Advance Taken" : "Earned So Far"}
+              </div>
+              <div className="home-salary-stat-val">
+                {activeRequest
+                  ? formatMoney(activeRequest.approvedAmount || activeRequest.requestedAmount)
+                  : (earnedSoFar > 0 ? formatMoney(earnedSoFar) : "—")}
+              </div>
             </div>
           </div>
         </div>
@@ -157,11 +272,16 @@ export function DashboardScreen({
         ))}
       </div>
 
-      {/* ── Current Advance ── */}
-      {activeRequest && (
+      {/* ── Advance Tracker (pre-disbursed) ── */}
+      {activeRequest && activeRequest.disbursalStatus === "Pending" && (
+        <AdvanceTracker request={activeRequest} onNavigate={onNavigate} />
+      )}
+
+      {/* ── Current Advance (post-disbursed — repayment tracking) ── */}
+      {activeRequest && activeRequest.disbursalStatus === "Disbursed" && (
         <div className="home-card">
           <div className="home-section-hdr">
-            <span className="home-section-title">Current Advance</span>
+            <span className="home-section-title">Repayment Due</span>
             <button type="button" className="home-section-link" onClick={() => onNavigate("repayments")}>
               View schedule <ArrowUpRight size={13} />
             </button>

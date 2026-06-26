@@ -430,9 +430,6 @@ export function ProfileScreen({
         <ProfileCard>
           <SettingsRow icon={<KeyRound size={16} />} label="Change Password" sub="Update your login password"
             onClick={() => onNavigate("change-password")} />
-          <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
-          <SettingsRow icon={<ShieldCheck size={16} />} iconBg="#F0FDF4" label="Privacy Policy"
-            sub="How we protect your data" onClick={() => {}} />
         </ProfileCard>
 
         {/* ── MobPae Info ── */}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, Phone, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 
 type LoginScreenProps = {
   error: string;
@@ -8,11 +8,77 @@ type LoginScreenProps = {
   onForgotPassword?: () => void;
 };
 
+const P  = "#5B3CE3";
+const PD = "#4A2FD4";
+const PL = "#7B64FF";
+
+/* ── Floating-label outlined input ───────────────────────────── */
+function FloatingInput({
+  label, type, value, onChange, autoComplete, rightSlot,
+}: {
+  label: string; type: string; value: string;
+  onChange: (v: string) => void; autoComplete?: string;
+  rightSlot?: React.ReactNode;
+}) {
+  const [focused, setFocused] = useState(false);
+  const active = focused || value.length > 0;
+
+  return (
+    <div style={{ position: "relative", marginBottom: 22 }}>
+      <div style={{
+        display: "flex", alignItems: "center",
+        border: `2px solid ${focused ? P : "#A78BFA"}`,
+        borderRadius: 14,
+        padding: "15px 16px",
+        minHeight: 56,
+        background: focused ? "#FAFAFE" : "white",
+        transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s",
+        boxShadow: focused ? `0 0 0 4px rgba(91,60,227,0.12)` : "none",
+      }}>
+        <input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          required
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            flex: 1, border: "none", outline: "none",
+            fontSize: 15, fontWeight: 500, color: "#1a1a2e",
+            fontFamily: "'Inter', sans-serif",
+            background: "transparent",
+          }}
+        />
+        {rightSlot}
+      </div>
+      {/* Floating label */}
+      <label style={{
+        position: "absolute",
+        left: 14,
+        top: active ? -10 : "50%",
+        transform: active ? "none" : "translateY(-50%)",
+        fontSize: active ? 11 : 15,
+        fontWeight: 800,
+        fontFamily: "'Inter', sans-serif",
+        color: active ? (focused ? P : P) : "#A78BFA",
+        background: "white",
+        padding: "0 5px",
+        pointerEvents: "none",
+        transition: "all 0.2s ease",
+        letterSpacing: active ? "0.08em" : 0,
+        textTransform: active ? "uppercase" : "none",
+      }}>
+        {label}
+      </label>
+    </div>
+  );
+}
+
 export function LoginScreen({ error, loading, onLogin, onForgotPassword }: LoginScreenProps) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,118 +86,232 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword }: Login
   };
 
   return (
-    <div className="login-screen">
+    <div style={{
+      position: "relative", display: "flex", flexDirection: "column",
+      flex: 1, background: "white", overflow: "hidden",
+      fontFamily: "Inter, sans-serif",
+    }}>
 
-      {/* Logo */}
-      <div className="login-logo-row">
-        <div className="login-logo-icon">
-          <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
-            <rect width="100" height="100" rx="18" fill="#5B3CE3"/>
-            <polygon points="12,88 24,88 62,12 50,12" fill="white" opacity="0.9"/>
-            <polygon points="36,88 48,88 86,12 74,12" fill="white" opacity="0.9"/>
-          </svg>
+      {/* ══════════════════════════════════════════
+          PURPLE HERO — top 46% with gradient + deco
+          ══════════════════════════════════════════ */}
+      <div style={{
+        position: "relative",
+        background: `linear-gradient(145deg, ${PD} 0%, ${P} 55%, ${PL} 100%)`,
+        paddingTop: 56,
+        paddingBottom: 80,
+        overflow: "hidden",
+        flexShrink: 0,
+      }}>
+
+        {/* Decorative glowing circles */}
+        <div style={{
+          position: "absolute", top: -50, right: -50,
+          width: 200, height: 200, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", bottom: 40, left: -60,
+          width: 160, height: 160, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        {/* Small sparkle dots */}
+        {[
+          { x: "75%", y: "20%", r: 3 },
+          { x: "15%", y: "60%", r: 2 },
+          { x: "85%", y: "65%", r: 4 },
+          { x: "30%", y: "15%", r: 2.5 },
+        ].map((d, i) => (
+          <div key={i} style={{
+            position: "absolute", left: d.x, top: d.y,
+            width: d.r * 2, height: d.r * 2, borderRadius: "50%",
+            background: "rgba(255,255,255,0.45)",
+            pointerEvents: "none",
+          }} />
+        ))}
+
+        {/* Logo + branding */}
+        <div style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 14,
+          position: "relative", zIndex: 1,
+        }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 22,
+            background: "rgba(255,255,255,0.18)",
+            backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+          }}>
+            <img
+              src="/logo-icon.svg" alt="MobPae"
+              width="44" height="29"
+              style={{ filter: "brightness(0) invert(1)", objectFit: "contain" }}
+            />
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontSize: 26, fontWeight: 800, color: "white", margin: 0, letterSpacing: "-0.5px" }}>
+              MobPae
+            </p>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", margin: "4px 0 0", fontWeight: 400 }}>
+              Your salary, when you need it.
+            </p>
+          </div>
         </div>
-        <span className="login-brand">MobPae</span>
       </div>
 
-      <h2 className="login-heading">Welcome back! 👋</h2>
-      <p className="login-sub">Sign in to access your salary advance and manage your finances.</p>
+      {/* ══════════════════════════════════════════
+          MULTI-LAYER WAVE — transitions hero → form
+          ══════════════════════════════════════════ */}
+      <div style={{
+        position: "relative", marginTop: -70,
+        flexShrink: 0, lineHeight: 0,
+      }}>
+        <svg viewBox="0 0 390 90" preserveAspectRatio="none"
+          style={{ width: "100%", height: 90, display: "block" }}>
+          {/* Back wave — bright lavender */}
+          <path
+            d="M0,30 C60,70 130,0 210,35 C280,65 340,10 390,28 L390,90 L0,90 Z"
+            fill="rgba(167,139,250,0.65)"
+          />
+          {/* Mid wave — medium purple */}
+          <path
+            d="M0,50 C80,10 160,75 260,45 C330,25 370,55 390,42 L390,90 L0,90 Z"
+            fill="rgba(124,97,255,0.50)"
+          />
+          {/* Front wave — white */}
+          <path
+            d="M0,65 C70,30 170,80 270,58 C350,40 375,68 390,60 L390,90 L0,90 Z"
+            fill="white"
+          />
+        </svg>
+      </div>
 
-      <form className="login-form" onSubmit={submit}>
+      {/* ══════════════════════════════════════════
+          FORM SECTION
+          ══════════════════════════════════════════ */}
+      <div style={{
+        flex: 1, background: "white",
+        padding: "0 28px 36px",
+        display: "flex", flexDirection: "column",
+        position: "relative",
+      }}>
 
-        {/* Email field */}
-        <div className="mp-field">
-          <label className="mp-label" htmlFor="mp-email">Email</label>
-          <div className="mp-input-wrap">
-            <span className="mp-input-icon"><Phone size={16} /></span>
-            <input
-              id="mp-email"
-              className="mp-input"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              autoComplete="email"
-              required
-            />
-          </div>
+        {/* Subtle bottom-right accent */}
+        <svg viewBox="0 0 160 160" style={{
+          position: "absolute", bottom: 0, right: 0,
+          width: 140, height: 140, pointerEvents: "none", opacity: 0.07,
+        }}>
+          <circle cx="140" cy="140" r="100" fill={P} />
+          <circle cx="140" cy="140" r="60"  fill={PL} />
+        </svg>
+
+        {/* Section title */}
+        <div style={{ marginBottom: 28 }}>
+          <h2 style={{
+            fontSize: 22, fontWeight: 800, color: "#1a1a2e",
+            margin: "0 0 4px", letterSpacing: "-0.4px",
+          }}>
+            Welcome back 👋
+          </h2>
+          <p style={{ fontSize: 13, color: "#8B92A5", margin: 0, fontWeight: 400 }}>
+            Sign in to access your account
+          </p>
         </div>
 
-        {/* Password field */}
-        <div className="mp-field">
-          <label className="mp-label" htmlFor="mp-pass">Password</label>
-          <div className="mp-input-wrap">
-            <span className="mp-input-icon"><Lock size={16} /></span>
-            <input
-              id="mp-pass"
-              className="mp-input"
-              type={showPass ? "text" : "password"}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              required
-            />
-            <button
-              type="button"
-              className="mp-eye-btn"
-              onClick={() => setShowPass(v => !v)}
-              aria-label={showPass ? "Hide password" : "Show password"}
-            >
-              {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
+        <form onSubmit={submit} style={{ position: "relative", zIndex: 1 }}>
 
-        {/* Remember + Forgot */}
-        <div className="login-footer-row">
-          <label className="login-remember">
-            <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
-            Remember me
-          </label>
-          <button type="button" className="login-forgot" onClick={onForgotPassword}>
-            Forgot Password?
+          <FloatingInput
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+          />
+
+          <FloatingInput
+            label="Password"
+            type={showPass ? "text" : "password"}
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setShowPass(v => !v)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: 0, display: "flex", flexShrink: 0, color: P,
+                }}
+              >
+                {showPass ? <EyeOff size={20} /> : <Lock size={20} />}
+              </button>
+            }
+          />
+
+          {/* Forgot password */}
+          {onForgotPassword && (
+            <div style={{ textAlign: "right", marginTop: -12, marginBottom: 20 }}>
+              <button
+                type="button" onClick={onForgotPassword}
+                style={{
+                  background: "none", border: "none", color: P,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div style={{
+              background: "#FEE2E2", color: "#B91C1C", borderRadius: 12,
+              padding: "11px 14px", fontSize: 13, marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span>⚠</span> {error}
+            </div>
+          )}
+
+          {/* Login button */}
+          <button
+            type="submit"
+            disabled={!email || !password || loading}
+            style={{
+              width: "100%",
+              background: !email || !password || loading
+                ? "#A09CF0"
+                : `linear-gradient(135deg, ${PD} 0%, ${PL} 100%)`,
+              color: "white", border: "none",
+              borderRadius: 16, padding: "17px",
+              fontSize: 16, fontWeight: 700,
+              fontFamily: "Inter, sans-serif",
+              cursor: loading || !email || !password ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: !email || !password || loading
+                ? "none"
+                : "0 8px 24px rgba(91,60,227,0.38)",
+              transition: "all 0.2s",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {loading ? <span className="mp-spinner" /> : "Login"}
           </button>
-        </div>
 
-        {/* Error */}
-        {error && <div className="login-error">⚠ {error}</div>}
-
-        {/* Log In button */}
-        <button
-          type="submit"
-          className="mp-btn-primary"
-          disabled={!email || !password || loading}
-          style={{ marginBottom: 16 }}
-        >
-          {loading ? <span className="mp-spinner" /> : <>Log In →</>}
-        </button>
-
-        {/* Divider */}
-        <div className="login-divider">
-          <span>or continue with</span>
-        </div>
-
-        {/* Google button */}
-        <button type="button" className="login-google-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        {/* Security note */}
-        <div className="login-security-note">
-          <ShieldCheck size={14} color="#5B3CE3" style={{ flexShrink: 0, marginTop: 1 }} />
-          <span>Your employer activates your MobPae account. Contact HR if you haven't received your credentials.</span>
-        </div>
-      </form>
-
-      <div className="login-new-row">
-        New to MobPae? <a href="#contact-hr">Contact HR →</a>
+          {/* Bottom hint */}
+          <p style={{
+            textAlign: "center", fontSize: 12, color: "#B0B7C3",
+            marginTop: 20, lineHeight: 1.6,
+          }}>
+            Your account is created by your employer.<br />
+            Contact HR if you haven't received credentials.
+          </p>
+        </form>
       </div>
     </div>
   );
