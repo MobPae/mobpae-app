@@ -57,13 +57,13 @@ function getInitials(name: string) {
 // Render markdown-like bold (**text**) as inline spans
 function RenderContent({ text }: { text: string }) {
   return (
-    <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.75 }}>
+    <div className="prof-info-content">
       {text.split("\n").map((line, i) => {
         const parts = line.split(/\*\*(.*?)\*\*/g);
         return (
-          <p key={i} style={{ margin: "2px 0" }}>
+          <p key={i}>
             {parts.map((part, j) =>
-              j % 2 === 1 ? <strong key={j} style={{ color: "#0F0A3C", fontWeight: 700 }}>{part}</strong> : part
+              j % 2 === 1 ? <strong key={j}>{part}</strong> : part
             )}
           </p>
         );
@@ -76,23 +76,22 @@ function RenderContent({ text }: { text: string }) {
 function InfoRow({ icon, title, content }: { icon: React.ReactNode; title: string; content: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ borderBottom: "1px solid #F3F1FF" }}>
+    <div className="prof-info-row">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 12,
-          padding: "14px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit"
-        }}
+        className="prof-info-button"
       >
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#5B3CE3", flexShrink: 0 }}>
+        <div className="prof-row-icon prof-row-icon--purple">
           {icon}
         </div>
-        <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>{title}</div>
+        <div className="prof-row-main">
+          <div className="prof-row-title">{title}</div>
+        </div>
         {open ? <ChevronUp size={16} color="#9CA3AF" /> : <ChevronDown size={16} color="#9CA3AF" />}
       </button>
       {open && (
-        <div style={{ padding: "0 16px 16px 64px" }}>
+        <div className="prof-info-panel">
           <RenderContent text={content} />
         </div>
       )}
@@ -103,8 +102,8 @@ function InfoRow({ icon, title, content }: { icon: React.ReactNode; title: strin
 // Card wrapper — same width/style as the salary card
 function ProfileCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ padding: "0 16px 10px" }}>
-      <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", boxShadow: "0 2px 12px rgba(91,60,227,.08)", overflow: "hidden", ...style }}>
+    <div className="prof-card-wrap">
+      <div className="prof-card" style={style}>
         {children}
       </div>
     </div>
@@ -114,9 +113,7 @@ function ProfileCard({ children, style }: { children: React.ReactNode; style?: R
 // Section header label — purple theme color
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 800, color: "#5B3CE3", textTransform: "uppercase", letterSpacing: ".08em", padding: "12px 16px 4px" }}>
-      {children}
-    </div>
+    <div className="prof-section-label">{children}</div>
   );
 }
 
@@ -128,22 +125,17 @@ function SettingsRow({ icon, iconBg, label, sub, onClick, danger }: {
     <button
       type="button"
       onClick={onClick}
-      style={{
-        width: "100%", display: "flex", alignItems: "center", gap: 12,
-        padding: "13px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit"
-      }}
+      className={`prof-row ${danger ? "prof-row--danger" : ""}`}
     >
-      <div style={{
-        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-        background: danger ? "#FEF2F2" : (iconBg || "#F5F3FF"),
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: danger ? "#EF4444" : "#5B3CE3"
-      }}>
+      <div
+        className="prof-row-icon"
+        style={{ background: danger ? "#FEF2F2" : iconBg }}
+      >
         {icon}
       </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: danger ? "#EF4444" : "#0F0A3C" }}>{label}</div>
-        {sub && <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{sub}</div>}
+      <div className="prof-row-main">
+        <div className="prof-row-title">{label}</div>
+        {sub && <div className="prof-row-sub">{sub}</div>}
       </div>
       <ChevronRight size={16} color="#D1D5DB" />
     </button>
@@ -313,120 +305,89 @@ export function ProfileScreen({
       <div className="screen-body" style={{ background: "var(--bg)" }}>
 
         {/* ── Profile hero card ── */}
-        <div style={{ padding: "14px 16px 4px" }}>
-          <div style={{
-            position: "relative", overflow: "hidden",
-            background: "linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 55%, #EEF2FF 100%)",
-            borderRadius: 20, border: "1px solid #DDD6FE",
-            padding: "20px 18px 18px",
-            boxShadow: "0 4px 16px rgba(91,60,227,.10)",
-          }}>
-            {/* Decorative circles */}
-            <div style={{ position: "absolute", top: -24, right: -24, width: 110, height: 110, borderRadius: "50%", background: "rgba(91,60,227,.08)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: -28, right: 30, width: 80, height: 80, borderRadius: "50%", background: "rgba(91,60,227,.05)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", top: 18, right: 64, width: 36, height: 36, borderRadius: "50%", background: "rgba(91,60,227,.07)", pointerEvents: "none" }} />
-
-            <div style={{ display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
-
-              {/* Avatar */}
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: "50%",
-                  background: "#DDD6FE", border: "2.5px solid #7C3AED",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 22, fontWeight: 800, color: "#5B3CE3", overflow: "hidden"
-                }}>
-                  {profile.profilePhotoUrl ? (
-                    <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : getInitials(profile.name || "M")}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => photoRef.current?.click()}
-                  style={{
-                    position: "absolute", bottom: 1, right: 1, width: 22, height: 22,
-                    borderRadius: "50%", background: "#5B3CE3", border: "2px solid white", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 2px 6px rgba(91,60,227,.35)"
-                  }}
-                >
-                  <Camera size={11} color="white" />
-                </button>
-                <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }}
-                  onChange={e => { if (e.target.files?.[0]) uploadProfilePhoto(e.target.files[0]); }} />
+        <section className="prof-hero-v2">
+          <div className="prof-hero-ink-v2" />
+          <div className="prof-hero-main-v2">
+            <div className="prof-avatar-wrap-v2">
+              <div className="prof-avatar-v2">
+                {profile.profilePhotoUrl ? (
+                  <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} />
+                ) : getInitials(profile.name || "M")}
               </div>
-
-              {/* Name + badge + details */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 2 }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F0A3C", lineHeight: 1.2 }}>
-                    {profile.name || "Employee"}
-                  </div>
-                  {membershipActive && (
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", gap: 3,
-                      background: "#16A34A", color: "white",
-                      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
-                      letterSpacing: ".02em"
-                    }}>
-                      <Crown size={9} /> Member
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 12, color: "#5B3CE3", fontWeight: 700, marginTop: 1 }}>
-                  {profile.employer || "MobPae"}
-                </div>
-                {profile.employeeCode && (
-                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                    ID: {profile.employeeCode}
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                className="prof-avatar-camera-v2"
+                onClick={() => photoRef.current?.click()}
+                aria-label="Update profile photo"
+              >
+                <Camera size={13} />
+              </button>
+              <input
+                ref={photoRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) uploadProfilePhoto(e.target.files[0]);
+                }}
+              />
+            </div>
+            <div className="prof-hero-copy-v2">
+              <h2>{profile.name || "Employee"}</h2>
+              <p>{profile.employer || "MobPae"}</p>
             </div>
           </div>
-        </div>
+          <div className="prof-hero-stats-v2">
+            <div>
+              <span>Employee ID</span>
+              <strong>{profile.employeeCode || "—"}</strong>
+            </div>
+            <div>
+              <span>Plan</span>
+              <strong className={membershipActive ? "green" : ""}>
+                <Crown size={16} /> {membershipActive ? "Member" : "Inactive"}
+              </strong>
+            </div>
+          </div>
+        </section>
 
         {/* ── Your Details (normal card, below hero) ── */}
         <SectionLabel>Your Details</SectionLabel>
-        <ProfileCard>
+        <div className="prof-list">
           {profile.employer && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div className="prof-detail-row">
+              <div className="prof-row-icon prof-row-icon--purple">
                 <Building2 size={16} color="#5B3CE3" />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 1 }}>Employer</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>{profile.employer}</div>
+              <div className="prof-row-main">
+                <div className="prof-row-sub">Employer</div>
+                <div className="prof-row-title">{profile.employer}</div>
               </div>
             </div>
           )}
-          {profile.employer && profile.email && <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />}
           {profile.email && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#F0FDF4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div className="prof-detail-row">
+              <div className="prof-row-icon prof-row-icon--green">
                 <Mail size={16} color="#16A34A" />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 1 }}>Email</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>{profile.email}</div>
+              <div className="prof-row-main">
+                <div className="prof-row-sub">Email</div>
+                <div className="prof-row-title">{profile.email}</div>
               </div>
             </div>
           )}
           {(profile as unknown as Record<string, string>).phone && (
-            <>
-              <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFFBEB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Phone size={16} color="#D97706" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 1 }}>Phone</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>{(profile as unknown as Record<string, string>).phone}</div>
-                </div>
+            <div className="prof-detail-row">
+              <div className="prof-row-icon prof-row-icon--warm">
+                <Phone size={16} color="#D97706" />
               </div>
-            </>
+              <div className="prof-row-main">
+                <div className="prof-row-sub">Phone</div>
+                <div className="prof-row-title">{(profile as unknown as Record<string, string>).phone}</div>
+              </div>
+            </div>
           )}
-        </ProfileCard>
+        </div>
 
         {/* ── Account ── */}
         <SectionLabel>Account</SectionLabel>

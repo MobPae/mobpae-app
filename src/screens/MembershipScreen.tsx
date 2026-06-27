@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { ArrowRight, BadgeCheck, Check, CheckCircle, Crown, Gift, ShieldCheck, Sparkles, Tag, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowRight, BadgeCheck, Check, CheckCircle, Crown, Gift, QrCode, ShieldCheck, Sparkles, Tag, UploadCloud, X } from "lucide-react";
 import type { AppState, CouponValidation, View } from "../types/app";
 import { SubPageHeader } from "../components/layout/SubPageHeader";
+import { getFileUrl } from "../services/api";
 
 type Props = {
   appState: AppState;
@@ -9,7 +10,7 @@ type Props = {
   couponValidation: CouponValidation | null;
   couponError: string;
   validatingCoupon: boolean;
-  onActivateMembership: () => Promise<void>;
+  onActivateMembership: (paymentScreenshot?: File, paymentReference?: string) => Promise<void>;
   onValidateCoupon: (code: string) => Promise<void>;
   onClearCoupon: () => void;
   onNavigate: (view: View) => void;
@@ -36,14 +37,22 @@ export function MembershipScreen({
   const {
     planName, fee, amountPayable, daysRemaining, memberSince, validTill,
     membershipTitle, membershipSubtitle, membershipBenefits,
+    status, payment, paymentScreenshot, paymentReference, remarks,
   } = membershipConfig;
 
   const [couponInput, setCouponInput] = useState("");
   const [activationError, setActivationError] = useState("");
+  const [selectedProof, setSelectedProof] = useState<File | null>(null);
+  const [showQr, setShowQr] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const payable = couponValidation?.payableAmount ?? amountPayable ?? fee;
+  const payable = couponValidation?.payableAmount ?? (amountPayable && amountPayable > 0 ? amountPayable : fee);
   const discount = couponValidation?.discountAmount ?? 0;
   const listPrice = fee || payable;
+  const membershipStatus = status?.toUpperCase();
+  const qrUrl = getFileUrl(payment?.qrUrl || "uploads/payment/googlepay-membership-qr.png");
+  const needsResubmission =
+    membershipStatus === "REJECTED" || (membershipStatus === "PENDING" && Boolean(remarks));
 
   const BENEFITS = membershipBenefits?.length
     ? membershipBenefits
@@ -121,6 +130,33 @@ export function MembershipScreen({
     );
   }
 
+  if (membershipStatus === "PENDING" && !needsResubmission) {
+    return (
+      <div className="mem-screen">
+        <SubPageHeader title="Membership Review" onBack={() => onNavigate("profile")} />
+        <div className="screen-body mem-body">
+          <div className="mem-review-card">
+            <div className="mem-review-icon"><ShieldCheck size={26} /></div>
+            <div className="mem-review-title">Payment under review</div>
+            <div className="mem-review-copy">
+              We have received your membership payment proof. Admin will verify it and activate your plan.
+            </div>
+            <div className="mem-review-list">
+              <div><span>Status</span><strong>Pending verification</strong></div>
+              <div><span>Amount</span><strong>₹{payable.toLocaleString("en-IN")}</strong></div>
+              {paymentReference && <div><span>Reference</span><strong>{paymentReference}</strong></div>}
+              {paymentScreenshot && <div><span>Proof</span><strong>Uploaded</strong></div>}
+            </div>
+          </div>
+          <div className="mem-help-note">
+            You can request salary advance once membership is approved.
+          </div>
+          <div className="mp-bottom-space" />
+        </div>
+      </div>
+    );
+  }
+
   // ── Upgrade / Activate state ──────────────────────────────
   return (
     <div className="mem-screen">
@@ -134,6 +170,13 @@ export function MembershipScreen({
       </div>
 
       <div className="screen-body mem-body">
+
+        {needsResubmission && (
+          <div className="mem-rejected-card">
+            <strong>Payment proof was rejected</strong>
+            <span>{remarks || "Please upload a clearer payment screenshot and submit again."}</span>
+          </div>
+        )}
 
         {/* Plan card */}
         <div className="mem-plan-card">
@@ -204,6 +247,62 @@ export function MembershipScreen({
           </div>
         </div>
 
+        <div className="mem-payment-card">
+          <div className="mem-payment-head">
+            <div>
+              <span>Pay membership fee</span>
+              <strong>Scan QR and pay</strong>
+            </div>
+            <div className="mem-payment-amount">₹{payable.toLocaleString("en-IN")}</div>
+          </div>
+
+          {!showQr ? (
+            <button
+              type="button"
+              className="mem-show-qr-btn"
+              onClick={() => setShowQr(true)}
+            >
+              <QrCode size={18} />
+              Show QR code
+            </button>
+          ) : (
+            <div className="mem-qr-box mem-qr-box--large">
+              {qrUrl ? (
+                <img src={qrUrl} alt="Membership payment QR" />
+              ) : (
+                <div>
+                  <Sparkles size={24} />
+                  <span>QR will appear here</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mem-payment-instruction">
+            Scan the QR, complete the payment, then upload the payment screenshot for verification.
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) setSelectedProof(file);
+            }}
+          />
+          <button
+            type="button"
+            className="mem-proof-upload"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <UploadCloud size={18} />
+            <span>{selectedProof ? selectedProof.name : "Upload payment screenshot"}</span>
+          </button>
+
+        </div>
+
         {activationError && (
           <div style={{ background: "#FEE2E2", color: "#B91C1C", borderRadius: 10, padding: "10px 14px", fontSize: 13, marginBottom: 12 }}>
             ⚠ {activationError}
@@ -236,16 +335,20 @@ export function MembershipScreen({
           disabled={activatingMembership}
           onClick={async () => {
             setActivationError("");
-            try { await onActivateMembership(); }
+            if (!selectedProof) {
+              setActivationError("Please upload your payment screenshot.");
+              return;
+            }
+            try { await onActivateMembership(selectedProof); }
             catch (e: unknown) {
               setActivationError(e instanceof Error ? e.message : "Activation failed. Please try again.");
             }
           }}
         >
-          {activatingMembership ? <span className="mp-spinner" /> : <>Activate for ₹{payable.toLocaleString("en-IN")} <ArrowRight size={16} /></>}
+          {activatingMembership ? <span className="mp-spinner" /> : <>Submit payment proof <ArrowRight size={16} /></>}
         </button>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, fontSize: 11, color: "#9CA3AF", marginTop: 8 }}>
-          <Gift size={12} /> Coupon optional · Secure activation
+          <Gift size={12} /> Coupon optional · Admin verified activation
         </div>
       </div>
     </div>

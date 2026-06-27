@@ -136,6 +136,9 @@ type BackendMembershipNested = {
   status?: string;
   couponCode?: string;
   discountAmount?: string | number;
+  paymentReference?: string | null;
+  paymentScreenshot?: string | null;
+  remarks?: string | null;
 };
 
 type BackendMembership = {
@@ -157,6 +160,12 @@ type BackendMembership = {
   membership?: BackendMembershipNested;  // nested detail object in /membership/me
 };
 
+type BackendMembershipRequestResult = {
+  success?: boolean;
+  message?: string;
+  membership?: BackendMembershipNested;
+};
+
 type BackendMembershipConfig = {
   membershipFee?: number;
   membershipValidityDays?: number;
@@ -166,6 +175,12 @@ type BackendMembershipConfig = {
   membershipSubtitle?: string;
   freeBenefits?: string[];
   membershipBenefits?: string[];
+  payment?: {
+    upiId?: string;
+    qrUrl?: string;
+    beneficiaryName?: string;
+    instructions?: string;
+  };
 };
 
 type BackendEmployeeMe = EmployeeDashboard & {
@@ -603,6 +618,11 @@ const getEmployerName = (employee: Partial<BackendEmployeeMe>) => {
   );
 };
 
+const getEmployerEmail = (employee: Partial<BackendEmployeeMe>) => {
+  if (typeof employee.employer === "object") return employee.employer?.email ?? "";
+  return "";
+};
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
@@ -846,6 +866,7 @@ export const employeeApi = {
           phone: employee.phone ?? "",
           employeeCode: employee.employeeCode ?? "",
           employer: getEmployerName(employee),
+          employerEmail: getEmployerEmail(employee),
           // appActivated is the definitive "account is live" flag from the new API shape
           accountActive: appActivated ?? employee.accountActive ?? false,
           salaryLimit,
@@ -868,8 +889,8 @@ export const employeeApi = {
           );
           // Amount actually paid (may differ if coupon was used)
           const amountPaid = Number(
-            membershipData?.amountPaid ??
             nested?.amount ??
+            (membershipData?.active ? membershipData?.amountPaid : undefined) ??
             planFee
           );
           const validityDays = Number(
@@ -906,6 +927,7 @@ export const employeeApi = {
                   : "—");
           return {
             planName: membershipData?.planName ?? nested?.planName ?? membershipConfigData?.membershipTitle ?? "",
+            status: nested?.status,
             fee: planFee,
             couponCode,
             couponDiscount,
@@ -922,6 +944,15 @@ export const employeeApi = {
             membershipSubtitle: membershipConfigData?.membershipSubtitle  ?? "",
             freeBenefits:       membershipConfigData?.freeBenefits        ?? [],
             membershipBenefits: membershipConfigData?.membershipBenefits  ?? [],
+            payment: {
+              ...membershipConfigData?.payment,
+              qrUrl:
+                membershipConfigData?.payment?.qrUrl ||
+                "uploads/payment/googlepay-membership-qr.png",
+            },
+            paymentReference: nested?.paymentReference ?? undefined,
+            paymentScreenshot: nested?.paymentScreenshot ?? undefined,
+            remarks: nested?.remarks ?? undefined,
           };
         })(),
         documents: kycData.length ? normalizeKycDocuments(kycData) : [],
@@ -1032,10 +1063,50 @@ export const employeeApi = {
     });
   },
 
-  async activateMembership(couponCode?: string) {
-    return request<BackendMembership>("/membership/request", {
+  async uploadMembershipScreenshot(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    let uploadRes: Response;
+    try {
+      uploadRes = await fetchWithAuth("/files/upload", {
+        method: "POST",
+        body: formData,
+      });
+    } catch {
+      throw new ApiError("Could not reach the server. Please check your connection and try again.");
+    }
+
+    if (!uploadRes.ok) {
+      let msg = `Screenshot upload failed (${uploadRes.status}).`;
+      try {
+        const body = (await uploadRes.json()) as { message?: string | string[] };
+        if (Array.isArray(body.message)) msg = body.message.join(" ");
+        else if (body.message) msg = body.message;
+      } catch { /* ignore */ }
+      if (uploadRes.status === 413) msg = "File is too large. Please upload a screenshot under 5 MB.";
+      if (uploadRes.status === 415) msg = "Unsupported file type. Please upload a JPG, PNG, or WebP image.";
+      if (uploadRes.status === 401) {
+        notifySessionExpired();
+        msg = "Your session has expired. Please log in again.";
+      }
+      throw new ApiError(msg, uploadRes.status);
+    }
+
+    const uploaded = (await uploadRes.json()) as { filePath?: string; path?: string; url?: string };
+    const filePath = uploaded.filePath ?? uploaded.path ?? uploaded.url;
+    if (!filePath) throw new ApiError("Upload succeeded but server did not return a file path.");
+    return filePath;
+  },
+
+  async activateMembership(payload?: {
+    couponCode?: string;
+    paymentReference?: string;
+    paymentScreenshot?: string;
+  }) {
+    return request<BackendMembershipRequestResult>("/membership/request", {
       method: "POST",
-      body: JSON.stringify(couponCode ? { couponCode } : {}),
+      body: JSON.stringify(payload ?? {}),
     });
   },
 

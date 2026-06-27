@@ -354,26 +354,44 @@ export function useEmployeeApp() {
     setCouponError("");
   };
 
-  const activateMembership = async () => {
+  const activateMembership = async (paymentScreenshot?: File, paymentReference?: string) => {
+    const uploadIssue = paymentScreenshot ? validateUpload(paymentScreenshot, false) : null;
+    if (uploadIssue) {
+      setNotice(uploadIssue);
+      throw new Error(uploadIssue);
+    }
+
     setActivatingMembership(true);
     try {
-      const result = await employeeApi.activateMembership(couponValidation?.couponCode);
+      const screenshotPath = paymentScreenshot
+        ? await employeeApi.uploadMembershipScreenshot(paymentScreenshot)
+        : undefined;
+      const result = await employeeApi.activateMembership({
+        couponCode: couponValidation?.couponCode,
+        paymentReference: paymentReference?.trim() || undefined,
+        paymentScreenshot: screenshotPath,
+      });
+      const membership = result.membership;
       setAppState((current) => ({
         ...current,
-        membershipActive: Boolean(result.active ?? true),
+        membershipActive: membership?.status === "ACTIVE",
         membershipConfig: {
           ...current.membershipConfig,
-          planName: result.planName ?? current.membershipConfig.planName,
-          daysRemaining: result.daysRemaining ?? current.membershipConfig.daysRemaining,
-          memberSince: result.memberSince ?? current.membershipConfig.memberSince,
-          validTill: result.validTill ?? current.membershipConfig.validTill,
+          status: membership?.status ?? current.membershipConfig.status,
+          planName: membership?.planName ?? current.membershipConfig.planName,
+          amountPayable: membership?.amount
+            ? Number(membership.amount)
+            : current.membershipConfig.amountPayable,
+          paymentReference: membership?.paymentReference ?? current.membershipConfig.paymentReference,
+          paymentScreenshot: membership?.paymentScreenshot ?? current.membershipConfig.paymentScreenshot,
+          remarks: membership?.remarks ?? current.membershipConfig.remarks,
         }
       }));
       setCouponValidation(null);
       setCouponError("");
-      setNotice("Membership activated successfully.");
+      setNotice(result.message ?? "Membership payment submitted for verification.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to activate membership.";
+      const message = error instanceof Error ? error.message : "Unable to submit membership payment.";
       setNotice(message);
       throw new Error(message);
     } finally {

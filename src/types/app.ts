@@ -31,6 +31,7 @@ export type EmployeeProfile = {
   phone: string;
   employeeCode: string;
   employer: string;
+  employerEmail?: string;
   accountActive: boolean;
   salaryLimit: number;
   selfieStatus?: SelfieStatus;
@@ -118,6 +119,7 @@ export type MembershipConfig = {
   // Active member fields
   planName: string;
   fee: number;                  // membershipFee from config or amountPaid from /me
+  status?: "PENDING" | "ACTIVE" | "REJECTED" | "EXPIRED" | "CANCELLED" | string;
   couponDiscount: number;
   couponCode?: string;
   amountPayable?: number;
@@ -134,6 +136,15 @@ export type MembershipConfig = {
   freeBenefits: string[];
   membershipBenefits: string[];
   membershipValidityDays: number;
+  payment?: {
+    upiId?: string;
+    qrUrl?: string;
+    beneficiaryName?: string;
+    instructions?: string;
+  };
+  paymentReference?: string;
+  paymentScreenshot?: string;
+  remarks?: string;
 };
 
 export type CouponValidation = {

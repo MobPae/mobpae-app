@@ -5,56 +5,60 @@ type TabBarProps = {
   onChange: (view: View) => void;
 };
 
-const ICON = "#0F0A3C"; // all icons dark/black
+const ACTIVE = "#171715";
+const INACTIVE = "#A8A096";
 
 function IconHome({ active }: { active: boolean }) {
+  const color = active ? ACTIVE : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M2 11L12 3l10 8" stroke={ICON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 11L12 3l10 8" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M4 10v9a1 1 0 0 0 1 1h4v-5h6v5h4a1 1 0 0 0 1-1V10"
-        stroke={ICON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? "rgba(15,10,60,0.08)" : "none"} />
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function IconAdvances({ active }: { active: boolean }) {
+  const color = active ? ACTIVE : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <rect x="2" y="5" width="20" height="14" rx="2"
-        stroke={ICON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? "rgba(15,10,60,0.06)" : "none"} />
-      <path d="M2 10h20" stroke={ICON} strokeWidth="2" strokeLinecap="round" />
-      <circle cx="17" cy="14" r="1.2" fill={ICON} />
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 10h20" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <circle cx="17" cy="14" r="1.2" fill={color} />
     </svg>
   );
 }
 
 function IconRepayments({ active }: { active: boolean }) {
+  const color = active ? ACTIVE : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M21 8v13H3V8" stroke={ICON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M23 3H1v5h22V3z" stroke={ICON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        fill={active ? "rgba(15,10,60,0.08)" : "none"} />
-      <path d="M10 12h4" stroke={ICON} strokeWidth="2" strokeLinecap="round" />
+      <path d="M21 8v13H3V8" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M23 3H1v5h22V3z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        fill="none" />
+      <path d="M10 12h4" stroke={color} strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-function IconHistory(_: { active: boolean }) {
+function IconHistory({ active }: { active: boolean }) {
+  const color = active ? ACTIVE : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="9" stroke={ICON} strokeWidth="2" />
-      <path d="M12 7v5l3 3" stroke={ICON} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
+      <path d="M12 7v5l3 3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function IconProfile(_: { active: boolean }) {
+function IconProfile({ active }: { active: boolean }) {
+  const color = active ? ACTIVE : INACTIVE;
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="7.5" r="4" stroke={ICON} strokeWidth="2" />
-      <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={ICON} strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="7.5" r="4" stroke={color} strokeWidth="2" />
+      <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={color} strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -62,8 +66,8 @@ function IconProfile(_: { active: boolean }) {
 const TABS: Array<{ id: View; label: string }> = [
   { id: "home",       label: "Home"       },
   { id: "advance",    label: "Advances"   },
-  { id: "repayments", label: "Repayments" },
-  { id: "activity",   label: "Transactions" },
+  { id: "repayments", label: "Repay" },
+  { id: "activity",   label: "Activity" },
   { id: "profile",    label: "Profile"    },
 ];
 

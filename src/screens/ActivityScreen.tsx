@@ -290,8 +290,7 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
               <div className="hist-month-label">{month}</div>
               <div className="hist-tx-card">
                 {events.map((e, i) => (
-                  <div key={e.id}>
-                    {i > 0 && <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />}
+                  <div key={e.id} className={i > 0 ? "hist-tx-item-spaced" : undefined}>
                     <div className="hist-tx-row">
                       <TxIcon type={e.iconType} bg={e.iconBg} color={e.iconColor} done={e.done} />
                       <div className="hist-tx-body">
@@ -329,13 +328,11 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
         <div className="hist-security-note">
           <Shield size={14} color="#9CA3AF" />
           <div className="hist-security-text">
-            <span>All transactions are secure and encrypted</span>
-            <br />
             <span>
-              Need help?{" "}
+              All transactions are secure & encrypted.{" "}
               <button
                 type="button"
-                style={{ color: "#5B3CE3", fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "inherit", padding: 0 }}
+                style={{ color: "#5B3CE3", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "inherit", padding: 0 }}
                 onClick={() => onNavigate("help")}
               >
                 Contact support
