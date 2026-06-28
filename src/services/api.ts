@@ -1,4 +1,4 @@
-import { emptyBankAccount, emptyState } from "../data/mockData";
+import { emptyBankAccount, emptyState } from "../data/emptyState";
 import type {
   AdvanceRequest,
   AppState,
@@ -78,6 +78,11 @@ type BackendRecoveryPreview = {
   interestAmount?: number;
   totalRecovery?: number;   // primary total field
   recoveryDate?: string;
+  payrollDate?: number;
+  payrollCutoffDate?: number;
+  isNextCycleRecovery?: boolean;
+  cycleMessage?: string;
+  nextEligibleAfter?: string;
   principalAmount?: number;
   availableAdvance?: number;
   // Legacy / alternate field names kept for safety
@@ -143,6 +148,7 @@ type BackendMembershipNested = {
 
 type BackendMembership = {
   active?: boolean;
+  status?: string;
   planName?: string;
   amountPaid?: number;
   membershipFee?: number;
@@ -220,6 +226,10 @@ export class ApiError extends Error {
     super(message);
   }
 }
+
+type ApiRequestOptions = RequestInit & {
+  suppressSessionExpiry?: boolean;
+};
 
 let refreshPromise: Promise<string | null> | null = null;
 
@@ -623,14 +633,15 @@ const getEmployerEmail = (employee: Partial<BackendEmployeeMe>) => {
   return "";
 };
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const headers = new Headers(options.headers);
+async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const { suppressSessionExpiry = false, ...requestOptions } = options;
+  const headers = new Headers(requestOptions.headers);
   headers.set("Content-Type", "application/json");
 
   let response: Response;
   try {
     response = await fetchWithAuth(path, {
-      ...options,
+      ...requestOptions,
       headers,
     });
   } catch {
@@ -655,7 +666,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
 
     // Session expired after refresh retry — clear both tokens and show login.
-    if (response.status === 401 && !path.includes("/auth/login")) {
+    if (response.status === 401 && !suppressSessionExpiry && !path.includes("/auth/login")) {
       notifySessionExpired();
     }
 
@@ -665,8 +676,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// The backend already owns the real data model. The app falls back to local demo data
-// so product review never lands on a blank screen when a local API is unavailable.
+// The backend owns the real data model. The local state below is only blank
+// initialization before API responses arrive.
 export const employeeApi = {
   hasSession() {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -758,7 +769,7 @@ export const employeeApi = {
               data?: BackendKycDocument[];
               items?: BackendKycDocument[];
             }
-        >("/kyc-documents/my"),
+        >("/kyc-documents/my", { suppressSessionExpiry: true }),
         request<
           | BankAccount
           | {
@@ -767,7 +778,7 @@ export const employeeApi = {
               data?: BankAccount;
             }
           | null
-        >("/bank-accounts/my"),
+        >("/bank-accounts/my", { suppressSessionExpiry: true }),
         request<
           | BackendSalaryRequest[]
           | {
@@ -775,7 +786,7 @@ export const employeeApi = {
               data?: BackendSalaryRequest[];
               items?: BackendSalaryRequest[];
             }
-        >("/salary-requests/my"),
+        >("/salary-requests/my", { suppressSessionExpiry: true }),
         request<
           | BackendRepayment[]
           | {
@@ -783,7 +794,7 @@ export const employeeApi = {
               data?: BackendRepayment[];
               items?: BackendRepayment[];
             }
-        >("/repayments/my"),
+        >("/repayments/my", { suppressSessionExpiry: true }),
         request<
           | BackendNotification[]
           | {
@@ -791,12 +802,15 @@ export const employeeApi = {
               data?: BackendNotification[];
               items?: BackendNotification[];
             }
-        >("/notifications/me"),
+        >("/notifications/me", { suppressSessionExpiry: true }),
         request<
           | BackendMembership
           | { membership?: BackendMembership; data?: BackendMembership }
-        >("/membership/me"),
-        request<BackendMembershipConfig | { data?: BackendMembershipConfig }>("/membership/config"),
+        >("/membership/me", { suppressSessionExpiry: true }),
+        request<BackendMembershipConfig | { data?: BackendMembershipConfig }>(
+          "/membership/config",
+          { suppressSessionExpiry: true }
+        ),
       ]);
 
       const dashboardData = dashboard;
@@ -927,7 +941,7 @@ export const employeeApi = {
                   : "—");
           return {
             planName: membershipData?.planName ?? nested?.planName ?? membershipConfigData?.membershipTitle ?? "",
-            status: nested?.status,
+            status: nested?.status ?? membershipData?.status,
             fee: planFee,
             couponCode,
             couponDiscount,
@@ -937,7 +951,7 @@ export const employeeApi = {
             membershipValidityDays: validityDays,
             memberSince,
             validTill,
-            // Plan comparison content — from /membership/config only, no hardcoded fallbacks
+            // Plan comparison content comes from /membership/config.
             freePlanTitle:      membershipConfigData?.freePlanTitle      ?? "",
             freePlanSubtitle:   membershipConfigData?.freePlanSubtitle   ?? "",
             membershipTitle:    membershipConfigData?.membershipTitle     ?? "",
@@ -1245,6 +1259,11 @@ export const employeeApi = {
       interestDays:  preview.interestDays     ?? 0,
       interestRate:  preview.interestRate,
       recoveryDate:  preview.recoveryDate     ?? preview.dueDate       ?? "",
+      payrollDate: preview.payrollDate,
+      payrollCutoffDate: preview.payrollCutoffDate,
+      isNextCycleRecovery: preview.isNextCycleRecovery,
+      cycleMessage: preview.cycleMessage,
+      nextEligibleAfter: preview.nextEligibleAfter,
     };
   },
 };

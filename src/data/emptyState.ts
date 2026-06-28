@@ -1,9 +1,7 @@
 import type { AppState, BankAccount } from "../types/app";
-// emptyState and emptyBankAccount are blank initial values used before the API responds.
-// They are NOT fake data — the UI always falls back to "N/A" when these zero values are present.
 
-// Blank state shown for a new user when backend has no data yet.
-// All values are zero/null — UI must show N/A when these are absent.
+// Blank initial values used only before API data arrives.
+// All business data rendered by the app should come from backend responses.
 export const emptyState: AppState = {
   profile: {
     id: "",
@@ -25,7 +23,7 @@ export const emptyState: AppState = {
     couponDiscount: 0,
     couponCode: "",
     amountPayable: 0,
-    validityLabel: "—",
+    validityLabel: "-",
     daysRemaining: 0,
     membershipValidityDays: 0,
     freePlanTitle: "",
@@ -45,6 +43,5 @@ export const emptyBankAccount: BankAccount = {
   bankName: "",
   accountNumber: "",
   ifscCode: "",
-  upiId: ""
+  upiId: "",
 };
-

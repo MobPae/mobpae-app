@@ -37,8 +37,11 @@ type AdvanceScreenProps = {
   salaryInHand?: number;
   payrollDay?: number | null;
   kycComplete: boolean;
+  kycSubmitted: boolean;
   bankComplete: boolean;
+  bankSubmitted: boolean;
   membershipActive: boolean;
+  membershipSubmitted: boolean;
   onAmountChange: (amount: number) => void;
   onSubmit: () => void;
   blockerActionLabel: string;
@@ -71,8 +74,11 @@ export function AdvanceScreen({
   salaryInHand,
   payrollDay,
   kycComplete,
+  kycSubmitted,
   bankComplete,
+  bankSubmitted,
   membershipActive,
+  membershipSubmitted,
   onAmountChange,
   onSubmit,
   blockerActionLabel,
@@ -136,8 +142,19 @@ export function AdvanceScreen({
           )} deduction`
         : `Full pay · deduction in ${recoveryMonthName}`
       : "Updated just now";
+  const setupSteps = [
+    { label: "KYC Verification", done: kycComplete, submitted: kycSubmitted, view: "onboarding-kyc" as View },
+    { label: "Bank Account", done: bankComplete, submitted: bankSubmitted, view: "onboarding-bank" as View },
+    { label: "Activate Membership", done: membershipActive, submitted: membershipSubmitted, view: "profile-membership" as View },
+  ].map((step) => {
+    if (step.done) return { ...step, status: "Completed", tone: "done" };
+    if (step.submitted) return { ...step, status: "Completed · Pending review", tone: "review" };
+    return { ...step, status: "Action required", tone: "todo" };
+  });
+  const hasMissingSetupAction = setupSteps.some((setupStep) => setupStep.tone === "todo");
+  const isWaitingForSetupReview = !eligible && !hasMissingSetupAction;
 
-  // ── Active advance overview (matches mockup) ──────────────
+  // ── Active advance overview ───────────────────────────────
   if (hasActive && currentRequest) {
     const isPaid = currentRequest.recoveryStatus === "Completed";
     const statusLabel = isPaid
@@ -279,12 +296,7 @@ export function AdvanceScreen({
   }
 
   // ── Setup required (not eligible, no active) ──────────────
-  if (!eligible) {
-    const blockerReasons = [
-      { label: "KYC Verification", done: kycComplete },
-      { label: "Bank Account", done: bankComplete },
-      { label: "Activate Membership", done: membershipActive },
-    ];
+  if (!eligible && hasMissingSetupAction) {
     return (
       <div className="adv-screen">
         <div className="screen-body">
@@ -307,19 +319,25 @@ export function AdvanceScreen({
           </div>
           <div className="adv-step-card">
             <div className="adv-step-hdr">Required steps</div>
-            {blockerReasons.map((r, i) => (
-              <div key={r.label} className="adv-step-row">
-                <div className={`adv-step-num ${r.done ? "done" : ""}`}>
-                  {r.done ? <CheckCircle size={14} /> : i + 1}
+            {setupSteps.map((r, i) => (
+              <button
+                key={r.label}
+                type="button"
+                className="adv-step-row"
+                onClick={() => onNavigate?.(r.view)}
+              >
+                <div className={`adv-step-num ${r.tone}`}>
+                  {r.done || r.submitted ? <CheckCircle size={14} /> : i + 1}
                 </div>
                 <div className="adv-step-body">
                   <div className="adv-step-title">{r.label}</div>
-                  <div className="adv-step-sub">
-                    {r.done ? "Completed" : "Action required"}
+                  <div className={`adv-step-sub ${r.tone}`}>
+                    {r.status}
                   </div>
                 </div>
                 {r.done && <BadgeCheck size={16} color="#16A34A" />}
-              </div>
+                {!r.done && r.submitted && <Clock size={16} color="#D97706" />}
+              </button>
             ))}
           </div>
           <div style={{ padding: "0 16px 16px" }}>
@@ -514,6 +532,16 @@ export function AdvanceScreen({
                     {formatShortDate(preview.recoveryDate)}
                   </span>
                 </div>
+                {preview.cycleMessage && (
+                  <div
+                    className={`adv-cycle-note ${
+                      preview.isNextCycleRecovery ? "is-next-cycle" : ""
+                    }`}
+                  >
+                    <CalendarDays size={15} />
+                    <span>{preview.cycleMessage}</span>
+                  </div>
+                )}
               </>
             )}
             <div className="adv-review-total">
@@ -635,6 +663,18 @@ export function AdvanceScreen({
   return (
     <div className="adv-screen">
       <div className="screen-body adv-page-body">
+        {isWaitingForSetupReview && (
+          <div className="adv-review-wait-card">
+            <div className="adv-review-wait-icon">
+              <Clock size={16} />
+            </div>
+            <div>
+              <strong>Verification is under review</strong>
+              <span>{nextBlocker || "Your submitted setup details are pending approval. Advance requests will unlock once verification is complete."}</span>
+            </div>
+          </div>
+        )}
+
         {/* Salary info card */}
         <div className="adv-salary-card">
           <div className="adv-salary-left">
@@ -759,6 +799,16 @@ export function AdvanceScreen({
             </div>
             <CalendarDays size={18} />
           </div>
+          {preview?.cycleMessage && (
+            <div
+              className={`adv-cycle-note ${
+                preview.isNextCycleRecovery ? "is-next-cycle" : ""
+              }`}
+            >
+              <CalendarDays size={15} />
+              <span>{preview.cycleMessage}</span>
+            </div>
+          )}
           {preview && (
             <div className="adv-hiw-box">
               <div className="adv-hiw-label">How it works</div>
@@ -843,7 +893,7 @@ export function AdvanceScreen({
           disabled={!canSubmit}
           onClick={() => setStep("review")}
         >
-          Continue <ArrowRight size={16} />
+          {isWaitingForSetupReview ? "Waiting for verification" : <>Continue <ArrowRight size={16} /></>}
         </button>
         <div className="adv-secure-note">
           <ShieldCheck size={12} /> Your request is encrypted and secure

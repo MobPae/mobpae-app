@@ -37,8 +37,6 @@ type ProfileScreenProps = {
   uploadingKycType: KycDocumentType | null;
   uploadProfilePhoto: (file: File) => void;
   uploadingPhoto: boolean;
-  uploadSelfie: (file: File) => void;
-  uploadingSelfie: boolean;
   bankForm: BankAccount;
   editingBank: boolean;
   savingBank: boolean;
@@ -158,9 +156,7 @@ export function ProfileScreen({
   onNavigate,
   uploadProfilePhoto,
   uploadKycDocument,
-  uploadSelfie,
   uploadingKycType,
-  uploadingSelfie,
   bankForm,
   savingBank,
   onSaveBank,
@@ -178,8 +174,7 @@ export function ProfileScreen({
 
   const kycVerified =
     appState.documents.every((d) => d.status === "Verified") &&
-    appState.documents.length > 0 &&
-    appState.profile.selfieStatus === "VERIFIED";
+    appState.documents.length > 0;
   const bankLinked = !!appState.bankAccount?.accountNumber;
 
   // ── KYC sub-page ──────────────────────────────────────────
@@ -192,10 +187,6 @@ export function ProfileScreen({
             documents={appState.documents}
             uploadingKycType={uploadingKycType}
             onUpload={uploadKycDocument}
-            selfieStatus={appState.profile.selfieStatus}
-            selfieUrl={appState.profile.selfieUrl}
-            uploadingSelfie={uploadingSelfie}
-            onUploadSelfie={uploadSelfie}
             onContinue={() => onNavigate("profile")}
             showProgress={false}
           />
@@ -207,19 +198,20 @@ export function ProfileScreen({
   // ── Bank sub-page ──────────────────────────────────────────
   if (initialSection === "bank") {
     const bank = appState.bankAccount;
-    const isVerified = !!bank?.accountNumber;
+    const hasBankAccount = !!bank?.accountNumber;
+    const isVerified = !!bank?.verified;
     return (
       <div className="prof-screen">
         <SubPageHeader title="Bank Account" onBack={() => onNavigate("profile")} />
         <div className="screen-body" style={{ background: "var(--bg)", padding: "0 0 24px" }}>
-          {isVerified ? (
+          {hasBankAccount ? (
             // ── Show existing bank details ────────────────────────────
             <>
               <div style={{ margin: "8px 16px 0" }}>
                 {/* Status badge */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0 6px" }}>
-                  <span className="chip chip-green"><span className="chip-dot" /> Verified</span>
-                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>Linked salary account</span>
+                  <span className={`chip ${isVerified ? "chip-green" : "chip-amber"}`}><span className="chip-dot" /> {isVerified ? "Verified" : "Pending review"}</span>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>{isVerified ? "Linked salary account" : "Submitted for verification"}</span>
                 </div>
                 {/* Bank card */}
                 <div style={{ background: "linear-gradient(135deg, #5B3CE3 0%, #7B5CF0 100%)", borderRadius: 16, padding: "18px 18px 16px", marginBottom: 12, color: "white" }}>
@@ -257,7 +249,7 @@ export function ProfileScreen({
                   ))}
                 </div>
                 <div style={{ fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
-                  <ShieldCheck size={12} color="#16A34A" /> Account verified and linked for salary advances
+                  <ShieldCheck size={12} color={isVerified ? "#16A34A" : "#D97706"} /> {isVerified ? "Account verified and linked for salary advances" : "Your bank account is pending admin verification"}
                 </div>
                 <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: 14, marginBottom: 12 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: "#0F0A3C", marginBottom: 8 }}>UPI ID</div>

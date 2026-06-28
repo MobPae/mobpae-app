@@ -41,11 +41,10 @@ export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, o
 
   return (
     <div className="onb-screen">
-
       {/* Progress */}
       {showProgress && (
-        <div style={{ display: "flex", alignItems: "center", padding: "14px 16px 0", background: "white" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 0, flex: 1 }}>
+        <div className="onb-progress-inline">
+          <div className="onb-progress-track">
             {["KYC", "Bank", "Done"].map((label, i) => (
               <div key={label} style={{ flex: 1, display: "flex", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>

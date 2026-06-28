@@ -165,6 +165,11 @@ export type RecoveryPreview = {
   interestDays: number;
   interestRate?: number;   // annual % from backend
   recoveryDate: string;
+  payrollDate?: number;
+  payrollCutoffDate?: number;
+  isNextCycleRecovery?: boolean;
+  cycleMessage?: string;
+  nextEligibleAfter?: string;
 };
 
 export type AppState = {

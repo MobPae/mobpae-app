@@ -12,7 +12,6 @@ export function SubPageHeader({ title, onBack }: SubPageHeaderProps) {
         <ChevronLeft size={22} />
       </button>
       <div className="sub-page-title">{title}</div>
-      <div style={{ width: 36 }} /> {/* spacer to center title */}
     </div>
   );
 }

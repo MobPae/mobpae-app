@@ -79,6 +79,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword }: Login
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const isSuccessMessage = error.toLowerCase().includes("successfully");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,14 +268,16 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword }: Login
             </div>
           )}
 
-          {/* Error */}
+          {/* Message */}
           {error && (
             <div style={{
-              background: "#FEE2E2", color: "#B91C1C", borderRadius: 12,
+              background: isSuccessMessage ? "#DCFCE7" : "#FEE2E2",
+              color: isSuccessMessage ? "#15803D" : "#B91C1C",
+              borderRadius: 12,
               padding: "11px 14px", fontSize: 13, marginBottom: 16,
               display: "flex", alignItems: "center", gap: 8,
             }}>
-              <span>⚠</span> {error}
+              <span>{isSuccessMessage ? "✓" : "⚠"}</span> {error}
             </div>
           )}
 

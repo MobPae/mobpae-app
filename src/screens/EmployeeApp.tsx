@@ -21,12 +21,18 @@ import { AppToast } from "../components/ui/AppToast";
 export function EmployeeApp() {
   const app = useEmployeeApp();
   const notifBackRef = useRef<View>("home");
+  const onboardingBackRef = useRef<View>("advance");
+
+  const openOnboarding = (view: "onboarding-kyc" | "onboarding-bank", backTo: View = "advance") => {
+    onboardingBackRef.current = backTo;
+    app.setActiveView(view);
+  };
 
   const resolveAdvanceBlocker = () => {
     if (app.activeRequest) return app.setActiveView("activity");
     if (!app.appState.profile.accountActive) return app.setActiveView("home");
-    if (!app.kycComplete) return app.setActiveView("profile-kyc");
-    if (!app.appState.bankAccount || !app.bankComplete) return app.setActiveView("profile-bank");
+    if (!app.kycComplete) return openOnboarding("onboarding-kyc");
+    if (!app.appState.bankAccount || !app.bankComplete) return openOnboarding("onboarding-bank");
     if (!app.appState.membershipActive) return app.setActiveView("profile-membership");
   };
 
@@ -35,7 +41,7 @@ export function EmployeeApp() {
     : !app.kycComplete
       ? "Complete KYC"
       : !app.appState.bankAccount || !app.bankComplete
-        ? "View bank status"
+        ? app.appState.bankAccount ? "View bank status" : "Add bank account"
         : !app.appState.membershipActive
           ? "Activate membership"
           : "View details";
@@ -101,7 +107,22 @@ export function EmployeeApp() {
 
   const navigate = (view: View) => {
     if (view === "notifications") notifBackRef.current = app.activeView as View;
+    if (app.activeView === "advance" && (view === "onboarding-kyc" || view === "onboarding-bank")) {
+      onboardingBackRef.current = "advance";
+    }
+    if (app.activeView === "onboarding-kyc" && view === "onboarding-bank") {
+      onboardingBackRef.current = "onboarding-kyc";
+    }
     app.setActiveView(view);
+  };
+
+  const handleShellBack = () => {
+    if (app.activeView === "onboarding-kyc") return app.setActiveView("advance");
+    if (app.activeView === "onboarding-bank") {
+      return app.setActiveView(onboardingBackRef.current === "onboarding-kyc" ? "onboarding-kyc" : "advance");
+    }
+    if (app.activeView === "onboarding-done") return app.setActiveView("advance");
+    return app.setActiveView("home");
   };
 
   return (
@@ -113,6 +134,7 @@ export function EmployeeApp() {
       refreshing={app.refreshing}
       onRefresh={app.refresh}
       onNavigate={navigate}
+      onBack={handleShellBack}
     >
       {/* ── Onboarding flow ─────────────────────────────────── */}
       {app.activeView === "onboarding-kyc" && (
@@ -120,11 +142,7 @@ export function EmployeeApp() {
           documents={app.appState.documents}
           uploadingKycType={app.uploadingKycType}
           onUpload={app.uploadKycDocument}
-          selfieStatus={app.appState.profile.selfieStatus}
-          selfieUrl={app.appState.profile.selfieUrl}
-          uploadingSelfie={app.uploadingSelfie}
-          onUploadSelfie={app.uploadSelfie}
-          onContinue={app.setActiveView}
+          onContinue={navigate}
         />
       )}
 
@@ -136,15 +154,18 @@ export function EmployeeApp() {
             app.setBankForm((prev) => ({ ...prev, [field]: value }))
           }
           onSaveBank={app.saveBankAccount}
-          onContinue={app.setActiveView}
+          onContinue={navigate}
         />
       )}
 
       {app.activeView === "onboarding-done" && (
         <OnboardingDoneScreen
           name={app.appState.profile.name}
-          kycSubmitted={app.appState.documents.some((d) => d.status !== "Not Uploaded")}
-          bankConnected={Boolean(app.appState.bankAccount)}
+          kycSubmitted={app.kycSubmitted}
+          kycVerified={app.kycComplete}
+          bankConnected={app.bankSubmitted}
+          membershipActive={app.appState.membershipActive}
+          membershipSubmitted={app.membershipSubmitted}
           onExplore={() => app.setActiveView("home")}
         />
       )}
@@ -170,6 +191,7 @@ export function EmployeeApp() {
           onValidateCoupon={app.validateCoupon}
           onClearCoupon={app.clearCoupon}
           onNavigate={navigate}
+          showHeader={false}
         />
       )}
 
@@ -200,8 +222,11 @@ export function EmployeeApp() {
           salaryInHand={app.appState.dashboard?.salaryInHand}
           payrollDay={app.appState.dashboard?.payrollDay}
           kycComplete={app.kycComplete}
+          kycSubmitted={app.kycSubmitted}
           bankComplete={app.bankComplete}
+          bankSubmitted={app.bankSubmitted}
           membershipActive={app.appState.membershipActive}
+          membershipSubmitted={app.membershipSubmitted}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
           blockerActionLabel={advanceBlockerActionLabel}
@@ -251,9 +276,7 @@ export function EmployeeApp() {
           uploadKycDocument={app.uploadKycDocument}
           uploadingKycType={app.uploadingKycType}
           uploadProfilePhoto={app.uploadProfilePhoto}
-          uploadSelfie={app.uploadSelfie}
           uploadingPhoto={app.uploadingPhoto}
-          uploadingSelfie={app.uploadingSelfie}
           bankForm={app.bankForm}
           editingBank={app.editingBank}
           savingBank={app.savingBank}

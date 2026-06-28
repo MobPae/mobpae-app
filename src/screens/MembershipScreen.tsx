@@ -14,6 +14,7 @@ type Props = {
   onValidateCoupon: (code: string) => Promise<void>;
   onClearCoupon: () => void;
   onNavigate: (view: View) => void;
+  showHeader?: boolean;
 };
 
 const fmtDate = (iso: string | undefined | null) => {
@@ -32,6 +33,7 @@ export function MembershipScreen({
   onValidateCoupon,
   onClearCoupon,
   onNavigate,
+  showHeader = true,
 }: Props) {
   const { membershipActive, membershipConfig } = appState;
   const {
@@ -69,7 +71,7 @@ export function MembershipScreen({
   if (membershipActive) {
     return (
       <div className="mem-screen">
-        <SubPageHeader title="My Membership" onBack={() => onNavigate("profile")} />
+        {showHeader && <SubPageHeader title="My Membership" onBack={() => onNavigate("profile")} />}
 
         <div className="screen-body mem-body">
           {/* Active card */}
@@ -133,7 +135,7 @@ export function MembershipScreen({
   if (membershipStatus === "PENDING" && !needsResubmission) {
     return (
       <div className="mem-screen">
-        <SubPageHeader title="Membership Review" onBack={() => onNavigate("profile")} />
+        {showHeader && <SubPageHeader title="Membership Review" onBack={() => onNavigate("profile")} />}
         <div className="screen-body mem-body">
           <div className="mem-review-card">
             <div className="mem-review-icon"><ShieldCheck size={26} /></div>
@@ -160,7 +162,7 @@ export function MembershipScreen({
   // ── Upgrade / Activate state ──────────────────────────────
   return (
     <div className="mem-screen">
-      <SubPageHeader title="Activate Membership" onBack={() => onNavigate("profile")} />
+      {showHeader && <SubPageHeader title="Activate Membership" onBack={() => onNavigate("profile")} />}
 
       {/* Hero */}
       <div className="mem-hero">

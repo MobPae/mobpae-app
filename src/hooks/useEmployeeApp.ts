@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { emptyBankAccount, emptyState } from "../data/mockData";
+import { emptyBankAccount, emptyState } from "../data/emptyState";
 import { employeeApi } from "../services/api";
 import type { AppState, BankAccount, CouponValidation, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
@@ -50,9 +50,11 @@ export function useEmployeeApp() {
   const [changePasswordError, setChangePasswordError] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingSelfie, setUploadingSelfie] = useState(false);
+  const suppressNextSessionExpiredRef = useRef(false);
   const clearNotice = useCallback(() => setNotice(""), []);
 
   const loadEmployee = async (checkOnboarding = false) => {
+    const hasExistingData = loadState === "ready" || Boolean(appState.profile.id);
     setLoadState("loading");
     try {
       const nextState = await employeeApi.loadAppState();
@@ -62,14 +64,26 @@ export function useEmployeeApp() {
       setEditingBank(false);
       setCouponValidation(null);
       setCouponError("");
+      setNotice((current) =>
+        current.toLowerCase().includes("backend is unavailable") ? "" : current
+      );
       setLoadState("ready");
 
       if (checkOnboarding) {
         setActiveView("home");
       }
-    } catch {
+    } catch (error) {
+      if (hasExistingData) {
+        setLoadState("ready");
+        return;
+      }
+
       setAppState(emptyState);
-      setNotice("Backend is unavailable. Please check your connection.");
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Backend is unavailable. Please check your connection."
+      );
       setLoadState("error");
     }
   };
@@ -84,6 +98,10 @@ export function useEmployeeApp() {
   // When a 401 is detected in the API layer, clear session state so the login screen shows.
   useEffect(() => {
     const handleExpired = () => {
+      if (suppressNextSessionExpiredRef.current) {
+        suppressNextSessionExpiredRef.current = false;
+        return;
+      }
       setIsLoggedIn(false);
       setAppState(emptyState);
       setLoadState("idle");
@@ -117,9 +135,11 @@ export function useEmployeeApp() {
     try {
       await employeeApi.changePassword(currentPassword, newPassword);
       // Backend invalidates all sessions on password change — clear tokens and force re-login
+      suppressNextSessionExpiredRef.current = true;
       employeeApi.logout();
       setIsLoggedIn(false);
       setActiveView("home");
+      setLoginError("Password changed successfully. Please sign in again.");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Failed to change password.";
       const displayMessage = msg.toLowerCase().includes("incorrect") || msg.toLowerCase().includes("wrong")
@@ -148,9 +168,16 @@ export function useEmployeeApp() {
 
   const kycComplete =
     appState.documents.length >= 3 &&
-    appState.documents.every((document) => document.status === "Verified") &&
-    appState.profile.selfieStatus === "VERIFIED";
+    appState.documents.every((document) => document.status === "Verified");
+  const kycSubmitted =
+    appState.documents.length >= 3 &&
+    appState.documents.every((document) => document.status !== "Not Uploaded");
   const bankComplete = Boolean(appState.bankAccount?.verified);
+  const bankSubmitted = Boolean(appState.bankAccount);
+  const membershipSubmitted =
+    appState.membershipActive ||
+    appState.membershipConfig.status === "PENDING" ||
+    Boolean(appState.membershipConfig.paymentScreenshot);
   const activeRequest = appState.requests.find(
     (request) => !["Paid", "Recovered", "Rejected"].includes(request.status)
   );
@@ -171,13 +198,13 @@ export function useEmployeeApp() {
 
   const nextBlocker = useMemo(() => {
     if (!appState.profile.accountActive) return "Employer approval is pending.";
-    if (!kycComplete) return "Complete KYC verification.";
+    if (!kycComplete) return kycSubmitted ? "KYC submitted. Pending admin verification." : "Complete KYC verification.";
     if (!appState.bankAccount) return "Add your bank account.";
-    if (!bankComplete) return "Bank account verification is pending.";
-    if (!appState.membershipActive) return "Activate membership.";
+    if (!bankComplete) return "Bank account pending verification.";
+    if (!appState.membershipActive) return membershipSubmitted ? "Membership payment pending admin verification." : "Activate membership.";
     if (activeRequest) return "You already have an active salary request.";
     return "";
-  }, [activeRequest, appState.membershipActive, appState.profile.accountActive, bankComplete, kycComplete]);
+  }, [activeRequest, appState.membershipActive, appState.profile.accountActive, appState.bankAccount, bankComplete, kycComplete, kycSubmitted, membershipSubmitted]);
 
   const eligibleForAdvance = !nextBlocker;
 
@@ -226,7 +253,6 @@ export function useEmployeeApp() {
       setAppState((current) => ({ ...current, bankAccount: bank }));
       setBankForm(bank);
       setEditingBank(false);
-      setNotice(bank.verified ? "Bank account updated successfully." : "Bank account saved. Pending verification.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to save bank account. Please try again.");
     } finally {
@@ -319,8 +345,6 @@ export function useEmployeeApp() {
       // Refetch GET /kyc-documents/my so state matches what the server persisted
       const refreshedDocs = await employeeApi.fetchKycDocuments();
       setAppState((current) => ({ ...current, documents: refreshedDocs }));
-
-      setNotice(`✓ ${documentType.replaceAll("_", " ")} uploaded successfully. Pending admin verification.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to upload document. Please try again.");
     } finally {
@@ -377,7 +401,7 @@ export function useEmployeeApp() {
         membershipActive: membership?.status === "ACTIVE",
         membershipConfig: {
           ...current.membershipConfig,
-          status: membership?.status ?? current.membershipConfig.status,
+          status: membership?.status ?? "PENDING",
           planName: membership?.planName ?? current.membershipConfig.planName,
           amountPayable: membership?.amount
             ? Number(membership.amount)
@@ -454,6 +478,7 @@ export function useEmployeeApp() {
     advanceAmount,
     appState,
     bankComplete,
+    bankSubmitted,
     bankForm,
     cancelBankEdit,
     couponError,
@@ -463,6 +488,7 @@ export function useEmployeeApp() {
     eligibleForAdvance,
     isLoggedIn,
     kycComplete,
+    kycSubmitted,
     loadEmployee,
     loadState,
     login,
@@ -471,6 +497,7 @@ export function useEmployeeApp() {
     forgotPassword,
     resetPassword,
     membershipFee,
+    membershipSubmitted,
     nextBlocker,
     notice,
     clearNotice,

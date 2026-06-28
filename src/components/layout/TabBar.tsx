@@ -6,7 +6,7 @@ type TabBarProps = {
 };
 
 const ACTIVE = "#171715";
-const INACTIVE = "#A8A096";
+const INACTIVE = "#171715";
 
 function IconHome({ active }: { active: boolean }) {
   const color = active ? ACTIVE : INACTIVE;
