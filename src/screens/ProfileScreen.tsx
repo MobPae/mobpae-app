@@ -182,7 +182,7 @@ export function ProfileScreen({
     return (
       <div className="prof-screen">
         <SubPageHeader title="KYC Documents" onBack={() => onNavigate("profile")} />
-        <div className="screen-body" style={{ background: "var(--bg)" }}>
+        <div className="screen-body profile-subpage-body profile-kyc-subpage" style={{ background: "var(--bg)" }}>
           <OnboardingKycScreen
             documents={appState.documents}
             uploadingKycType={uploadingKycType}
@@ -203,35 +203,35 @@ export function ProfileScreen({
     return (
       <div className="prof-screen">
         <SubPageHeader title="Bank Account" onBack={() => onNavigate("profile")} />
-        <div className="screen-body" style={{ background: "var(--bg)", padding: "0 0 24px" }}>
+        <div className="screen-body profile-subpage-body" style={{ background: "var(--bg)", padding: "0 0 24px" }}>
           {hasBankAccount ? (
             // ── Show existing bank details ────────────────────────────
             <>
-              <div style={{ margin: "8px 16px 0" }}>
+              <div className="profile-bank-content">
                 {/* Status badge */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0 6px" }}>
                   <span className={`chip ${isVerified ? "chip-green" : "chip-amber"}`}><span className="chip-dot" /> {isVerified ? "Verified" : "Pending review"}</span>
                   <span style={{ fontSize: 11, color: "#9CA3AF" }}>{isVerified ? "Linked salary account" : "Submitted for verification"}</span>
                 </div>
                 {/* Bank card */}
-                <div style={{ background: "linear-gradient(135deg, #5B3CE3 0%, #7B5CF0 100%)", borderRadius: 16, padding: "18px 18px 16px", marginBottom: 12, color: "white" }}>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,.65)", marginBottom: 8, fontWeight: 600, letterSpacing: ".03em" }}>{bank!.bankName || "Bank Account"}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: ".12em", marginBottom: 14 }}>
+                <div className="profile-bank-card">
+                  <div className="profile-bank-name">{bank!.bankName || "Bank Account"}</div>
+                  <div className="profile-bank-number">
                     {maskAccountNumber(bank!.accountNumber)}
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                     <div>
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,.55)", marginBottom: 2, textTransform: "uppercase" }}>Account Holder</div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{bank!.accountHolderName || "—"}</div>
+                      <div className="profile-bank-mini-label">Account Holder</div>
+                      <div className="profile-bank-mini-value">{bank!.accountHolderName || "—"}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 9, color: "rgba(255,255,255,.55)", marginBottom: 2, textTransform: "uppercase" }}>IFSC</div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{bank!.ifscCode || "—"}</div>
+                      <div className="profile-bank-mini-label">IFSC</div>
+                      <div className="profile-bank-mini-value">{bank!.ifscCode || "—"}</div>
                     </div>
                   </div>
                 </div>
                 {/* Info rows */}
-                <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", overflow: "hidden", marginBottom: 16 }}>
+                <div className="profile-bank-list-card">
                   {[
                     { label: "Bank Name", value: bank!.bankName },
                     { label: "Account Number", value: maskAccountNumber(bank!.accountNumber) },
@@ -240,36 +240,35 @@ export function ProfileScreen({
                     ...(bank!.upiId ? [{ label: "UPI ID", value: bank!.upiId }] : []),
                   ].map((row, i, arr) => (
                     <div key={row.label}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px" }}>
+                      <div className="profile-bank-info-row">
                         <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 600 }}>{row.label}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>{row.value || "—"}</span>
                       </div>
-                      {i < arr.length - 1 && <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />}
+                      {i < arr.length - 1 && <div className="profile-subpage-row-gap" />}
                     </div>
                   ))}
+                  <div className="profile-bank-upi-inline">
+                    <div className="profile-bank-upi-title">UPI ID</div>
+                    <div className="mp-field">
+                      <input
+                        className="mp-input"
+                        value={bankForm.upiId ?? ""}
+                        placeholder="name@bank"
+                        onChange={(event) => onBankFormChange("upiId", event.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="mp-btn-secondary"
+                      disabled={savingBank}
+                      onClick={onUpdateUpiId}
+                    >
+                      {savingBank ? "Saving..." : "Update UPI ID"}
+                    </button>
+                  </div>
                 </div>
                 <div style={{ fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
                   <ShieldCheck size={12} color={isVerified ? "#16A34A" : "#D97706"} /> {isVerified ? "Account verified and linked for salary advances" : "Your bank account is pending admin verification"}
-                </div>
-                <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: 14, marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0F0A3C", marginBottom: 8 }}>UPI ID</div>
-                  <div className="mp-field" style={{ marginBottom: 10 }}>
-                    <input
-                      className="mp-input"
-                      value={bankForm.upiId ?? ""}
-                      placeholder="name@bank"
-                      onChange={(event) => onBankFormChange("upiId", event.target.value)}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="mp-btn-secondary"
-                    disabled={savingBank}
-                    onClick={onUpdateUpiId}
-                    style={{ width: "100%", height: 42, fontSize: 13, fontWeight: 800 }}
-                  >
-                    {savingBank ? "Saving..." : "Update UPI ID"}
-                  </button>
                 </div>
                 <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 14, padding: "12px 14px", color: "#92400E", fontSize: 12, lineHeight: 1.55 }}>
                   To change your verified bank account, contact MobPae support. A new account will need verification before future advances.
@@ -387,11 +386,9 @@ export function ProfileScreen({
           <SettingsRow icon={<CreditCard size={16} />} label="Bank Account"
             sub={bankLinked ? `${appState.bankAccount!.bankName} · ${maskAccountNumber(appState.bankAccount!.accountNumber)}` : "Add your salary account"}
             onClick={() => onNavigate("profile-bank")} />
-          <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
           <SettingsRow icon={<FileText size={16} />} label="KYC Documents"
             sub={kycVerified ? "All verified ✓" : "View & upload docs"}
             onClick={() => onNavigate("profile-kyc")} />
-          <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
           <SettingsRow
             icon={<Crown size={16} />}
             iconBg={membershipActive ? "#F0FDF4" : "#F5F3FF"}
@@ -399,7 +396,6 @@ export function ProfileScreen({
             sub={membershipActive ? (membershipConfig?.planName || "Active plan") : "Enable salary advance access"}
             onClick={() => onNavigate("profile-membership")}
           />
-          <div style={{ height: 1, background: "#F3F1FF", margin: "0 16px" }} />
           <SettingsRow icon={<Bell size={16} />} label="Notifications" sub="Manage your alerts"
             onClick={() => onNavigate("notifications")} />
         </ProfileCard>
@@ -418,7 +414,7 @@ export function ProfileScreen({
             <ProfileCard>
               {appInfo.map((item, i) => (
                 <div key={item.id}>
-                  {i > 0 && <div style={{ height: 1, background: "#F3F1FF" }} />}
+                  {i > 0 && <div className="profile-subpage-row-gap" />}
                   <InfoRow
                     icon={INFO_ICONS[item.type] ?? <Info size={16} />}
                     title={item.title}

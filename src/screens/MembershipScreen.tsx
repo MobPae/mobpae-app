@@ -66,6 +66,7 @@ export function MembershipScreen({
         "Auto salary repayment",
         "Priority customer support",
       ];
+  const visibleBenefits = BENEFITS.slice(0, 4);
 
   // ── Active state ──────────────────────────────────────────
   if (membershipActive) {
@@ -106,7 +107,7 @@ export function MembershipScreen({
           {/* Benefits */}
           <div className="mem-benefits-card">
             <div className="mem-benefits-title">Your benefits</div>
-            {BENEFITS.map((b) => (
+            {visibleBenefits.map((b) => (
               <div key={b} className="mem-benefit-item">
                 <div className="mem-benefit-icon"><Check size={16} /></div>
                 <div className="mem-benefit-body">
@@ -118,14 +119,6 @@ export function MembershipScreen({
           </div>
 
           {/* Security */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#F0FDF4", borderRadius: 12, border: "1px solid #BBF7D0", padding: "13px 16px", margin: "0 0 12px" }}>
-            <ShieldCheck size={18} color="#16A34A" />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#14532D" }}>Your membership is secure</div>
-              <div style={{ fontSize: 12, color: "#166534" }}>One-time activation · No recurring charge</div>
-            </div>
-          </div>
-
           <div className="mp-bottom-space" />
         </div>
       </div>
@@ -193,12 +186,27 @@ export function MembershipScreen({
             )}
           </div>
           <div style={{ margin: "12px 0" }}>
-            {BENEFITS.slice(0, 5).map((b) => (
+            {visibleBenefits.map((b) => (
               <div key={b} className="mem-benefit-row">
                 <CheckCircle size={14} className="mem-benefit-check" color="#16A34A" />
                 {b}
               </div>
             ))}
+          </div>
+
+          <div className="mem-payable-summary">
+            <div>
+              <span>Fee</span>
+              <strong>₹{listPrice.toLocaleString("en-IN")}</strong>
+            </div>
+            <div>
+              <span>Discount</span>
+              <strong className={discount > 0 ? "green" : ""}>{discount > 0 ? `−₹${discount.toLocaleString("en-IN")}` : "Optional"}</strong>
+            </div>
+            <div>
+              <span>Payable</span>
+              <strong>₹{payable.toLocaleString("en-IN")}</strong>
+            </div>
           </div>
 
           {/* Coupon */}
@@ -232,21 +240,6 @@ export function MembershipScreen({
             </div>
           )}
           {couponError && <div style={{ fontSize: 12, color: "#DC2626", marginBottom: 8 }}>⚠ {couponError}</div>}
-        </div>
-
-        <div className="mem-price-card">
-          <div className="mem-price-row">
-            <span>Membership fee</span>
-            <strong>₹{listPrice.toLocaleString("en-IN")}</strong>
-          </div>
-          <div className="mem-price-row">
-            <span>Coupon discount</span>
-            <strong className={discount > 0 ? "green" : ""}>{discount > 0 ? `− ₹${discount.toLocaleString("en-IN")}` : "Optional"}</strong>
-          </div>
-          <div className="mem-price-total">
-            <span>Final payable</span>
-            <strong>₹{payable.toLocaleString("en-IN")}</strong>
-          </div>
         </div>
 
         <div className="mem-payment-card">
@@ -310,17 +303,6 @@ export function MembershipScreen({
             ⚠ {activationError}
           </div>
         )}
-
-        {/* Benefits list */}
-        <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: "16px", marginBottom: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#0F0A3C", marginBottom: 10 }}>All benefits included</div>
-          {BENEFITS.map((b) => (
-            <div key={b} className="mem-benefit-item">
-              <Check size={15} color="#5B3CE3" />
-              <div style={{ flex: 1, fontSize: 13, color: "#374151" }}>{b}</div>
-            </div>
-          ))}
-        </div>
 
         <div style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", marginBottom: 12 }}>
           One-time activation fee · Valid for {membershipConfig.membershipValidityDays || 365} days

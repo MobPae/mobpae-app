@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Bell, ChevronLeft, RefreshCw } from "lucide-react";
 import { TabBar } from "./TabBar";
 import type { EmployeeProfile, View } from "../../types/app";
@@ -39,12 +39,23 @@ function getHeaderTitle(view: View) {
 export function AppShell({
   activeView, children, profile, unreadCount, refreshing, onRefresh, onNavigate, onBack,
 }: AppShellProps) {
+  const bodyRef = useRef<HTMLDivElement | null>(null);
   const isOnboarding = ONBOARDING_VIEWS.includes(activeView);
   const isTabView = HEADER_VIEWS.includes(activeView);
   const showTabHeader = isTabView;
   const isHome = activeView === "home";
   const homeHeaderTitle = profile.employeeCode || "Employee";
   const homeHeaderSub = profile.employerEmail || profile.employer || "MobPae member";
+
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+
+    body.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    body.querySelectorAll<HTMLElement>(".screen-body, .screen-body-onboarding").forEach((node) => {
+      node.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [activeView]);
 
   return (
     <div className="app-root">
@@ -97,7 +108,11 @@ export function AppShell({
           </div>
         )}
 
-        <div className={isOnboarding ? "screen-body-onboarding" : "screen-body"}>
+        <div
+          ref={bodyRef}
+          key={activeView}
+          className={isOnboarding ? "screen-body-onboarding" : "screen-body"}
+        >
           {children}
         </div>
 

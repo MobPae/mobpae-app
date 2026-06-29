@@ -479,7 +479,7 @@ button:focus-visible {
    GLOBAL HEADER (shared across all 5 tab views)
    ============================================================ */
 .global-header {
-  background: #ffffff;
+  background: #fafaf8;
   padding: 16px 18px 14px;
   display: flex;
   align-items: center;
@@ -3713,6 +3713,11 @@ button,
 .phone-shell {
   font-size: var(--text-body);
   color: #171715;
+  background: #fafaf8 !important;
+}
+
+.app-root {
+  background: #fafaf8 !important;
 }
 
 .phone-shell .global-header {
@@ -5370,4 +5375,1129 @@ button,
 .phone-shell .nav-tab svg {
   color: #171715 !important;
   stroke: #171715 !important;
+}
+
+/* Final Advances redesign: compact fintech layout with fixed action. */
+.phone-shell .global-header {
+  background: #fafaf8 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+.phone-shell .screen-body,
+.phone-shell .screen-body-onboarding {
+  background: #fafaf8 !important;
+}
+
+.phone-shell .adv-new-screen {
+  min-height: 100%;
+  background: #fafaf8 !important;
+}
+
+.phone-shell .adv-new-body {
+  padding: 4px 16px 10px !important;
+}
+
+.phone-shell .adv-new-review-card {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  padding: 12px;
+  border-radius: 18px;
+  background: #fff7ed;
+  border: 1px solid #fde6c7;
+}
+
+.phone-shell .adv-new-review-card > span {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: #ffedd5;
+  color: #c2410c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-shell .adv-new-review-card strong {
+  display: block;
+  color: #7c2d12;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.phone-shell .adv-new-review-card span:last-child {
+  display: block;
+  margin-top: 4px;
+  color: #9a3412;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.phone-shell .adv-new-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: 18px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 86% 10%, rgba(118, 121, 255, .42), transparent 34%),
+    radial-gradient(circle at 76% 100%, rgba(159, 215, 221, .25), transparent 38%),
+    linear-gradient(135deg, #171715 0%, #19151f 54%, #2b214c 100%);
+  box-shadow: 0 16px 36px rgba(17, 17, 15, .12);
+}
+
+.phone-shell .adv-new-hero-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.phone-shell .adv-new-hero-top span,
+.phone-shell .adv-new-hero-grid span {
+  display: block;
+  color: rgba(255,255,255,.62);
+  font-size: var(--text-label);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.phone-shell .adv-new-hero-top strong {
+  display: block;
+  margin-top: 8px;
+  color: #ffffff;
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -0.06em;
+}
+
+.phone-shell .adv-new-hero-top small {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255,255,255,.58);
+  font-size: var(--text-meta);
+  line-height: 1.25;
+}
+
+.phone-shell .adv-new-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.phone-shell .adv-new-status.is-ready {
+  background: rgba(34, 197, 94, .18);
+  color: #86efac;
+}
+
+.phone-shell .adv-new-status.is-waiting {
+  background: rgba(245, 158, 11, .18);
+  color: #f59e0b;
+}
+
+.phone-shell .adv-new-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+
+.phone-shell .adv-new-hero-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #ffffff;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.phone-shell .adv-new-hero-grid strong.is-success {
+  color: #86efac;
+}
+
+.phone-shell .adv-new-hero-grid strong.is-pending {
+  color: #fbbf24;
+}
+
+.phone-shell .adv-new-card {
+  margin-top: 12px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #eeeae4;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, .035);
+}
+
+.phone-shell .adv-new-amount-card,
+.phone-shell .adv-new-summary,
+.phone-shell .adv-new-flow {
+  padding: 14px;
+}
+
+.phone-shell .adv-new-section-head,
+.phone-shell .adv-new-card-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.phone-shell .adv-new-section-head span,
+.phone-shell .adv-new-card-title span {
+  display: block;
+  color: #8a847b;
+  font-size: var(--text-label);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.phone-shell .adv-new-section-head strong {
+  display: block;
+  margin-top: 4px;
+  color: #171715;
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -0.06em;
+}
+
+.phone-shell .adv-new-section-head small {
+  color: #6b45f4;
+  background: #f0ecff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: var(--text-caption);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.phone-shell .adv-new-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.phone-shell .adv-new-quick-row button {
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid #ecebff;
+  background: #f7f6ff;
+  color: #6b45f4;
+  font-family: inherit;
+  font-size: var(--text-meta);
+  font-weight: 700;
+}
+
+.phone-shell .adv-new-quick-row button.active {
+  background: #6b45f4;
+  border-color: #6b45f4;
+  color: #ffffff;
+}
+
+.phone-shell .adv-new-quick-row button:disabled {
+  opacity: .48;
+}
+
+.phone-shell .adv-new-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #f0ede8;
+}
+
+.phone-shell .adv-new-summary-grid > div {
+  min-height: 64px;
+  padding: 11px 12px;
+  background: #fffdfa;
+  border-right: 1px solid #f0ede8;
+  border-bottom: 1px solid #f0ede8;
+}
+
+.phone-shell .adv-new-summary-grid > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.phone-shell .adv-new-summary-grid > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.phone-shell .adv-new-summary-grid span {
+  display: block;
+  color: #9b948b;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.phone-shell .adv-new-summary-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #171715;
+  font-size: var(--text-body);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.phone-shell .adv-new-summary-grid strong.purple {
+  color: #dc2626;
+}
+
+.phone-shell .adv-new-due-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 11px;
+  padding: 11px 12px;
+  border-radius: 16px;
+  background: #fff1f2;
+  color: #dc2626;
+  border: 1px solid #ffe4e6;
+}
+
+.phone-shell .adv-new-due-row span {
+  display: block;
+  color: #77706a;
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
+.phone-shell .adv-new-due-row strong {
+  display: block;
+  margin-top: 3px;
+  color: #dc2626;
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.phone-shell .adv-new-cycle-note {
+  margin-top: 9px;
+  padding: 10px 12px;
+  border-radius: 15px;
+  background: #fdf6eb;
+  color: #b45309;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.phone-shell .adv-new-status.is-ready,
+.phone-shell .chip-green {
+  color: #16a34a !important;
+}
+
+.phone-shell .chip-amber {
+  color: #d97706 !important;
+  background: #fff7ed !important;
+}
+
+.phone-shell .chip-red {
+  color: #dc2626 !important;
+  background: #fef2f2 !important;
+}
+
+.phone-shell .adv-new-flow-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.phone-shell .adv-new-flow-row > div {
+  border-radius: 17px;
+  background: #faf9f6;
+  padding: 11px 8px;
+  text-align: center;
+}
+
+.phone-shell .adv-new-flow-row i {
+  width: 22px;
+  height: 22px;
+  margin: 0 auto 7px;
+  border-radius: 999px;
+  background: #6b45f4;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+
+.phone-shell .adv-new-flow-row span {
+  display: block;
+  color: #8a847b;
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
+.phone-shell .adv-new-flow-row strong {
+  display: block;
+  margin-top: 5px;
+  color: #171715;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.phone-shell .adv-new-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.phone-shell .adv-new-benefits span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e9f6f6;
+  color: #16736f;
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+
+.phone-shell .adv-fixed-action {
+  position: static;
+  transform: none;
+  width: auto;
+  z-index: auto;
+  padding: 10px 16px 18px;
+  background: #fafaf8;
+}
+
+.phone-shell .adv-fixed-action .mp-btn-primary {
+  height: 48px !important;
+  border-radius: 18px !important;
+  box-shadow: 0 14px 28px rgba(107, 69, 244, .18);
+}
+
+.phone-shell .adv-fixed-action .adv-secure-note {
+  margin-top: 7px;
+}
+
+/* Final subpage consistency pass: profile child pages should feel like the app, not legacy screens. */
+.phone-shell .sub-page-header {
+  min-height: 68px !important;
+  padding: 14px 18px 12px !important;
+  background: #fafaf8 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  gap: 12px !important;
+  justify-content: flex-start !important;
+}
+
+.phone-shell .sub-page-back {
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px !important;
+  border-radius: 15px !important;
+  background: #f0ecff !important;
+  border: 0 !important;
+  color: #6b45f4 !important;
+  box-shadow: none !important;
+}
+
+.phone-shell .sub-page-title {
+  margin: 0 !important;
+  color: #171715 !important;
+  font-size: var(--text-page) !important;
+  font-weight: 500 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.05em !important;
+  text-align: left !important;
+}
+
+.phone-shell .mem-screen,
+.phone-shell .notif-screen,
+.phone-shell .change-password-screen,
+.phone-shell .prof-screen {
+  background: #fafaf8 !important;
+}
+
+.phone-shell .mem-screen > .screen-body,
+.phone-shell .notif-screen > .screen-body,
+.phone-shell .prof-screen > .screen-body {
+  overflow: visible !important;
+  min-height: auto !important;
+  flex: initial !important;
+}
+
+.phone-shell .mem-body,
+.phone-shell .notif-body {
+  padding: 4px 16px 24px !important;
+}
+
+.phone-shell .mem-hero {
+  margin: 4px 16px 12px !important;
+  padding: 18px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 86% 4%, rgba(118, 121, 255, .26) 0 24%, transparent 25%),
+    linear-gradient(135deg, #171411 0%, #171411 58%, #251c3d 100%) !important;
+  text-align: left !important;
+}
+
+.phone-shell .mem-crown-ring {
+  width: 46px !important;
+  height: 46px !important;
+  margin: 0 0 12px !important;
+  border-radius: 16px !important;
+  background: #f0ecff !important;
+  color: #6b45f4 !important;
+}
+
+.phone-shell .mem-hero-title,
+.phone-shell .change-password-hero h2 {
+  font-size: var(--text-section) !important;
+  font-weight: 500 !important;
+  line-height: 1.14 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.phone-shell .mem-hero-sub,
+.phone-shell .change-password-hero p {
+  font-size: var(--text-meta) !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+}
+
+.phone-shell .mem-plan-card,
+.phone-shell .mem-price-card,
+.phone-shell .mem-payment-card,
+.phone-shell .mem-review-card,
+.phone-shell .mem-benefits-card,
+.phone-shell .mem-active-card,
+.phone-shell .notif-card,
+.phone-shell .change-password-card {
+  border-radius: 22px !important;
+  border: 1px solid #eeeae4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, .04) !important;
+}
+
+.phone-shell .mem-plan-card,
+.phone-shell .mem-price-card,
+.phone-shell .mem-payment-card,
+.phone-shell .mem-review-card,
+.phone-shell .mem-benefits-card,
+.phone-shell .mem-active-card {
+  padding: 14px !important;
+  margin-bottom: 12px !important;
+}
+
+.phone-shell .mem-plan-price,
+.phone-shell .mem-price-row strong,
+.phone-shell .mem-review-title {
+  font-size: var(--text-section) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.phone-shell .mem-coupon-input,
+.phone-shell .mem-proof-upload,
+.phone-shell .mem-coupon-btn,
+.phone-shell .mem-show-qr-btn,
+.phone-shell .change-password-submit {
+  min-height: 48px !important;
+  border-radius: 18px !important;
+  font-size: var(--text-button) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .mem-show-qr-btn,
+.phone-shell .change-password-submit {
+  background: #6b45f4 !important;
+  color: #ffffff !important;
+}
+
+.phone-shell .notif-screen > div:first-child {
+  background: #fafaf8 !important;
+}
+
+.phone-shell .notif-screen > div:first-child .mp-link-btn {
+  right: 18px !important;
+  color: #6b45f4 !important;
+  background: transparent !important;
+  font-size: var(--text-meta) !important;
+  font-weight: 700 !important;
+}
+
+.phone-shell .notif-row {
+  padding: 12px 13px !important;
+  gap: 12px !important;
+  border-bottom-color: #eeeae4 !important;
+}
+
+.phone-shell .notif-icon,
+.phone-shell .change-password-icon {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 16px !important;
+}
+
+.phone-shell .notif-title {
+  font-size: var(--text-body) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .notif-sub,
+.phone-shell .notif-date-label,
+.phone-shell .notif-time {
+  font-size: var(--text-meta) !important;
+}
+
+.phone-shell .change-password-hero {
+  margin: 4px 16px 12px !important;
+  padding: 18px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(118, 121, 255, .24) 0 25%, transparent 26%),
+    linear-gradient(135deg, #171411 0%, #171411 58%, #251c3d 100%) !important;
+}
+
+.phone-shell .change-password-card {
+  margin: 0 16px 24px !important;
+  padding: 14px !important;
+  gap: 12px !important;
+}
+
+.phone-shell .change-password-field label,
+.phone-shell .password-rules > div,
+.phone-shell .password-match-note,
+.phone-shell .change-password-error {
+  font-size: var(--text-meta) !important;
+}
+
+.phone-shell .change-password-field > div {
+  height: 48px !important;
+  border-radius: 16px !important;
+  background: #fffdfa !important;
+  border: 1px solid #eeeae4 !important;
+}
+
+.phone-shell .change-password-field > div:focus-within {
+  border-color: #6b45f4 !important;
+  box-shadow: 0 0 0 3px rgba(107, 69, 244, .10) !important;
+}
+
+.phone-shell .password-rules {
+  border-radius: 16px !important;
+  background: #f7f3ff !important;
+  padding: 10px 12px !important;
+}
+
+.phone-shell .mem-active-card {
+  background:
+    radial-gradient(circle at 88% 8%, rgba(118, 121, 255, .28) 0 24%, transparent 25%),
+    linear-gradient(135deg, #171411 0%, #171411 58%, #251c3d 100%) !important;
+  color: #ffffff !important;
+  padding: 16px !important;
+}
+
+.phone-shell .mem-active-details {
+  gap: 8px !important;
+  border-radius: 18px !important;
+  padding: 10px !important;
+}
+
+.phone-shell .mem-active-badge {
+  font-size: var(--text-card) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .mem-active-card-title,
+.phone-shell .mem-active-stat-label {
+  font-size: var(--text-caption) !important;
+  font-weight: 500 !important;
+}
+
+.phone-shell .mem-active-stat-val {
+  font-size: var(--text-meta) !important;
+  font-weight: 700 !important;
+}
+
+.phone-shell .mem-benefit-item {
+  padding: 8px 0 !important;
+  gap: 10px !important;
+}
+
+.phone-shell .mem-benefits-card {
+  padding: 12px 14px !important;
+}
+
+.phone-shell .mem-benefits-title {
+  margin-bottom: 6px !important;
+  font-size: var(--text-body) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .profile-subpage-body {
+  background: #fafaf8 !important;
+}
+
+.phone-shell .profile-bank-content {
+  margin: 4px 16px 0 !important;
+}
+
+.phone-shell .profile-bank-card {
+  margin-bottom: 10px !important;
+  padding: 16px !important;
+  border-radius: 22px !important;
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(118, 121, 255, .28) 0 24%, transparent 25%),
+    linear-gradient(135deg, #171411 0%, #171411 58%, #251c3d 100%) !important;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, .04) !important;
+}
+
+.phone-shell .profile-bank-list-card,
+.phone-shell .profile-bank-upi-card {
+  margin-bottom: 10px !important;
+  border-radius: 22px !important;
+  border: 1px solid #eeeae4 !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, .04) !important;
+}
+
+.phone-shell .profile-bank-upi-card {
+  padding: 12px !important;
+}
+
+.phone-shell .profile-bank-info-row {
+  padding: 10px 12px !important;
+}
+
+.phone-shell .profile-bank-info-row span:first-child {
+  color: #8a847b !important;
+  font-size: var(--text-meta) !important;
+  font-weight: 500 !important;
+}
+
+.phone-shell .profile-bank-info-row span:last-child {
+  color: #171715 !important;
+  font-size: var(--text-meta) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .profile-bank-name {
+  margin-bottom: 8px;
+  color: rgba(255,255,255,.65);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: .03em;
+}
+
+.phone-shell .profile-bank-number {
+  margin-bottom: 12px;
+  color: #ffffff;
+  font-size: var(--text-card);
+  font-weight: 600;
+  letter-spacing: .10em;
+}
+
+.phone-shell .profile-bank-mini-label {
+  margin-bottom: 2px;
+  color: rgba(255,255,255,.55);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.phone-shell .profile-bank-mini-value {
+  color: #ffffff;
+  font-size: var(--text-meta);
+  font-weight: 600;
+}
+
+.phone-shell .profile-bank-upi-inline {
+  padding: 10px;
+  border-top: 8px solid #fafaf8;
+}
+
+.phone-shell .profile-bank-upi-title {
+  margin-bottom: 8px;
+  color: #171715;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.phone-shell .profile-bank-upi-inline .mp-field {
+  margin-bottom: 8px !important;
+}
+
+.phone-shell .profile-bank-upi-inline .mp-btn-secondary {
+  width: 100%;
+  height: 44px !important;
+}
+
+/* Profile/subpage compact spacing system: one gutter, one row rhythm, no mixed dividers. */
+.phone-shell .prof-screen > .screen-body,
+.phone-shell .profile-subpage-body {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.phone-shell .prof-hero-v2 {
+  margin: 4px 0 18px !important;
+  padding: 18px 16px 16px !important;
+}
+
+.phone-shell .prof-hero-main-v2 {
+  grid-template-columns: 72px minmax(0, 1fr) !important;
+  gap: 14px !important;
+}
+
+.phone-shell .prof-avatar-wrap-v2,
+.phone-shell .prof-avatar-v2 {
+  width: 72px !important;
+  height: 72px !important;
+}
+
+.phone-shell .prof-hero-stats-v2 {
+  margin-top: 16px !important;
+  gap: 8px !important;
+}
+
+.phone-shell .prof-hero-stats-v2 > div {
+  padding: 11px 12px !important;
+  border-radius: 16px !important;
+}
+
+.phone-shell .prof-section-label {
+  padding: 0 0 10px !important;
+}
+
+.phone-shell .prof-list,
+.phone-shell .prof-card-wrap {
+  margin-bottom: 18px !important;
+}
+
+.phone-shell .prof-detail-row,
+.phone-shell .prof-row,
+.phone-shell .prof-info-button {
+  grid-template-columns: 38px minmax(0, 1fr) auto !important;
+  gap: 12px !important;
+  padding: 8px 0 !important;
+}
+
+.phone-shell .prof-detail-row + .prof-detail-row,
+.phone-shell .prof-row + .prof-row,
+.phone-shell .prof-info-row + .prof-info-row {
+  margin-top: 8px !important;
+}
+
+.phone-shell .prof-row-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 14px !important;
+}
+
+.phone-shell .prof-row-title {
+  font-size: var(--text-body) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .prof-row-sub {
+  margin-top: 4px !important;
+  font-size: var(--text-meta) !important;
+}
+
+.phone-shell .profile-subpage-row-gap {
+  height: 8px !important;
+  background: transparent !important;
+}
+
+.phone-shell .profile-bank-content {
+  margin: 0 !important;
+}
+
+.phone-shell .profile-bank-card {
+  padding: 14px !important;
+  border-radius: 20px !important;
+}
+
+.phone-shell .profile-bank-list-card,
+.phone-shell .profile-bank-upi-card,
+.phone-shell .mem-plan-card,
+.phone-shell .mem-price-card,
+.phone-shell .mem-payment-card,
+.phone-shell .mem-review-card,
+.phone-shell .mem-benefits-card,
+.phone-shell .mem-active-card,
+.phone-shell .onb-doc-card,
+.phone-shell .onb-tips-card {
+  border-radius: 20px !important;
+}
+
+.phone-shell .profile-bank-list-card,
+.phone-shell .profile-bank-upi-card {
+  margin-bottom: 8px !important;
+}
+
+.phone-shell .profile-bank-info-row {
+  padding: 8px 10px !important;
+}
+
+.phone-shell .profile-bank-upi-card {
+  padding: 10px !important;
+}
+
+.phone-shell .mem-body,
+.phone-shell .notif-body {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.phone-shell .mem-hero {
+  margin-left: 12px !important;
+  margin-right: 12px !important;
+  padding: 16px !important;
+  border-radius: 20px !important;
+}
+
+.phone-shell .mem-plan-card,
+.phone-shell .mem-price-card,
+.phone-shell .mem-payment-card,
+.phone-shell .mem-review-card,
+.phone-shell .mem-benefits-card,
+.phone-shell .mem-active-card {
+  padding: 12px !important;
+  margin-bottom: 8px !important;
+}
+
+.phone-shell .mem-price-row,
+.phone-shell .mem-price-total {
+  padding: 9px 0 !important;
+}
+
+.phone-shell .mem-benefit-item {
+  padding: 7px 0 !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-screen {
+  background: #fafaf8 !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-hero {
+  margin: 0 0 10px !important;
+  padding: 16px !important;
+  border-radius: 20px !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-body,
+.phone-shell .profile-kyc-subpage .onb-footer {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-doc-card,
+.phone-shell .profile-kyc-subpage .onb-tips-card {
+  margin-bottom: 8px !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-doc-row {
+  padding: 10px 11px !important;
+  gap: 10px !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-doc-icon {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-tips-card {
+  padding: 11px 12px !important;
+}
+
+.phone-shell .profile-kyc-subpage .onb-footer {
+  padding-top: 2px !important;
+}
+
+/* Final typography/header consistency sweep. */
+.phone-shell .global-header,
+.phone-shell .sub-page-header {
+  min-height: 74px !important;
+  padding: 16px 18px 14px !important;
+  gap: 12px !important;
+  background: #fafaf8 !important;
+}
+
+.phone-shell .global-header-back,
+.phone-shell .sub-page-back {
+  width: 44px !important;
+  height: 44px !important;
+  flex: 0 0 44px !important;
+  border-radius: 15px !important;
+  background: #f0ecff !important;
+  color: #6b45f4 !important;
+}
+
+.phone-shell .global-header-title,
+.phone-shell .sub-page-title {
+  font-size: var(--text-page) !important;
+  font-weight: 500 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.05em !important;
+}
+
+.phone-shell .mem-screen {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.phone-shell .mem-body {
+  padding: 0 18px 24px !important;
+}
+
+.phone-shell .mem-hero {
+  margin: 0 18px 10px !important;
+  padding: 14px !important;
+}
+
+.phone-shell .mem-crown-ring {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 14px !important;
+  margin-bottom: 10px !important;
+}
+
+.phone-shell .mem-plan-card,
+.phone-shell .mem-payment-card,
+.phone-shell .mem-review-card,
+.phone-shell .mem-benefits-card,
+.phone-shell .mem-active-card {
+  padding: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.phone-shell .mem-plan-name,
+.phone-shell .mem-payment-head span,
+.phone-shell .mem-price-row span,
+.phone-shell .mem-price-total span {
+  font-size: var(--text-meta) !important;
+  font-weight: 500 !important;
+}
+
+.phone-shell .mem-plan-price,
+.phone-shell .mem-payment-amount,
+.phone-shell .mem-price-total strong {
+  font-size: var(--text-section) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.phone-shell .mem-plan-price span {
+  font-size: var(--text-meta) !important;
+  font-weight: 400 !important;
+}
+
+.phone-shell .mem-payable-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.phone-shell .mem-payable-summary > div {
+  min-width: 0;
+  padding: 9px 8px;
+  border-radius: 14px;
+  background: #fafaf8;
+  border: 1px solid #eeeae4;
+}
+
+.phone-shell .mem-payable-summary span {
+  display: block;
+  color: #8a847b;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.phone-shell .mem-payable-summary strong {
+  display: block;
+  margin-top: 5px;
+  color: #171715;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.phone-shell .mem-payable-summary strong.green {
+  color: #16a34a;
+}
+
+.phone-shell .mem-benefit-row,
+.phone-shell .mem-benefit-title,
+.phone-shell .mem-payment-instruction,
+.phone-shell .mem-review-copy {
+  font-size: var(--text-meta) !important;
+  font-weight: 500 !important;
+}
+
+.phone-shell .mem-payment-head strong,
+.phone-shell .mem-benefits-title,
+.phone-shell .mem-review-title,
+.phone-shell .mem-active-badge {
+  font-size: var(--text-card) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .mem-payment-instruction {
+  padding: 10px 11px !important;
+  border-radius: 14px !important;
+}
+
+.phone-shell .mem-proof-upload,
+.phone-shell .mem-show-qr-btn,
+.phone-shell .mem-coupon-input,
+.phone-shell .mem-coupon-btn,
+.phone-shell .mp-btn-primary,
+.phone-shell .mp-btn-secondary {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+  font-size: var(--text-button) !important;
+  font-weight: 600 !important;
+}
+
+.phone-shell .mem-qr-box--large {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 10px !important;
+}
+
+.phone-shell .mem-qr-box--large img {
+  max-height: 220px !important;
+  object-fit: contain !important;
+}
+
+.phone-shell .mem-screen [style*="font-size: 14"],
+.phone-shell .mem-screen [style*="fontSize: 14"],
+.phone-shell .mem-screen [style*="font-size: 13"],
+.phone-shell .mem-screen [style*="fontSize: 13"] {
+  font-size: var(--text-meta) !important;
 }

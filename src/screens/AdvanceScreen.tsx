@@ -661,52 +661,44 @@ export function AdvanceScreen({
 
   // ── Calculator ────────────────────────────────────────────
   return (
-    <div className="adv-screen">
-      <div className="screen-body adv-page-body">
-        {isWaitingForSetupReview && (
-          <div className="adv-review-wait-card">
-            <div className="adv-review-wait-icon">
-              <Clock size={16} />
+    <div className="adv-screen adv-new-screen">
+      <div className="adv-new-body">
+        <section className="adv-new-hero">
+          <div className="adv-new-hero-top">
+            <div>
+              <span>Available access</span>
+              <strong>{formatMoney(limit)}</strong>
+              <small>from {salary > 0 ? formatMoney(salary) : "your"} monthly salary</small>
+            </div>
+            <div className={eligible ? "adv-new-status is-ready" : "adv-new-status is-waiting"}>
+              {eligible ? <CheckCircle size={13} /> : <Clock size={13} />}
+              {eligible ? "Ready" : "Pending"}
+            </div>
+          </div>
+          <div className="adv-new-hero-grid">
+            <div>
+              <span>Salary</span>
+              <strong>{salary > 0 ? formatMoney(salary) : "—"}</strong>
             </div>
             <div>
-              <strong>Verification is under review</strong>
-              <span>{nextBlocker || "Your submitted setup details are pending approval. Advance requests will unlock once verification is complete."}</span>
+              <span>Payday</span>
+              <strong>{formatPayday(nextPayday)}</strong>
             </div>
-          </div>
-        )}
-
-        {/* Salary info card */}
-        <div className="adv-salary-card">
-          <div className="adv-salary-left">
-            <div className="adv-salary-icon">
-              <Wallet size={20} />
-            </div>
-            <div className="adv-salary-label">Monthly Salary</div>
-            <div className="adv-salary-amount">
-              {salary > 0 ? formatMoney(salary) : "—"}
-            </div>
-            <div className="adv-salary-updated">
-              <RefreshCw size={10} /> Updated today
-            </div>
-          </div>
-          <div className="adv-salary-right">
             <div>
-              <div className="adv-avail-label">Available for Advance</div>
-              <div className="adv-avail-amount">{formatMoney(limit)}</div>
-              <span className="chip chip-green">
-                <span className="chip-dot" /> Active
-              </span>
+              <span>Status</span>
+              <strong className={eligible ? "is-success" : "is-pending"}>{eligible ? "Active" : "Review"}</strong>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Amount slider */}
-        <div className="adv-slider-card">
-          <div className="adv-slider-title">How much do you need?</div>
-          <div className="adv-slider-sub">
-            Select an amount up to {formatMoney(limit)}
+        <section className="adv-new-card adv-new-amount-card">
+          <div className="adv-new-section-head">
+            <div>
+              <span>Request amount</span>
+              <strong>{formatMoney(amount)}</strong>
+            </div>
+            <small>Limit {formatMoney(limit)}</small>
           </div>
-          <div className="adv-slider-amount">{formatMoney(amount)}</div>
           <input
             type="range"
             className="adv-range"
@@ -714,179 +706,108 @@ export function AdvanceScreen({
             max={sliderMax}
             step={500}
             value={Math.min(amount, sliderMax)}
-            disabled={limit < MIN_AMOUNT}
+            disabled={isWaitingForSetupReview || limit < MIN_AMOUNT}
             onChange={(e) => onAmountChange(Number(e.target.value))}
           />
           <div className="adv-range-labels">
             <span className="adv-range-lbl">{formatMoney(MIN_AMOUNT)}</span>
             <span className="adv-range-lbl">{formatMoney(limit)}</span>
           </div>
-          <div
-            style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}
-          >
+          <div className="adv-new-quick-row">
             {quickAmounts.map((v) => (
               <button
                 key={v}
                 type="button"
+                className={amount === v ? "active" : ""}
+                disabled={isWaitingForSetupReview}
                 onClick={() => onAmountChange(v)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: 99,
-                  background: amount === v ? "#5B3CE3" : "#F4F3FF",
-                  color: amount === v ? "white" : "#5B3CE3",
-                  border: "1.5px solid",
-                  borderColor: amount === v ? "#5B3CE3" : "#C4BBFF",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
               >
                 {formatMoney(v)}
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Interest & details */}
-        <div className="adv-detail-card">
-          <div className="adv-detail-hdr">
-            <span className="adv-detail-hdr-title">Advance details</span>
-            {previewLoading && (
-              <RefreshCw size={14} color="#9CA3AF" className="spin" />
-            )}
+        <section className="adv-new-card adv-new-summary">
+          <div className="adv-new-card-title">
+            <span>Repayment preview</span>
+            {previewLoading && <RefreshCw size={13} className="spin" />}
           </div>
-          <div className="adv-detail-grid">
-            <div className="adv-detail-item">
-              <div className="adv-detail-item-label">
-                <IndianRupee size={12} /> Amount
-              </div>
-              <div className="adv-detail-item-val purple">
-                {preview ? formatMoney(preview.youReceive) : "—"}
-              </div>
-            </div>
-            <div className="adv-detail-item">
-              <div className="adv-detail-item-label">
-                <Clock size={12} /> Tenure
-              </div>
-              <div className="adv-detail-item-val">
-                {preview ? `${preview.interestDays} days` : "—"}
-              </div>
-            </div>
-            <div className="adv-detail-item">
-              <div className="adv-detail-item-label">
-                <Info size={12} /> Interest
-              </div>
-              <div className="adv-detail-item-val">
-                {preview ? formatMoney(preview.interest) : "—"}
-              </div>
-            </div>
-            <div className="adv-detail-item">
-              <div className="adv-detail-item-label">
-                <CreditCard size={12} /> Total payment
-              </div>
-              <div className="adv-detail-item-val">
-                {preview ? formatMoney(preview.total) : "—"}
-              </div>
-            </div>
-          </div>
-          <div className="adv-payment-date-row">
+          <div className="adv-new-summary-grid">
             <div>
-              <span>Payment scheduled</span>
-              <strong>
-                {preview ? formatShortDate(preview.recoveryDate) : "—"}
-              </strong>
+              <span>You receive</span>
+              <strong>{preview ? formatMoney(preview.youReceive) : "—"}</strong>
             </div>
-            <CalendarDays size={18} />
+            <div>
+              <span>Tenure</span>
+              <strong>{preview ? `${preview.interestDays} days` : "—"}</strong>
+            </div>
+            <div>
+              <span>Interest</span>
+              <strong>{preview ? formatMoney(preview.interest) : "—"}</strong>
+            </div>
+            <div>
+              <span>Total due</span>
+              <strong className="purple">{preview ? formatMoney(preview.total) : "—"}</strong>
+            </div>
+          </div>
+          <div className="adv-new-due-row">
+            <CalendarDays size={15} />
+            <div>
+              <span>Deducts on payday</span>
+              <strong>{preview ? formatShortDate(preview.recoveryDate) : "—"}</strong>
+            </div>
           </div>
           {preview?.cycleMessage && (
-            <div
-              className={`adv-cycle-note ${
-                preview.isNextCycleRecovery ? "is-next-cycle" : ""
-              }`}
-            >
-              <CalendarDays size={15} />
-              <span>{preview.cycleMessage}</span>
+            <div className={`adv-new-cycle-note ${preview.isNextCycleRecovery ? "is-next-cycle" : ""}`}>
+              {preview.cycleMessage}
             </div>
           )}
+        </section>
+
+        <section className="adv-new-card adv-new-flow">
+          <div className="adv-new-card-title">
+            <span>Request flow</span>
+          </div>
           {preview && (
-            <div className="adv-hiw-box">
-              <div className="adv-hiw-label">How it works</div>
-              <div className="adv-hiw-row">
-                <div className="adv-hiw-col">
-                  <div className="adv-hiw-when">Today</div>
-                  <div className="adv-hiw-action">You request</div>
-                  <div className="adv-hiw-amt">{formatMoney(amount)}</div>
-                </div>
-                <div className="adv-hiw-arrow">→</div>
-                <div className="adv-hiw-col">
-                  <div className="adv-hiw-when">After approval</div>
-                  <div className="adv-hiw-action">Receive</div>
-                  <div className="adv-hiw-amt">
-                    {formatMoney(preview.youReceive)}
-                  </div>
-                </div>
-                <div className="adv-hiw-arrow">→</div>
-                <div className="adv-hiw-col">
-                  <div className="adv-hiw-when">
-                    {formatShortDate(preview.recoveryDate)}
-                  </div>
-                  <div className="adv-hiw-action">Repay</div>
-                  <div className="adv-hiw-amt">
-                    {formatMoney(preview.total)}
-                  </div>
-                </div>
+            <div className="adv-new-flow-row">
+              <div>
+                <i>1</i>
+                <span>Request</span>
+                <strong>{formatMoney(amount)}</strong>
+              </div>
+              <div>
+                <i>2</i>
+                <span>Receive</span>
+                <strong>{formatMoney(preview.youReceive)}</strong>
+              </div>
+              <div>
+                <i>3</i>
+                <span>Repay</span>
+                <strong>{formatShortDate(preview.recoveryDate)}</strong>
               </div>
             </div>
           )}
+        </section>
+
+        <div className="adv-new-benefits">
+          <span><ShieldCheck size={13} /> Secure</span>
+          <span><CheckCircle size={13} /> No hidden fees</span>
+          <span><CreditCard size={13} /> Auto-deducted</span>
         </div>
 
-        {/* Feature highlights */}
-        <div className="adv-features">
-          {[
-            {
-              icon: <CheckCircle size={16} />,
-              label: "Zero hidden",
-              sub: "fees",
-            },
-            {
-              icon: <CheckCircle size={16} />,
-              label: "Instant",
-              sub: "approval",
-            },
-            {
-              icon: <CheckCircle size={16} />,
-              label: "Flexible",
-              sub: "amounts",
-            },
-            {
-              icon: <CheckCircle size={16} />,
-              label: "Auto",
-              sub: "repayment",
-            },
-            {
-              icon: <CheckCircle size={16} />,
-              label: "Secure",
-              sub: "transfer",
-            },
-            {
-              icon: <CheckCircle size={16} />,
-              label: "No credit",
-              sub: "score check",
-            },
-          ].map((f) => (
-            <div key={f.label} className="adv-feature-item">
-              <div className="adv-feature-icon">{f.icon}</div>
-              <div className="adv-feature-label">{f.label}</div>
-              <div className="adv-feature-sub">{f.sub}</div>
+        {isWaitingForSetupReview && (
+          <div className="adv-new-review-card">
+            <span><Clock size={15} /></span>
+            <div>
+              <strong>Verification under review</strong>
+              <span>{nextBlocker || "Your submitted setup details are pending approval. Advance requests will unlock once verification is complete."}</span>
             </div>
-          ))}
-        </div>
-
-        <div className="mp-bottom-space" />
+          </div>
+        )}
       </div>
 
-      <div className="adv-sticky-btn">
+      <div className="adv-fixed-action">
         <button
           type="button"
           className="mp-btn-primary"
