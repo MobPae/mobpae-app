@@ -55,6 +55,7 @@ type BackendSalaryRequest = {
   totalAmount?: number | string;
   totalRecoveryAmount?: number | string;
   interestDays?: number | string;
+  interestRate?: number | string;
   requestedAt?: string;
   createdAt?: string;
   repaymentDate?: string | null;
@@ -100,6 +101,7 @@ type BackendRepayment = {
   interestAmount?: number | string;
   totalAmount?: number | string;
   interestDays?: number | string;
+  interestRate?: number | string;
   dueDate?: string;
   status?: string;
   salaryRequest?: BackendSalaryRequest;
@@ -434,10 +436,10 @@ const normalizeRequests = (
     const totalRecoveryAmount = toAmount(
       repayment?.totalAmount ??
         request.totalAmount ??
-        request.totalRecoveryAmount ??
-        principalAmount + interestAmount
+        request.totalRecoveryAmount
     );
     const interestDays = repayment?.interestDays ?? request.interestDays;
+    const interestRate = repayment?.interestRate ?? request.interestRate;
 
     return {
       id: request.id,
@@ -453,6 +455,8 @@ const normalizeRequests = (
       totalRecoveryAmount,
       interestDays:
         interestDays === undefined ? undefined : Number(interestDays),
+      interestRate:
+        interestRate === undefined ? undefined : Number(interestRate),
       recoveryDate,
       recoveryStatus: repayment?.status === "PAID" ? "Completed" : "Scheduled",
       disbursalStatus:

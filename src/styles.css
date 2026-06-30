@@ -63,13 +63,13 @@ a {
   /* Fixed MobPae mobile typography rulebook. Do not change per page. */
   --text-display: 24px;
   --text-page: 20px;
-  --text-section: 16px;
+  --text-section: 15px;
   --text-card: 14px;
-  --text-body: 12px;
-  --text-button: 12px;
-  --text-input: 12px;
+  --text-body: 14px;
+  --text-button: 13px;
+  --text-input: 14px;
   --text-label: 11px;
-  --text-meta: 12px;
+  --text-meta: 11px;
   --text-caption: 10px;
 
   --fs-display: var(--text-display);
@@ -1258,7 +1258,7 @@ button:focus-visible {
 .adv-calc-check {
   background: #171411;
   color: white;
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 400;
 }
 .adv-calc-total small {
@@ -2246,7 +2246,6 @@ button:focus-visible {
   min-height: 24px;
   padding: 3px 9px;
   border-radius: 999px;
-  background: #f9f8ff;
   color: var(--P);
   font-size: 10.5px;
   font-weight: 800;
@@ -3779,7 +3778,7 @@ button,
 }
 
 .phone-shell .home-greeting-v2 {
-  padding: 8px 0 14px !important;
+  padding: 4px 0 8px !important;
 }
 
 .phone-shell .home-greeting-v2 h1,
@@ -3907,17 +3906,25 @@ button,
   padding: 0 15px !important;
 }
 
+.phone-shell .home-salary-bottom-v2 button svg,
+.phone-shell .home-salary-bottom-v2 button svg * {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  stroke: #ffffff !important;
+  stroke-width: 2.4 !important;
+}
+
 .phone-shell .home-repayment-section-v2 {
-  margin-top: 24px !important;
+  margin-top: 18px !important;
 }
 
 .phone-shell .home-repayment-v2 {
-  margin-top: 13px !important;
+  margin-top: 8px !important;
   grid-template-columns: 1fr auto !important;
-  gap: 22px !important;
-  padding: 10px 0 8px !important;
-  border-top: 1px solid #eeece7 !important;
-  border-bottom: 1px solid #eeece7 !important;
+  gap: 18px !important;
+  padding: 2px 0 0 !important;
+  border: 0 !important;
 }
 
 .phone-shell .home-repayment-v2 > div:not(.home-repayment-amount-wrap-v2) {
@@ -3947,8 +3954,14 @@ button,
   flex: 0 0 32px !important;
 }
 
+.phone-shell .home-deduct-icon-v2 svg,
+.phone-shell .home-deduct-icon-v2 svg * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
 .phone-shell .home-activity-v2 {
-  margin-top: 30px !important;
+  margin-top: 22px !important;
 }
 
 .phone-shell .home-activity-row-v2 {
@@ -4118,10 +4131,6 @@ button,
   border-radius: 12px !important;
   font-size: var(--text-body) !important;
   line-height: 1 !important;
-}
-
-.phone-shell .adv-calc-check {
-  font-size: 20px !important;
 }
 
 .phone-shell .adv-calc-row strong,
@@ -4928,7 +4937,7 @@ button,
 
 .phone-shell .hist-tx-row {
   display: grid !important;
-  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(118px, auto) !important;
   gap: 12px !important;
   align-items: center !important;
   padding: 0 !important;
@@ -4966,7 +4975,7 @@ button,
 }
 
 .phone-shell .hist-tx-right {
-  min-width: 96px !important;
+  min-width: 118px !important;
   text-align: right !important;
 }
 
@@ -4987,13 +4996,30 @@ button,
 }
 
 .phone-shell .hist-tx-status {
-  max-width: 100px !important;
-  min-height: 28px !important;
-  margin-top: 9px !important;
-  padding: 0 12px !important;
-  font-size: var(--text-body) !important;
-  font-weight: 500 !important;
-  line-height: 1 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  margin-top: 7px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: var(--text-meta) !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+.phone-shell .hist-tx-status.chip-green {
+  color: #1F9A5F !important;
+}
+
+.phone-shell .hist-tx-status.chip-amber {
+  color: #D74715 !important;
+}
+
+.phone-shell .hist-tx-status.chip-purple {
+  color: #5B3CE3 !important;
 }
 
 .phone-shell .hist-security-note {
@@ -5335,46 +5361,6 @@ button,
 
 .phone-shell .rep-hero-card-v2 .rep-auto-chip-v2 {
   background: rgba(251, 231, 221, .96) !important;
-}
-
-/* Final navigation polish: icon-only header actions and black bottom tabs. */
-.phone-shell .global-header-actions {
-  gap: 4px !important;
-}
-
-.phone-shell .global-header .mp-topbar-icon-btn {
-  width: 32px !important;
-  height: 32px !important;
-  flex: 0 0 32px !important;
-  background: transparent !important;
-  color: #6B45F4 !important;
-  box-shadow: none !important;
-}
-
-.phone-shell .global-header .mp-topbar-icon-btn svg {
-  color: #6B45F4 !important;
-  stroke: #6B45F4 !important;
-}
-
-.phone-shell .global-header .mp-topbar-icon-btn:active {
-  background: rgba(107, 69, 244, .08) !important;
-}
-
-.phone-shell .mp-notif-dot {
-  top: 3px !important;
-  right: 3px !important;
-  width: 7px !important;
-  height: 7px !important;
-}
-
-.phone-shell .nav-tab-label,
-.phone-shell .nav-tab.active .nav-tab-label {
-  color: #171715 !important;
-}
-
-.phone-shell .nav-tab svg {
-  color: #171715 !important;
-  stroke: #171715 !important;
 }
 
 /* Final Advances redesign: compact fintech layout with fixed action. */
@@ -6336,31 +6322,317 @@ button,
   padding-top: 2px !important;
 }
 
-/* Final typography/header consistency sweep. */
-.phone-shell .global-header,
-.phone-shell .sub-page-header {
-  min-height: 74px !important;
-  padding: 16px 18px 14px !important;
-  gap: 12px !important;
+/* ============================================================
+   ACTIVE MOBILE UI CONTRACT
+   Keep app-wide typography, headers, actions, and tab bar here.
+   Page-specific layout stays above; this block should stay compact.
+   ============================================================ */
+.phone-shell {
+  color: #171715;
+  font-size: var(--text-body);
+  letter-spacing: 0;
+}
+
+.phone-shell :is(.screen-body, .screen-body-onboarding) {
   background: #fafaf8 !important;
 }
 
-.phone-shell .global-header-back,
-.phone-shell .sub-page-back {
-  width: 44px !important;
-  height: 44px !important;
-  flex: 0 0 44px !important;
-  border-radius: 15px !important;
-  background: #f0ecff !important;
-  color: #6b45f4 !important;
+.phone-shell :is(.global-header, .sub-page-header) {
+  min-height: 72px !important;
+  padding: 16px 18px 12px !important;
+  gap: 12px !important;
+  background: #fafaf8 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
 }
 
-.phone-shell .global-header-title,
-.phone-shell .sub-page-title {
+.phone-shell :is(.global-header-back, .sub-page-back) {
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px !important;
+  border-radius: 15px !important;
+  background: #f2efff !important;
+  color: #5b3ce3 !important;
+}
+
+.phone-shell .global-header-actions {
+  gap: 2px !important;
+}
+
+.phone-shell .global-header .mp-topbar-icon-btn,
+.phone-shell .sub-page-header .mp-topbar-icon-btn {
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px !important;
+  background: transparent !important;
+  color: #5b3ce3 !important;
+  box-shadow: none !important;
+}
+
+.phone-shell .global-header .mp-topbar-icon-btn svg,
+.phone-shell .sub-page-header .mp-topbar-icon-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: #5b3ce3 !important;
+  stroke: #5b3ce3 !important;
+}
+
+.phone-shell .mp-notif-dot {
+  top: 4px !important;
+  right: 4px !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.phone-shell :is(.global-header-title, .sub-page-title, .auth-card h1) {
   font-size: var(--text-page) !important;
+  line-height: 1.12 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell :is(
+  .home-section-top-v2 > span,
+  .adv-calc-head h2,
+  .rep-schedule-v2 h2,
+  .rep-history-head-v2 h2,
+  .hist-month-label,
+  .prof-section-title,
+  .mem-section-title,
+  .onb-section-title,
+  .help-section-title
+) {
+  color: #171715 !important;
+  font-size: var(--text-section) !important;
+  line-height: 1.18 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.phone-shell :is(
+  .home-activity-text-v2 strong,
+  .adv-active-info > strong,
+  .adv-calc-row strong,
+  .adv-calc-total strong,
+  .rep-timeline-body-v2 strong,
+  .rep-auto-card-v2 strong,
+  .rep-paid-row-v2 strong,
+  .hist-tx-title,
+  .prof-row strong,
+  .prof-detail-row strong,
+  .prof-info-button strong,
+  .mem-payment-head strong,
+  .mem-benefits-title,
+  .mem-review-title,
+  .mem-active-badge,
+  .onb-doc-title,
+  .help-topic-card strong
+) {
+  color: #171715 !important;
+  font-size: var(--text-card) !important;
+  line-height: 1.18 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell :is(
+  .home-repayment-v2 strong,
+  .home-activity-money-v2,
+  .adv-active-stats strong,
+  .adv-calc-row b,
+  .adv-calc-total b,
+  .rep-money-v2,
+  .rep-paid-row-v2 b,
+  .hist-tx-amount,
+  .mem-payable-summary strong,
+  .mem-price-row strong,
+  .mem-price-total strong
+) {
+  font-size: var(--text-body) !important;
+  line-height: 1.18 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell :is(
+  .home-repayment-v2 span,
+  .home-activity-text-v2 small,
+  .adv-active-subline,
+  .adv-active-stats span,
+  .adv-calc-row small,
+  .adv-calc-total small,
+  .rep-timeline-body-v2 small,
+  .rep-timeline-body-v2 span,
+  .rep-auto-card-v2 span,
+  .rep-auto-card-v2 small,
+  .rep-paid-row-v2 small,
+  .hist-tx-sub,
+  .hist-tx-datetime,
+  .hist-tx-status,
+  .prof-row span,
+  .prof-detail-row span,
+  .prof-info-button span,
+  .mem-benefit-row,
+  .mem-payment-instruction,
+  .mem-review-copy,
+  .onb-doc-sub,
+  .help-topic-card span
+) {
+  color: #8a847b !important;
+  font-size: var(--text-meta) !important;
+  line-height: 1.28 !important;
   font-weight: 500 !important;
-  line-height: 1.08 !important;
-  letter-spacing: -0.05em !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell :is(
+  .mp-btn-primary,
+  .mp-btn-secondary,
+  .mp-btn-outline,
+  .home-section-top-v2 button,
+  .home-salary-bottom-v2 button,
+  .adv-refer-btn,
+  .hist-filter-btn,
+  .hist-export-btn,
+  .mem-coupon-btn,
+  .mem-show-qr-btn,
+  .mem-proof-upload
+) {
+  min-height: 44px !important;
+  font-size: var(--text-button) !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell :is(
+  .home-salary-amount-v2,
+  .rep-amount-v2,
+  .adv-slider-amount,
+  .adv-success-amount-val,
+  .mem-plan-price
+) {
+  font-size: var(--text-display) !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell :is(.chip, .mem-plan-badge, .home-usage-ring-v2 span) {
+  font-size: var(--text-caption) !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0 !important;
+}
+
+.phone-shell .bottom-nav {
+  position: absolute !important;
+  left: 18px !important;
+  right: 18px !important;
+  bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  z-index: 220 !important;
+  height: 76px !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  padding: 8px 8px 10px !important;
+  border: 1px solid rgba(236, 231, 246, 0.95) !important;
+  border-radius: 30px !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 14px 34px rgba(22, 19, 34, 0.12) !important;
+  backdrop-filter: blur(18px);
+}
+
+.phone-shell .screen-body {
+  padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.phone-shell .nav-tab {
+  position: relative !important;
+  display: grid !important;
+  grid-template-rows: 32px 12px 6px !important;
+  align-items: center !important;
+  justify-items: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  height: 58px !important;
+  padding: 0 !important;
+  border-radius: 22px !important;
+}
+
+.phone-shell .nav-tab-icon {
+  width: 52px !important;
+  height: 32px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 18px !important;
+  background: transparent !important;
+  transition: background 0.18s ease, transform 0.18s ease !important;
+}
+
+.phone-shell .nav-tab.active .nav-tab-icon {
+  background: #ecebff !important;
+  transform: translateY(-1px);
+}
+
+.phone-shell .nav-tab svg,
+.phone-shell .nav-tab svg * {
+  stroke: #171715 !important;
+}
+
+.phone-shell .nav-tab-label,
+.phone-shell .nav-tab.active .nav-tab-label {
+  display: block !important;
+  width: 100% !important;
+  color: #171715 !important;
+  font-size: var(--text-caption) !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.phone-shell .nav-tab:not(.active) {
+  opacity: 0.45;
+}
+
+.phone-shell .nav-tab.active {
+  opacity: 1;
+}
+
+.phone-shell .nav-tab.active::after {
+  content: "";
+  position: static !important;
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #5b3ce3;
+}
+
+.phone-shell .adv-active-stats {
+  grid-template-columns: 0.9fr 1fr 0.95fr !important;
+}
+
+.phone-shell .adv-active-stats > div {
+  min-height: 72px !important;
+  padding: 11px 10px !important;
+}
+
+.phone-shell .adv-active-stats span {
+  margin-bottom: 7px !important;
+  font-size: var(--text-caption) !important;
+  line-height: 1.2 !important;
+}
+
+.phone-shell .adv-active-stats strong.purple {
+  color: #5b3ce3 !important;
+  font-size: var(--text-body) !important;
+}
+
+.phone-shell .adv-calc-total b {
+  font-size: var(--text-card) !important;
 }
 
 .phone-shell .mem-screen {
@@ -6372,46 +6644,9 @@ button,
   padding: 0 18px 24px !important;
 }
 
-.phone-shell .mem-hero {
-  margin: 0 18px 10px !important;
-  padding: 14px !important;
-}
-
-.phone-shell .mem-crown-ring {
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 14px !important;
-  margin-bottom: 10px !important;
-}
-
-.phone-shell .mem-plan-card,
-.phone-shell .mem-payment-card,
-.phone-shell .mem-review-card,
-.phone-shell .mem-benefits-card,
-.phone-shell .mem-active-card {
+.phone-shell :is(.mem-plan-card, .mem-payment-card, .mem-review-card, .mem-benefits-card, .mem-active-card) {
   padding: 12px !important;
   margin-bottom: 10px !important;
-}
-
-.phone-shell .mem-plan-name,
-.phone-shell .mem-payment-head span,
-.phone-shell .mem-price-row span,
-.phone-shell .mem-price-total span {
-  font-size: var(--text-meta) !important;
-  font-weight: 500 !important;
-}
-
-.phone-shell .mem-plan-price,
-.phone-shell .mem-payment-amount,
-.phone-shell .mem-price-total strong {
-  font-size: var(--text-section) !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.04em !important;
-}
-
-.phone-shell .mem-plan-price span {
-  font-size: var(--text-meta) !important;
-  font-weight: 400 !important;
 }
 
 .phone-shell .mem-payable-summary {
@@ -6451,39 +6686,6 @@ button,
   color: #16a34a;
 }
 
-.phone-shell .mem-benefit-row,
-.phone-shell .mem-benefit-title,
-.phone-shell .mem-payment-instruction,
-.phone-shell .mem-review-copy {
-  font-size: var(--text-meta) !important;
-  font-weight: 500 !important;
-}
-
-.phone-shell .mem-payment-head strong,
-.phone-shell .mem-benefits-title,
-.phone-shell .mem-review-title,
-.phone-shell .mem-active-badge {
-  font-size: var(--text-card) !important;
-  font-weight: 600 !important;
-}
-
-.phone-shell .mem-payment-instruction {
-  padding: 10px 11px !important;
-  border-radius: 14px !important;
-}
-
-.phone-shell .mem-proof-upload,
-.phone-shell .mem-show-qr-btn,
-.phone-shell .mem-coupon-input,
-.phone-shell .mem-coupon-btn,
-.phone-shell .mp-btn-primary,
-.phone-shell .mp-btn-secondary {
-  min-height: 46px !important;
-  border-radius: 16px !important;
-  font-size: var(--text-button) !important;
-  font-weight: 600 !important;
-}
-
 .phone-shell .mem-qr-box--large {
   height: auto !important;
   min-height: 0 !important;
@@ -6495,9 +6697,10 @@ button,
   object-fit: contain !important;
 }
 
-.phone-shell .mem-screen [style*="font-size: 14"],
-.phone-shell .mem-screen [style*="fontSize: 14"],
-.phone-shell .mem-screen [style*="font-size: 13"],
-.phone-shell .mem-screen [style*="fontSize: 13"] {
-  font-size: var(--text-meta) !important;
+@media (max-width: 480px) {
+  .phone-shell .bottom-nav {
+    position: fixed !important;
+    left: 18px !important;
+    right: 18px !important;
+  }
 }

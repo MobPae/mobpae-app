@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
 import type { AdvanceRequest, AppState, View } from "../types/app";
 import {
   formatMoney,
+  formatReadableDate,
   formatRequestStatus,
   formatShortDate,
 } from "../utils/format";
@@ -34,17 +35,6 @@ function nextPaydayDate(payrollDay?: number | null) {
   const today = new Date();
   const offset = today.getDate() > payrollDay ? 1 : 0;
   return new Date(today.getFullYear(), today.getMonth() + offset, payrollDay);
-}
-
-function daysUntilPayday(payrollDay?: number | null): number | null {
-  const payday = nextPaydayDate(payrollDay);
-  if (!payday) return null;
-  return Math.max(0, Math.ceil((payday.getTime() - Date.now()) / 86_400_000));
-}
-
-function formatPayday(date: Date | null) {
-  if (!date) return "—";
-  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
 function latestRequest(requests: AdvanceRequest[]) {
@@ -83,11 +73,16 @@ export function DashboardScreen({
   const usedPercent =
     limit > 0 ? Math.min(100, Math.round((advanceTaken / limit) * 100)) : 0;
   const payday = nextPaydayDate(dashboard?.payrollDay);
-  const daysLeft = daysUntilPayday(dashboard?.payrollDay);
   const repaymentDue = current?.totalRecoveryAmount || advanceTaken;
   const repaymentDate = current?.recoveryDate
-    ? formatShortDate(current.recoveryDate)
-    : formatPayday(payday);
+    ? formatReadableDate(current.recoveryDate)
+    : payday
+    ? payday.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
   const recent = latestRequest(requests);
 
   return (
@@ -98,13 +93,6 @@ export function DashboardScreen({
         <h1>
           {greeting()}, <em>{name}.</em>
         </h1>
-        <p>
-          You have{" "}
-          <strong>
-            {daysLeft ?? "—"} {daysLeft === 1 ? "day" : "days"}
-          </strong>{" "}
-          until your next payday.
-        </p>
       </section>
 
       <section className="home-salary-v2">

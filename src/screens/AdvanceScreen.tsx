@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import {
-  formatFullDate,
+  formatReadableDate,
   formatMoney,
   formatRequestStatus,
   formatShortDate,
@@ -58,6 +58,10 @@ function nextPaydayDate(payrollDay?: number | null) {
 function formatPayday(d: Date | null) {
   if (!d) return "—";
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function formatBackendMoney(value?: number | null) {
+  return value && value > 0 ? formatMoney(value) : "—";
 }
 
 /* ── Page heading shared across all advance states ── */
@@ -160,33 +164,13 @@ export function AdvanceScreen({
     const statusLabel = isPaid
       ? "Repaid"
       : formatRequestStatus(currentRequest.status, currentRequest.statusLabel);
-    const principal =
-      currentRequest.principalAmount ||
-      currentRequest.approvedAmount ||
-      currentRequest.requestedAmount;
-    const totalRepayment =
-      currentRequest.totalRecoveryAmount ||
-      principal + (currentRequest.interestAmount || 0);
-    const interest =
-      currentRequest.interestAmount || Math.max(0, totalRepayment - principal);
-    const interestDays =
-      currentRequest.interestDays ||
-      (currentRequest.recoveryDate
-        ? Math.max(
-            1,
-            Math.ceil(
-              (new Date(currentRequest.recoveryDate).getTime() -
-                new Date(currentRequest.requestDate).getTime()) /
-                86_400_000
-            )
-          )
-        : 0);
-    const monthlyRate =
-      principal > 0 && interestDays > 0
-        ? (interest / principal / (interestDays / 30)) * 100
-        : null;
-    const rateLabel = monthlyRate
-      ? `${monthlyRate.toFixed(1)}% flat / month`
+    const principal = currentRequest.principalAmount;
+    const totalRepayment = currentRequest.totalRecoveryAmount;
+    const interest = currentRequest.interestAmount;
+    const interestDays = currentRequest.interestDays;
+    const interestRate = currentRequest.interestRate;
+    const rateLabel = interestRate
+      ? `${interestRate}% p.a.`
       : "Flat interest";
     const scheduleDate = formatShortDate(
       currentRequest.recoveryDate ||
@@ -210,7 +194,7 @@ export function AdvanceScreen({
               </div>
               <div className="adv-active-info">
                 <strong>
-                  {advanceHeadline} {formatMoney(principal)}
+                  {advanceHeadline} {formatBackendMoney(principal)}
                 </strong>
                 <small className="adv-active-subline">
                   {statusLabel} - {scheduleDate}
@@ -221,23 +205,18 @@ export function AdvanceScreen({
 
             <div className="adv-active-stats">
               <div>
-                <span>Received</span>
-                <strong>{formatMoney(principal)}</strong>
+                <span>Request date</span>
+                <strong>{formatReadableDate(currentRequest.requestDate)}</strong>
               </div>
               <div>
                 <span>Due by</span>
-                <strong>{formatFullDate(currentRequest.recoveryDate)}</strong>
+                <strong>{formatReadableDate(currentRequest.recoveryDate)}</strong>
               </div>
               <div>
-                <span>Amount</span>
+                <span>Total payable</span>
                 <strong className="purple">
-                  {formatMoney(totalRepayment)}
+                  {formatBackendMoney(totalRepayment)}
                 </strong>
-                {!isPaid && (
-                  <span className="adv-on-payday">
-                    <span /> On payday
-                  </span>
-                )}
               </div>
             </div>
           </button>
@@ -254,19 +233,19 @@ export function AdvanceScreen({
                 <strong>Advance amount</strong>
                 <small>Principal you receive</small>
               </div>
-              <b>{formatMoney(principal)}</b>
+              <b>{formatBackendMoney(principal)}</b>
             </div>
             <div className="adv-calc-row">
               <span className="adv-calc-icon adv-calc-icon--warm">+</span>
               <div>
                 <strong>Interest</strong>
                 <small>
-                  {formatMoney(principal)} ×{" "}
-                  {monthlyRate ? `${monthlyRate.toFixed(1)}%` : "rate"} ×{" "}
+                  {formatBackendMoney(principal)} ×{" "}
+                  {interestRate ? `${interestRate}% p.a.` : "rate"} ×{" "}
                   {interestDays || "—"} days
                 </small>
               </div>
-              <b className="orange">{formatMoney(interest)}</b>
+              <b className="orange">{formatBackendMoney(interest)}</b>
             </div>
             <div className="adv-calc-total">
               <span className="adv-calc-check">✓</span>
@@ -274,7 +253,7 @@ export function AdvanceScreen({
                 <strong>Total repayable</strong>
                 <small>Auto-deducted on payday</small>
               </div>
-              <b>{formatMoney(totalRepayment)}</b>
+              <b>{formatBackendMoney(totalRepayment)}</b>
             </div>
           </div>
 

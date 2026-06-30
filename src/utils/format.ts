@@ -43,6 +43,19 @@ export const formatFullDate = (date?: string) => {
   }).format(parsedDate);
 };
 
+export const formatReadableDate = (date?: string) => {
+  if (!date || date === "Pending") return "Pending";
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return date.split(",")[0] || "Pending";
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  }).format(parsedDate);
+};
+
 export const maskAccountNumber = (accountNumber: string) => (accountNumber ? `**** ${accountNumber.slice(-4)}` : "");
 
 export const formatRequestStatus = (status?: string, label?: string) => {

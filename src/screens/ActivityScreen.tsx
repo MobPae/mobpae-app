@@ -306,7 +306,7 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
                           className={`hist-tx-status ${
                             e.statusLabel === "Credited" || e.statusLabel === "Repaid"
                               ? "chip-green"
-                              : e.statusLabel === "Pending"
+                              : e.statusLabel === "Pending" || e.statusLabel.toLowerCase().includes("scheduled")
                               ? "chip-amber"
                               : "chip-purple"
                           }`}
