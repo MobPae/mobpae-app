@@ -381,6 +381,8 @@ const normalizeRequestStatus = (status?: string): RequestStatus => {
       return "Submitted";
     case "EMPLOYER_APPROVED":
       return "Employer Approved";
+    case "AWAITING_MEMBERSHIP_PAYMENT":
+      return "Awaiting Membership";
     case "READY_FOR_DISBURSAL":
       return "Admin Approved";
     case "DISBURSED":
@@ -481,6 +483,7 @@ const normalizeRequests = (
           description: "Approved by your employer.",
           done: [
             "EMPLOYER_APPROVED",
+            "AWAITING_MEMBERSHIP_PAYMENT",
             "READY_FOR_DISBURSAL",
             "DISBURSED",
             "REPAYMENT_SCHEDULED",
@@ -489,9 +492,11 @@ const normalizeRequests = (
         },
         {
           status: "Admin Approved" as RequestStatus,
-          // READY_FOR_DISBURSAL is set when admin creates the disbursal record
           timestamp: "",
-          description: "Reviewed and approved by MobPae admin.",
+          description:
+            request.status === "AWAITING_MEMBERSHIP_PAYMENT"
+              ? "Complete membership payment to proceed with disbursal."
+              : "Reviewed and approved by MobPae admin.",
           done: [
             "READY_FOR_DISBURSAL",
             "DISBURSED",

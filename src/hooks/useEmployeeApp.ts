@@ -189,11 +189,10 @@ export function useEmployeeApp() {
       { label: "Active account", done: appState.profile.accountActive },
       { label: "KYC", done: kycComplete },
       { label: "Bank", done: bankComplete },
-      { label: "Membership", done: appState.membershipActive },
       { label: "Advance", done: appState.requests.length > 0 },
       { label: "Payment", done: !activeRecovery }
     ],
-    [activeRecovery, appState.membershipActive, appState.profile.accountActive, appState.requests.length, bankComplete, kycComplete]
+    [activeRecovery, appState.profile.accountActive, appState.requests.length, bankComplete, kycComplete]
   );
 
   const nextBlocker = useMemo(() => {
@@ -201,10 +200,9 @@ export function useEmployeeApp() {
     if (!kycComplete) return kycSubmitted ? "KYC submitted. Pending admin verification." : "Complete KYC verification.";
     if (!appState.bankAccount) return "Add your bank account.";
     if (!bankComplete) return "Bank account pending verification.";
-    if (!appState.membershipActive) return membershipSubmitted ? "Membership payment pending admin verification." : "Activate membership.";
     if (activeRequest) return "You already have an active salary request.";
     return "";
-  }, [activeRequest, appState.membershipActive, appState.profile.accountActive, appState.bankAccount, bankComplete, kycComplete, kycSubmitted, membershipSubmitted]);
+  }, [activeRequest, appState.profile.accountActive, appState.bankAccount, bankComplete, kycComplete, kycSubmitted]);
 
   const eligibleForAdvance = !nextBlocker;
 

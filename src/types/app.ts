@@ -20,7 +20,7 @@ export type View =
   | "help";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
-export type RequestStatus = "Submitted" | "Employer Approved" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
+export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
 
 export type SelfieStatus = "PENDING" | "VERIFIED" | "REJECTED";
 

@@ -19,18 +19,25 @@ export function OnboardingDoneScreen({
 }: Props) {
   const firstName = name.split(" ")[0] || "there";
 
-  const statusRows = [
-    { label: "Account Created", status: "Done", tone: "done" as const },
+  type Tone = "done" | "submitted" | "pending";
+  const toneOrder: Record<Tone, number> = { done: 0, submitted: 1, pending: 2 };
+
+  const variableRows: { label: string; status: string; tone: Tone }[] = [
     {
       label: "KYC Documents",
       status: kycVerified ? "Verified" : kycSubmitted ? "Under review" : "Pending",
-      tone: (kycVerified ? "done" : kycSubmitted ? "submitted" : "pending") as "done" | "submitted" | "pending",
+      tone: (kycVerified ? "done" : kycSubmitted ? "submitted" : "pending") as Tone,
     },
     {
       label: "Bank Account",
       status: bankConnected ? "Added" : "Pending",
-      tone: (bankConnected ? "done" : "pending") as "done" | "pending",
+      tone: (bankConnected ? "done" : "pending") as Tone,
     },
+  ].sort((a, b) => toneOrder[a.tone] - toneOrder[b.tone]);
+
+  const statusRows = [
+    { label: "Account Created", status: "Done", tone: "done" as const },
+    ...variableRows,
   ];
 
   return (

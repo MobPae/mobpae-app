@@ -66,6 +66,7 @@ export const formatRequestStatus = (status?: string, label?: string) => {
     PENDING_APPROVAL: "Pending approval",
     UNDER_REVIEW: "Under review",
     EMPLOYER_APPROVED: "Employer approved",
+    AWAITING_MEMBERSHIP_PAYMENT: "Membership payment pending",
     ADMIN_APPROVED: "Admin approved",
     READY_FOR_DISBURSAL: "Ready for payout",
     DISBURSED: "Disbursed",

@@ -32,7 +32,6 @@ export function EmployeeApp() {
     if (!app.appState.profile.accountActive) return app.setActiveView("home");
     if (!app.kycComplete) return openOnboarding("onboarding-kyc");
     if (!app.appState.bankAccount || !app.bankComplete) return openOnboarding("onboarding-bank");
-    if (!app.appState.membershipActive) return app.setActiveView("profile-membership");
   };
 
   const advanceBlockerActionLabel = app.activeRequest
@@ -41,9 +40,7 @@ export function EmployeeApp() {
       ? "Complete KYC"
       : !app.appState.bankAccount || !app.bankComplete
         ? app.appState.bankAccount ? "View bank status" : "Add bank account"
-        : !app.appState.membershipActive
-          ? "Activate membership"
-          : "View details";
+        : "View details";
 
   if (!app.isLoggedIn) {
     if (app.activeView === "forgot-password") {
@@ -143,6 +140,7 @@ export function EmployeeApp() {
           uploadingKycType={app.uploadingKycType}
           onUpload={app.uploadKycDocument}
           onContinue={navigate}
+          bankConnected={app.bankSubmitted}
         />
       )}
 
@@ -155,6 +153,7 @@ export function EmployeeApp() {
           }
           onSaveBank={app.saveBankAccount}
           onContinue={navigate}
+          kycSubmitted={app.kycSubmitted}
         />
       )}
 
@@ -179,22 +178,6 @@ export function EmployeeApp() {
         />
       )}
 
-      {/* Advance tab: show membership activation if not yet a member */}
-      {app.activeView === "advance" && !app.appState.membershipActive && (
-        <MembershipScreen
-          appState={app.appState}
-          activatingMembership={app.activatingMembership}
-          couponValidation={app.couponValidation}
-          couponError={app.couponError}
-          validatingCoupon={app.validatingCoupon}
-          onActivateMembership={app.activateMembership}
-          onValidateCoupon={app.validateCoupon}
-          onClearCoupon={app.clearCoupon}
-          onNavigate={navigate}
-          showHeader={false}
-        />
-      )}
-
       {app.activeView === "profile-membership" && (
         <MembershipScreen
           appState={app.appState}
@@ -209,7 +192,7 @@ export function EmployeeApp() {
         />
       )}
 
-      {app.activeView === "advance" && app.appState.membershipActive && (
+      {app.activeView === "advance" && (
         <AdvanceScreen
           amount={app.advanceAmount}
           eligible={app.eligibleForAdvance}
@@ -225,8 +208,6 @@ export function EmployeeApp() {
           kycSubmitted={app.kycSubmitted}
           bankComplete={app.bankComplete}
           bankSubmitted={app.bankSubmitted}
-          membershipActive={app.appState.membershipActive}
-          membershipSubmitted={app.membershipSubmitted}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
           blockerActionLabel={advanceBlockerActionLabel}

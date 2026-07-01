@@ -37,8 +37,6 @@ type AdvanceScreenProps = {
   kycSubmitted: boolean;
   bankComplete: boolean;
   bankSubmitted: boolean;
-  membershipActive: boolean;
-  membershipSubmitted: boolean;
   onAmountChange: (amount: number) => void;
   onSubmit: () => void;
   blockerActionLabel: string;
@@ -78,8 +76,6 @@ export function AdvanceScreen({
   kycSubmitted,
   bankComplete,
   bankSubmitted,
-  membershipActive,
-  membershipSubmitted,
   onAmountChange,
   onSubmit,
   blockerActionLabel,
@@ -91,6 +87,7 @@ export function AdvanceScreen({
   );
   const [agree1, setAgree1] = useState(false);
   const [agree2, setAgree2] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const hasActive = Boolean(
     currentRequest &&
@@ -146,7 +143,6 @@ export function AdvanceScreen({
   const setupSteps = [
     { label: "KYC Verification", done: kycComplete, submitted: kycSubmitted, view: "onboarding-kyc" as View },
     { label: "Bank Account", done: bankComplete, submitted: bankSubmitted, view: "onboarding-bank" as View },
-    { label: "Activate Membership", done: membershipActive, submitted: membershipSubmitted, view: "profile-membership" as View },
   ].map((step) => {
     if (step.done) return { ...step, status: "Completed", tone: "done" };
     if (step.submitted) return { ...step, status: "Completed · Pending review", tone: "review" };
@@ -242,65 +238,6 @@ export function AdvanceScreen({
               </div>
               <b>{formatBackendMoney(totalRepayment)}</b>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Setup required (not eligible, no active) ──────────────
-  if (!eligible && hasMissingSetupAction) {
-    return (
-      <div className="adv-screen">
-        <div className="screen-body">
-          <div className="adv-blocked-hero">
-            <div className="adv-blocked-icon-wrap">
-              <Wallet size={32} />
-            </div>
-            <div
-              className="adv-blocked-badge"
-              style={{ background: "#FEF3C7", color: "#D97706" }}
-            >
-              Setup Required
-            </div>
-            <div className="adv-blocked-title">
-              Complete setup to access advances
-            </div>
-            <div className="adv-blocked-sub">
-              {nextBlocker || "Please complete all required steps below."}
-            </div>
-          </div>
-          <div className="adv-step-card">
-            <div className="adv-step-hdr">Required steps</div>
-            {setupSteps.map((r, i) => (
-              <button
-                key={r.label}
-                type="button"
-                className="adv-step-row"
-                onClick={() => onNavigate?.(r.view)}
-              >
-                <div className={`adv-step-num ${r.tone}`}>
-                  {r.done || r.submitted ? <CheckCircle size={14} /> : i + 1}
-                </div>
-                <div className="adv-step-body">
-                  <div className="adv-step-title">{r.label}</div>
-                  <div className={`adv-step-sub ${r.tone}`}>
-                    {r.status}
-                  </div>
-                </div>
-                {r.done && <BadgeCheck size={16} color="#16A34A" />}
-                {!r.done && r.submitted && <Clock size={16} color="#D97706" />}
-              </button>
-            ))}
-          </div>
-          <div style={{ padding: "0 16px 16px" }}>
-            <button
-              type="button"
-              className="mp-btn-primary"
-              onClick={onResolveBlocker}
-            >
-              {blockerActionLabel || "Complete Setup"} <ArrowRight size={16} />
-            </button>
           </div>
         </div>
       </div>
@@ -585,167 +522,205 @@ export function AdvanceScreen({
     );
   }
 
-  // ── Calculator ────────────────────────────────────────────
+  // ── Compact unified calculator (eligible + setup-required same layout) ──
   return (
-    <div className="adv-screen adv-new-screen">
-      <div className="adv-new-body">
-        <section className="adv-new-hero">
-          <div className="adv-new-hero-top">
+    <div className="adv-screen adv-compact-screen">
+      <div className="adv-c-body">
+
+        {/* ── Hero card ── */}
+        <div className="adv-c-hero">
+          <div className="adv-c-hero-top">
             <div>
-              <span>Available access</span>
-              <strong>{formatMoney(limit)}</strong>
-              <small>from {salary > 0 ? formatMoney(salary) : "your"} monthly salary</small>
+              <div className="adv-c-hero-eyebrow">Available advance</div>
+              <div className="adv-c-hero-amt">
+                {eligible && limit > 0 ? formatMoney(limit) : "—"}
+              </div>
             </div>
-            <div className={eligible ? "adv-new-status is-ready" : "adv-new-status is-waiting"}>
-              {eligible ? <CheckCircle size={13} /> : <Clock size={13} />}
+            <div className={`adv-c-badge ${eligible ? "ready" : "pending"}`}>
+              {eligible ? <CheckCircle size={11} /> : <Clock size={11} />}
               {eligible ? "Ready" : "Pending"}
             </div>
           </div>
-          <div className="adv-new-hero-grid">
-            <div>
-              <span>Salary</span>
-              <strong>{salary > 0 ? formatMoney(salary) : "—"}</strong>
-            </div>
-            <div>
-              <span>Payday</span>
-              <strong>{formatPayday(nextPayday)}</strong>
-            </div>
-            <div>
-              <span>Status</span>
-              <strong className={eligible ? "is-success" : "is-pending"}>{eligible ? "Active" : "Review"}</strong>
-            </div>
+          <div className="adv-c-hero-meta">
+            {salary > 0 && <span>Salary {formatMoney(salary)}</span>}
+            {nextPayday && <><span>·</span><span>Payday {formatPayday(nextPayday)}</span></>}
           </div>
-        </section>
+          {/* Setup progress (only when not eligible) */}
+          {!eligible && (
+            <div className="adv-c-steps">
+              {setupSteps.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  className={`adv-c-step ${s.tone}`}
+                  onClick={() => s.tone === "todo" ? onNavigate?.(s.view) : undefined}
+                >
+                  <span className={`adv-c-step-dot ${s.tone}`} />
+                  <span className="adv-c-step-label">{s.label}</span>
+                  <span className="adv-c-step-status">{s.status}</span>
+                  {s.tone === "todo" && <ChevronRight size={11} />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        <section className="adv-new-card adv-new-amount-card">
-          <div className="adv-new-section-head">
-            <div>
-              <span>Request amount</span>
-              <strong>{formatMoney(amount)}</strong>
-            </div>
-            <small>Limit {formatMoney(limit)}</small>
+        {/* ── Amount selector ── */}
+        <div className="adv-c-section">
+          <div className="adv-c-row">
+            <span className="adv-c-label">Request amount</span>
+            {limit > 0 && <span className="adv-c-limit-chip">Max {formatMoney(limit)}</span>}
           </div>
-          <input
-            type="range"
-            className="adv-range"
-            min={MIN_AMOUNT}
-            max={sliderMax}
-            step={500}
-            value={Math.min(amount, sliderMax)}
-            disabled={isWaitingForSetupReview || limit < MIN_AMOUNT}
-            onChange={(e) => onAmountChange(Number(e.target.value))}
-          />
-          <div className="adv-range-labels">
-            <span className="adv-range-lbl">{formatMoney(MIN_AMOUNT)}</span>
-            <span className="adv-range-lbl">{formatMoney(limit)}</span>
-          </div>
-          <div className="adv-new-quick-row">
+          <div className="adv-c-amount">{formatMoney(amount)}</div>
+          {limit >= MIN_AMOUNT && (
+            <>
+              <input
+                type="range"
+                className="adv-range adv-c-range"
+                min={MIN_AMOUNT}
+                max={sliderMax}
+                step={500}
+                value={Math.min(amount, sliderMax)}
+                onChange={(e) => onAmountChange(Number(e.target.value))}
+              />
+              <div className="adv-range-labels">
+                <span className="adv-range-lbl">{formatMoney(MIN_AMOUNT)}</span>
+                <span className="adv-range-lbl">{formatMoney(limit)}</span>
+              </div>
+            </>
+          )}
+          <div className="adv-c-pills">
             {quickAmounts.map((v) => (
               <button
                 key={v}
                 type="button"
-                className={amount === v ? "active" : ""}
-                disabled={isWaitingForSetupReview}
+                className={`adv-c-pill ${amount === v ? "active" : ""}`}
                 onClick={() => onAmountChange(v)}
               >
                 {formatMoney(v)}
               </button>
             ))}
           </div>
-        </section>
-
-        <section className="adv-new-card adv-new-summary">
-          <div className="adv-new-card-title">
-            <span>Repayment preview</span>
-            {previewLoading && <RefreshCw size={13} className="spin" />}
-          </div>
-          <div className="adv-new-summary-grid">
-            <div>
-              <span>You receive</span>
-              <strong>{preview ? formatMoney(preview.youReceive) : "—"}</strong>
-            </div>
-            <div>
-              <span>Tenure</span>
-              <strong>{preview ? `${preview.interestDays} days` : "—"}</strong>
-            </div>
-            <div>
-              <span>Interest</span>
-              <strong>{preview ? formatMoney(preview.interest) : "—"}</strong>
-            </div>
-            <div>
-              <span>Total due</span>
-              <strong className="purple">{preview ? formatMoney(preview.total) : "—"}</strong>
-            </div>
-          </div>
-          <div className="adv-new-due-row">
-            <CalendarDays size={15} />
-            <div>
-              <span>Deducts on payday</span>
-              <strong>{preview ? formatShortDate(preview.recoveryDate) : "—"}</strong>
-            </div>
-          </div>
-          {preview?.cycleMessage && (
-            <div className={`adv-new-cycle-note ${preview.isNextCycleRecovery ? "is-next-cycle" : ""}`}>
-              {preview.cycleMessage}
-            </div>
-          )}
-        </section>
-
-        <section className="adv-new-card adv-new-flow">
-          <div className="adv-new-card-title">
-            <span>Request flow</span>
-          </div>
-          {preview && (
-            <div className="adv-new-flow-row">
-              <div>
-                <i>1</i>
-                <span>Request</span>
-                <strong>{formatMoney(amount)}</strong>
-              </div>
-              <div>
-                <i>2</i>
-                <span>Receive</span>
-                <strong>{formatMoney(preview.youReceive)}</strong>
-              </div>
-              <div>
-                <i>3</i>
-                <span>Repay</span>
-                <strong>{formatShortDate(preview.recoveryDate)}</strong>
-              </div>
-            </div>
-          )}
-        </section>
-
-        <div className="adv-new-benefits">
-          <span><ShieldCheck size={13} /> Secure</span>
-          <span><CheckCircle size={13} /> No hidden fees</span>
-          <span><CreditCard size={13} /> Auto-deducted</span>
         </div>
 
-        {isWaitingForSetupReview && (
-          <div className="adv-new-review-card">
-            <span><Clock size={15} /></span>
-            <div>
-              <strong>Verification under review</strong>
-              <span>{nextBlocker || "Your submitted setup details are pending approval. Advance requests will unlock once verification is complete."}</span>
-            </div>
+        {/* ── Repayment row ── */}
+        <div className="adv-c-divider" />
+        <div className="adv-c-repay">
+          <div className="adv-c-repay-stat">
+            <span className="adv-c-label">
+              Total repayable
+              {previewLoading && <RefreshCw size={11} className="spin" style={{ marginLeft: 4 }} />}
+            </span>
+            <span className="adv-c-repay-val">
+              {preview ? formatMoney(preview.total) : "—"}
+            </span>
           </div>
-        )}
+          <div className="adv-c-repay-stat">
+            <span className="adv-c-label">On payday</span>
+            <span className="adv-c-repay-val">
+              {preview
+                ? formatShortDate(preview.recoveryDate)
+                : formatPayday(nextPayday) || "—"}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="adv-c-how-btn"
+            onClick={() => setShowBreakdown(true)}
+          >
+            Details ↗
+          </button>
+        </div>
+
       </div>
 
+      {/* ── Fixed CTA ── */}
       <div className="adv-fixed-action">
         <button
           type="button"
           className="mp-btn-primary"
-          disabled={!canSubmit}
-          onClick={() => setStep("review")}
+          disabled={eligible ? !canSubmit : isWaitingForSetupReview}
+          onClick={eligible ? () => setStep("review") : onResolveBlocker}
         >
-          {isWaitingForSetupReview ? "Waiting for verification" : <>Continue <ArrowRight size={16} /></>}
+          {eligible
+            ? <>Request advance <ArrowRight size={16} /></>
+            : hasMissingSetupAction
+              ? <>{blockerActionLabel || "Complete Setup"} <ArrowRight size={16} /></>
+              : "Verification in progress…"}
         </button>
         <div className="adv-secure-note">
-          <ShieldCheck size={12} /> Your request is encrypted and secure
+          <ShieldCheck size={12} /> Encrypted and secure
         </div>
       </div>
+
+      {/* ── Breakdown bottom sheet ── */}
+      {showBreakdown && (
+        <div
+          className="adv-sheet-overlay"
+          onClick={() => setShowBreakdown(false)}
+        >
+          <div className="adv-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="adv-sheet-handle" />
+            <div className="adv-sheet-title">How it's calculated</div>
+            {preview ? (
+              <>
+                <div className="adv-sheet-row">
+                  <span className="adv-sheet-lbl">Advance amount</span>
+                  <span className="adv-sheet-val">{formatMoney(amount)}</span>
+                </div>
+                {(preview.processingFee ?? 0) > 0 && (
+                  <div className="adv-sheet-row">
+                    <span className="adv-sheet-lbl">Processing fee</span>
+                    <span className="adv-sheet-val adv-sheet-orange">
+                      {formatMoney(preview.processingFee)}
+                    </span>
+                  </div>
+                )}
+                <div className="adv-sheet-row">
+                  <span className="adv-sheet-lbl">
+                    Interest
+                    {preview.interestDays ? ` · ${preview.interestDays} days` : ""}
+                    {preview.interestRate ? ` @ ${preview.interestRate}% p.a.` : ""}
+                  </span>
+                  <span className="adv-sheet-val adv-sheet-orange">
+                    {formatMoney(preview.interest)}
+                  </span>
+                </div>
+                <div className="adv-sheet-row">
+                  <span className="adv-sheet-lbl">You receive</span>
+                  <span className="adv-sheet-val">{formatMoney(preview.youReceive)}</span>
+                </div>
+                <div className="adv-sheet-row">
+                  <span className="adv-sheet-lbl">Auto-deducted on</span>
+                  <span className="adv-sheet-val">
+                    {formatShortDate(preview.recoveryDate)}
+                  </span>
+                </div>
+                <div className="adv-sheet-total">
+                  <span className="adv-sheet-total-lbl">Total repayable</span>
+                  <span className="adv-sheet-total-val">
+                    {formatMoney(preview.total)}
+                  </span>
+                </div>
+                {preview.cycleMessage && (
+                  <p className="adv-sheet-note">{preview.cycleMessage}</p>
+                )}
+              </>
+            ) : (
+              <p className="adv-sheet-empty">
+                Select an amount to see the breakdown
+              </p>
+            )}
+            <button
+              type="button"
+              className="adv-sheet-close"
+              onClick={() => setShowBreakdown(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

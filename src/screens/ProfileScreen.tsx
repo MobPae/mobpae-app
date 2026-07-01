@@ -17,7 +17,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { employeeApi, type AppInfoItem } from "../services/api";
+import { employeeApi, getFileUrl, type AppInfoItem } from "../services/api";
 import type { AppState, BankAccount, KycDocumentType, View } from "../types/app";
 import { maskAccountNumber } from "../utils/format";
 import { SubPageHeader } from "../components/layout/SubPageHeader";
@@ -75,13 +75,16 @@ function InfoRow({ icon, title, content }: { icon: React.ReactNode; title: strin
         onClick={() => setOpen(!open)}
         className="prof-info-button"
       >
-        <div className="prof-row-icon prof-row-icon--purple">
+        <div className="prof-row-icon" style={{ background: "#F0ECFF", color: "#6B45F4" }}>
           {icon}
         </div>
         <div className="prof-row-main">
           <div className="prof-row-title">{title}</div>
         </div>
-        {open ? <ChevronUp size={16} color="#9CA3AF" /> : <ChevronDown size={16} color="#9CA3AF" />}
+        {open
+          ? <ChevronUp size={15} color="var(--border)" style={{ flexShrink: 0 }} />
+          : <ChevronDown size={15} color="var(--border)" style={{ flexShrink: 0 }} />
+        }
       </button>
       {open && (
         <div className="prof-info-panel">
@@ -111,8 +114,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 // Settings row inside a card
-function SettingsRow({ icon, iconBg, label, sub, onClick, danger }: {
-  icon: React.ReactNode; iconBg?: string; label: string; sub?: string; onClick?: () => void; danger?: boolean;
+function SettingsRow({ icon, iconBg, iconColor, label, sub, onClick, danger }: {
+  icon: React.ReactNode; iconBg?: string; iconColor?: string; label: string; sub?: string; onClick?: () => void; danger?: boolean;
 }) {
   return (
     <button
@@ -122,7 +125,10 @@ function SettingsRow({ icon, iconBg, label, sub, onClick, danger }: {
     >
       <div
         className="prof-row-icon"
-        style={{ background: danger ? "#FEF2F2" : iconBg }}
+        style={{
+          background: danger ? "#FFF0EE" : (iconBg ?? "#F0ECFF"),
+          color: danger ? "#D74715" : (iconColor ?? "#6B45F4"),
+        }}
       >
         {icon}
       </div>
@@ -130,7 +136,7 @@ function SettingsRow({ icon, iconBg, label, sub, onClick, danger }: {
         <div className="prof-row-title">{label}</div>
         {sub && <div className="prof-row-sub">{sub}</div>}
       </div>
-      <ChevronRight size={16} color="#D1D5DB" />
+      <ChevronRight size={15} color="var(--border)" style={{ flexShrink: 0 }} />
     </button>
   );
 }
@@ -183,7 +189,7 @@ export function ProfileScreen({
             uploadingKycType={uploadingKycType}
             onUpload={uploadKycDocument}
             onContinue={() => onNavigate("profile")}
-            showProgress={false}
+            bankConnected={!!appState.bankAccount?.accountNumber}
           />
         </div>
       </div>
@@ -278,7 +284,7 @@ export function ProfileScreen({
               onBankFormChange={onBankFormChange}
               onSaveBank={onSaveBank}
               onContinue={() => onNavigate("profile")}
-              showProgress={false}
+              kycSubmitted={appState.documents.length > 0}
             />
           )}
         </div>
@@ -288,106 +294,106 @@ export function ProfileScreen({
 
   return (
     <div className="prof-screen">
-      <div className="screen-body" style={{ background: "var(--bg)" }}>
+      <div className="screen-body prof-v5-body">
 
-        {/* ── Profile hero — ID-card layout ── */}
-        <section className="prof-hero-v4">
-          <div className="prof-hero-v4-ink" />
-
-          {/* Identity row: monogram + name/ID/email */}
-          <div className="prof-hero-v4-identity">
-            <div className="prof-hero-v4-mono">
-              {getInitials(profile.name || "M")}
-            </div>
-            <div className="prof-hero-v4-texts">
-              <div className="prof-hero-v4-name">{profile.name || "Employee"}</div>
-              {(profile.employeeCode || profile.employer) && (
-                <div className="prof-hero-v4-meta">
-                  {[profile.employeeCode, profile.employer].filter(Boolean).join(" · ")}
-                </div>
-              )}
-              {profile.email && (
-                <div className="prof-hero-v4-email">{profile.email}</div>
-              )}
-            </div>
+        {/* ── Dark hero ── */}
+        <section className="prof-v5-hero">
+          {/* Avatar */}
+          <div className="prof-v5-avatar">
+            {profile.profilePhotoUrl
+              ? <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} />
+              : getInitials(profile.name || "M")
+            }
           </div>
 
-          {/* Status grid — 3 cells */}
-          <div className="prof-status-grid">
-            <div className={`prof-status-cell${membershipActive ? " prof-status-cell--green" : ""}`}>
-              <Crown size={15} />
-              <div className="prof-status-cell-label">Plan</div>
-              <div className="prof-status-cell-val">{membershipActive ? "Active" : "Free"}</div>
+          {/* Name */}
+          <div className="prof-v5-name">{profile.name || "Employee"}</div>
+
+          {/* Employer · code */}
+          {(profile.employeeCode || profile.employer) && (
+            <div className="prof-v5-meta">
+              {[profile.employeeCode, profile.employer].filter(Boolean).join(" · ")}
             </div>
-            <div className={`prof-status-cell${kycVerified ? " prof-status-cell--green" : " prof-status-cell--amber"}`}>
-              <ShieldCheck size={15} />
-              <div className="prof-status-cell-label">KYC</div>
-              <div className="prof-status-cell-val">{kycVerified ? "Done" : "Pending"}</div>
-            </div>
-            <div className={`prof-status-cell${bankLinked ? " prof-status-cell--blue" : ""}`}>
-              <CreditCard size={15} />
-              <div className="prof-status-cell-label">Bank</div>
-              <div className="prof-status-cell-val">{bankLinked ? "Linked" : "None"}</div>
-            </div>
+          )}
+
+          {/* Email */}
+          {profile.email && (
+            <div className="prof-v5-email">{profile.email}</div>
+          )}
+
+          {/* Status badges */}
+          <div className="prof-v5-badges">
+            <span className={`prof-v5-badge${membershipActive ? " prof-v5-badge--g" : ""}`}>
+              <Crown size={10} />{membershipActive ? "Active Plan" : "Free"}
+            </span>
+            <span className={`prof-v5-badge${kycVerified ? " prof-v5-badge--g" : " prof-v5-badge--a"}`}>
+              <ShieldCheck size={10} />{kycVerified ? "KYC Done" : "KYC Pending"}
+            </span>
+            <span className={`prof-v5-badge${bankLinked ? " prof-v5-badge--b" : ""}`}>
+              <CreditCard size={10} />{bankLinked ? "Bank Linked" : "No Bank"}
+            </span>
           </div>
         </section>
 
-        {/* ── Account ── */}
-        <SectionLabel>Account</SectionLabel>
-        <ProfileCard>
-          <SettingsRow icon={<CreditCard size={16} />} label="Bank Account"
-            sub={bankLinked ? `${appState.bankAccount!.bankName} · ${maskAccountNumber(appState.bankAccount!.accountNumber)}` : "Add your salary account"}
-            onClick={() => onNavigate("profile-bank")} />
-          <SettingsRow icon={<FileText size={16} />} label="KYC Documents"
-            sub={kycVerified ? "All verified ✓" : "View & upload docs"}
-            onClick={() => onNavigate("profile-kyc")} />
-          <SettingsRow
-            icon={<Crown size={16} />}
-            iconBg={membershipActive ? "#F0FDF4" : "#F5F3FF"}
-            label={membershipActive ? "My Membership" : "Activate Plan"}
-            sub={membershipActive ? (membershipConfig?.planName || "Active plan") : "Enable salary advance access"}
-            onClick={() => onNavigate("profile-membership")}
-          />
-          <SettingsRow icon={<Bell size={16} />} label="Notifications" sub="Manage your alerts"
-            onClick={() => onNavigate("notifications")} />
-        </ProfileCard>
+        {/* ── White settings sheet ── */}
+        <div className="prof-v5-sheet">
 
-        {/* ── Security & Account ── */}
-        <SectionLabel>Security</SectionLabel>
-        <ProfileCard>
-          <SettingsRow icon={<KeyRound size={16} />} label="Change Password" sub="Update your login password"
-            onClick={() => onNavigate("change-password")} />
-        </ProfileCard>
+          {/* Single card — all rows */}
+          <div className="prof-v5-group">
+            <SettingsRow
+              icon={<CreditCard size={16} />}
+              iconBg="#E8EDF8" iconColor="#2D5BE3"
+              label="Bank Account"
+              sub={bankLinked ? `${appState.bankAccount!.bankName} · ${maskAccountNumber(appState.bankAccount!.accountNumber)}` : "Add your salary account"}
+              onClick={() => onNavigate("profile-bank")}
+            />
+            <SettingsRow
+              icon={<FileText size={16} />}
+              iconBg="#E8F6EE" iconColor="#1A8A4A"
+              label="KYC Documents"
+              sub={kycVerified ? "All verified ✓" : "View & upload docs"}
+              onClick={() => onNavigate("profile-kyc")}
+            />
+            <SettingsRow
+              icon={<Crown size={16} />}
+              iconBg={membershipActive ? "#E8F6EE" : "#EDE8FF"}
+              iconColor={membershipActive ? "#1A8A4A" : "#6B45F4"}
+              label={membershipActive ? "My Membership" : "Activate Plan"}
+              sub={membershipActive ? (membershipConfig?.planName || "Active plan") : "Enable salary advance access"}
+              onClick={() => onNavigate("profile-membership")}
+            />
+            <SettingsRow
+              icon={<Bell size={16} />}
+              iconBg="#FFF8E8" iconColor="#C97C15"
+              label="Notifications"
+              sub="Manage your alerts"
+              onClick={() => onNavigate("notifications")}
+            />
+            <SettingsRow
+              icon={<KeyRound size={16} />}
+              iconBg="#EDE8FF" iconColor="#6B45F4"
+              label="Change Password"
+              sub="Update your login password"
+              onClick={() => onNavigate("change-password")}
+            />
+            {appInfo.map((item) => (
+              <InfoRow
+                key={item.id}
+                icon={INFO_ICONS[item.type] ?? <Info size={16} />}
+                title={item.title}
+                content={item.content}
+              />
+            ))}
+            <SettingsRow
+              icon={<LogOut size={16} />}
+              label="Sign Out"
+              sub="Log out of MobPae"
+              danger
+              onClick={onLogout}
+            />
+          </div>
 
-        {/* ── MobPae Info ── */}
-        {appInfo.length > 0 && (
-          <>
-            <SectionLabel>About</SectionLabel>
-            <ProfileCard>
-              {appInfo.map((item, i) => (
-                <div key={item.id}>
-                  {i > 0 && <div className="profile-subpage-row-gap" />}
-                  <InfoRow
-                    icon={INFO_ICONS[item.type] ?? <Info size={16} />}
-                    title={item.title}
-                    content={item.content}
-                  />
-                </div>
-              ))}
-            </ProfileCard>
-          </>
-        )}
-
-        {/* ── Sign Out ── */}
-        <SectionLabel>Session</SectionLabel>
-        <ProfileCard>
-          <SettingsRow icon={<LogOut size={16} />} label="Sign Out" sub="Log out of MobPae"
-            danger onClick={onLogout} />
-        </ProfileCard>
-
-        {/* ── Version footer ── */}
-        <div style={{ textAlign: "center", color: "#C4B5FD", fontSize: 11, padding: "12px 0 28px", fontWeight: 500 }}>
-          MobPae v2.0 · Employee App
+          <div className="prof-v5-footer">MobPae v2.0</div>
         </div>
 
       </div>

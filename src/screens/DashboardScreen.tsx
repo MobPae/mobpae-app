@@ -166,6 +166,38 @@ export function DashboardScreen({
         </button>
       )}
 
+      {/* ── Membership payment action required ── */}
+      {requests.some(r => r.status === "Awaiting Membership") && (
+        <button
+          type="button"
+          onClick={() => onNavigate("profile-membership")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
+            border: "1.5px solid #F59E0B",
+            borderRadius: 14,
+            padding: "12px 14px",
+            margin: "0 16px 12px",
+            width: "calc(100% - 32px)",
+            textAlign: "left",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 22 }}>🔐</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E" }}>
+              Action Required: Pay Membership
+            </div>
+            <div style={{ fontSize: 11.5, color: "#B45309", marginTop: 2 }}>
+              Your advance request is approved — complete membership to receive funds.
+            </div>
+          </div>
+          <span style={{ fontSize: 18, color: "#B45309" }}>›</span>
+        </button>
+      )}
+
       {/* ── Unified feed — Activity + Colleagues ── */}
       <section className="home-feed-v2">
 

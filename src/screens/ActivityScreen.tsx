@@ -165,6 +165,7 @@ const STATUS_CYCLE = ["All Status", "Pending", "Credited", "Repaid"] as const;
 type StatusFilter = typeof STATUS_CYCLE[number];
 
 export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
+  const awaitingMembership = requests.some(r => r.status === "Awaiting Membership");
   const [tab, setTab] = useState<Tab>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All Status");
   const [monthFilter, setMonthFilter] = useState<string>("All Dates");
@@ -265,6 +266,38 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
         </button>
       </div>
 
+      {/* ── Membership payment banner ── */}
+      {awaitingMembership && (
+        <button
+          type="button"
+          onClick={() => onNavigate("profile-membership")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
+            border: "1.5px solid #F59E0B",
+            borderRadius: 12,
+            padding: "12px 14px",
+            margin: "0 0 12px",
+            width: "100%",
+            textAlign: "left",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 20 }}>🔐</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E" }}>
+              Action Required: Pay Membership
+            </div>
+            <div style={{ fontSize: 11.5, color: "#B45309", marginTop: 2 }}>
+              Your advance is approved — complete membership payment to receive funds.
+            </div>
+          </div>
+          <span style={{ fontSize: 18, color: "#B45309" }}>›</span>
+        </button>
+      )}
+
       {/* ── Body ── */}
       <div className="screen-body hist-body">
 
@@ -310,7 +343,7 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
                         className={`hist-tx-status ${
                           e.statusLabel === "Credited" || e.statusLabel === "Repaid"
                             ? "chip-green"
-                            : e.statusLabel === "Pending" || e.statusLabel.toLowerCase().includes("scheduled")
+                            : e.statusLabel.toLowerCase().includes("membership") || e.statusLabel === "Pending" || e.statusLabel.toLowerCase().includes("scheduled")
                             ? "chip-amber"
                             : "chip-purple"
                         }`}

@@ -8,7 +8,7 @@ type Props = {
   onBankFormChange: (field: keyof BankAccount, value: string) => void;
   onSaveBank: () => Promise<void> | void;
   onContinue: (view: View) => void;
-  showProgress?: boolean;
+  kycSubmitted: boolean;
 };
 
 const POPULAR_BANKS = [
@@ -26,7 +26,7 @@ const POPULAR_BANKS = [
 
 type Step = "pick" | "form";
 
-export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, onSaveBank, onContinue, showProgress = true }: Props) {
+export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, onSaveBank, onContinue, kycSubmitted }: Props) {
   const [step, setStep] = useState<Step>("pick");
   const [search, setSearch] = useState("");
 
@@ -39,31 +39,11 @@ export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, o
     setStep("form");
   }
 
+  const nextView: View = kycSubmitted ? "advance" : "onboarding-kyc";
+  const skipLabel = kycSubmitted ? "Skip — Go to Advance" : "Skip — Add KYC First";
+
   return (
     <div className="onb-screen">
-      {/* Progress */}
-      {showProgress && (
-        <div className="onb-progress-inline">
-          <div className="onb-progress-track">
-            {["KYC", "Bank", "Done"].map((label, i) => (
-              <div key={label} style={{ flex: 1, display: "flex", alignItems: "center" }}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-                    background: i <= 1 ? "#5B3CE3" : "#F3F1FF",
-                    color: i <= 1 ? "white" : "#9CA3AF",
-                    fontSize: 12, fontWeight: 800, border: i <= 1 ? "none" : "1.5px solid #E5E7EB",
-                  }}>
-                    {i + 1}
-                  </div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: i <= 1 ? "#5B3CE3" : "#9CA3AF", textTransform: "uppercase" }}>{label}</div>
-                </div>
-                {i < 2 && <div style={{ flex: 1, height: 2, background: i < 1 ? "#5B3CE3" : "#F3F1FF", margin: "0 4px", marginBottom: 16 }} />}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Hero */}
       <div className="onb-hero" style={{ background: "white" }}>
@@ -175,7 +155,7 @@ export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, o
             className="mp-btn-primary"
             disabled={savingBank || !bankForm.accountNumber || !bankForm.ifscCode || !bankForm.accountHolderName}
             style={{ marginBottom: 8 }}
-            onClick={async () => { await onSaveBank(); onContinue("onboarding-done"); }}
+            onClick={async () => { await onSaveBank(); onContinue(nextView); }}
           >
             {savingBank ? <span className="mp-spinner" /> : <>Save & Continue <ArrowRight size={16} /></>}
           </button>
@@ -183,9 +163,9 @@ export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, o
         <button
           type="button"
           className={step === "form" ? "mp-btn-outline" : "mp-btn-primary"}
-          onClick={() => onContinue("onboarding-done")}
+          onClick={() => onContinue(nextView)}
         >
-          {step === "pick" ? <>Skip for now <ArrowRight size={16} /></> : "Skip"}
+          {step === "pick" ? <>{skipLabel} <ArrowRight size={16} /></> : "Skip"}
         </button>
         <div className="onb-secure-note" style={{ marginTop: 8 }}>
           <ShieldCheck size={12} /> 256-bit encrypted · RBI compliant

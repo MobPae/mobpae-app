@@ -17,7 +17,7 @@ type Props = {
   uploadingKycType: KycDocumentType | null;
   onUpload: (type: KycDocumentType, file: File) => void;
   onContinue: (view: View) => void;
-  showProgress?: boolean;
+  bankConnected: boolean;
 };
 
 const KYC_DOCS: { type: KycDocumentType; label: string; hint: string }[] = [
@@ -48,7 +48,7 @@ export function OnboardingKycScreen({
   uploadingKycType,
   onUpload,
   onContinue,
-  showProgress = true,
+  bankConnected,
 }: Props) {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const allDocsVerified = documents.length > 0 && documents.every((d) => d.status === "Verified");
@@ -61,31 +61,11 @@ export function OnboardingKycScreen({
     return documents.find((d) => d.documentType === type);
   }
 
+  const nextView: View = bankConnected ? "advance" : "onboarding-bank";
+  const ctaLabel = bankConnected ? "Continue to Advance" : "Continue to Bank Account";
+
   return (
     <div className="onb-screen">
-      {/* Progress bar */}
-      {showProgress && (
-        <div className="onb-progress-inline">
-          <div className="onb-progress-track">
-            {["KYC", "Bank", "Done"].map((label, i) => (
-              <div key={label} style={{ flex: 1, display: "flex", alignItems: "center" }}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-                    background: i === 0 ? "#5B3CE3" : "#F3F1FF",
-                    color: i === 0 ? "white" : "#9CA3AF",
-                    fontSize: 12, fontWeight: 800, border: i === 0 ? "none" : "1.5px solid #E5E7EB",
-                  }}>
-                    {i + 1}
-                  </div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: i === 0 ? "#5B3CE3" : "#9CA3AF", textTransform: "uppercase" }}>{label}</div>
-                </div>
-                {i < 2 && <div style={{ flex: 1, height: 2, background: "#F3F1FF", margin: "0 4px", marginBottom: 16 }} />}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Hero */}
       <div className="onb-hero">
@@ -172,12 +152,12 @@ export function OnboardingKycScreen({
         <button
           type="button"
           className="mp-btn-primary"
-          onClick={() => onContinue("onboarding-bank")}
+          onClick={() => onContinue(nextView)}
         >
           {allVerified ? (
-            <><BadgeCheck size={16} /> All Verified — Continue</>
+            <><BadgeCheck size={16} /> All Verified — {ctaLabel}</>
           ) : (
-            <>Continue to Bank Account <ArrowRight size={16} /></>
+            <>{ctaLabel} <ArrowRight size={16} /></>
           )}
         </button>
         <div className="onb-secure-note">
