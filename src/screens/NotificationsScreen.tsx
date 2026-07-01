@@ -89,24 +89,26 @@ export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkA
         ) : (
           Array.from(grouped.entries()).map(([dateLabel, items]) => (
             <div key={dateLabel}>
-              <div className="notif-date-label">{dateLabel}</div>
+              <div className="notif-date-pill">{dateLabel}</div>
               <div className="notif-card">
-                {items.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`notif-row${!n.isRead ? " unread" : ""}`}
-                    onClick={() => { if (!n.isRead) void onMarkRead(n.id); }}
-                    style={{ cursor: !n.isRead ? "pointer" : "default" }}
-                  >
-                    <div className={`notif-icon ${getNotifIconClass(n.title)}`}>
-                      {getNotifIcon(n.title)}
+                {items.map((n, i) => (
+                  <div key={n.id}>
+                    {i > 0 && <div className="notif-row-divider" />}
+                    <div
+                      className={`notif-row${!n.isRead ? " unread" : ""}`}
+                      onClick={() => { if (!n.isRead) void onMarkRead(n.id); }}
+                      style={{ cursor: !n.isRead ? "pointer" : "default" }}
+                    >
+                      {!n.isRead && <div className="notif-unread-bar" />}
+                      <div className={`notif-icon ${getNotifIconClass(n.title)}`}>
+                        {getNotifIcon(n.title)}
+                      </div>
+                      <div className="notif-body-col">
+                        <div className="notif-title">{n.title}</div>
+                        <div className="notif-sub">{n.message}</div>
+                        <div className="notif-time">{timeAgo(n.createdAt)}</div>
+                      </div>
                     </div>
-                    <div className="notif-body-col">
-                      <div className="notif-title">{n.title}</div>
-                      <div className="notif-sub">{n.message}</div>
-                      <div className="notif-time">{timeAgo(n.createdAt)}</div>
-                    </div>
-                    {!n.isRead && <div className="notif-unread-dot" />}
                   </div>
                 ))}
               </div>

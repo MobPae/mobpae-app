@@ -173,6 +173,19 @@ export type RecoveryPreview = {
   nextEligibleAfter?: string;
 };
 
+export type PeerActivityItem = {
+  displayName: string; // "Rahul" — first name only (last initial stripped in UI)
+  action: string;
+  daysAgo: number;
+};
+
+export type PeerActivity = {
+  totalEmployees: number;
+  activeUsers: number;
+  percentageActive: number;
+  recentActivity: PeerActivityItem[];
+};
+
 export type AppState = {
   profile: EmployeeProfile;
   dashboard: EmployeeDashboard | null;
@@ -183,6 +196,7 @@ export type AppState = {
   requests: AdvanceRequest[];
   notifications: string[];
   rawNotifications: AppNotification[];
+  peerActivity: PeerActivity | null;
 };
 
 export type NavItem = {

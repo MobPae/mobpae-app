@@ -8,6 +8,7 @@ import type {
   EmployeeDashboard,
   KycDocument,
   KycDocumentType,
+  PeerActivity,
   RecoveryPreview,
   RequestStatus,
 } from "../types/app";
@@ -765,6 +766,7 @@ export const employeeApi = {
         notifications,
         membership,
         membershipConfig,
+        peerActivityResult,
       ] = await Promise.allSettled([
         request<
           | BackendKycDocument[]
@@ -815,6 +817,9 @@ export const employeeApi = {
           "/membership/config",
           { suppressSessionExpiry: true }
         ),
+        request<PeerActivity>("/employees/me/peer-activity", {
+          suppressSessionExpiry: true,
+        }),
       ]);
 
       const dashboardData = dashboard;
@@ -990,6 +995,10 @@ export const employeeApi = {
           isRead:    n.isRead   ?? false,
           type:      n.type     ?? null,
         })),
+        peerActivity:
+          peerActivityResult.status === "fulfilled"
+            ? (peerActivityResult.value as PeerActivity)
+            : null,
       };
     } catch (err) {
       // Re-throw so callers (useEmployeeApp) can surface the error to the user

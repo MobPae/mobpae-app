@@ -75,50 +75,49 @@ export function MembershipScreen({
         {showHeader && <SubPageHeader title="My Membership" onBack={() => onNavigate("profile")} />}
 
         <div className="screen-body mem-body">
-          {/* Active card */}
-          <div className="mem-active-card">
-            <div className="mem-active-top">
-              <div className="mem-active-icon"><Crown size={22} /></div>
+          {/* ── Dark hero membership card ── */}
+          <div className="mem-active-hero">
+            <div className="mem-active-hero-ink" />
+            {/* Top row: crown + plan name + active badge */}
+            <div className="mem-active-hero-top">
+              <div className="mem-active-hero-icon"><Crown size={20} /></div>
               <div>
-                <div className="mem-active-card-title">{planName || "MobPae Member"}</div>
-                <div className="mem-active-badge">Active membership</div>
+                <div className="mem-active-hero-title">{planName || "MobPae Member"}</div>
+                <div className="mem-active-hero-badge"><span />Active</div>
               </div>
             </div>
-            <div className="mem-active-details">
+            {/* Divider */}
+            <div className="mem-active-hero-line" />
+            {/* 3-cell stats strip */}
+            <div className="mem-active-hero-stats">
               <div>
-                <div className="mem-active-stat-label">Member Since</div>
-                <div className="mem-active-stat-val">{fmtDate(memberSince)}</div>
+                <span>Member since</span>
+                <strong>{fmtDate(memberSince)}</strong>
               </div>
               <div>
-                <div className="mem-active-stat-label">Valid Till</div>
-                <div className="mem-active-stat-val">{fmtDate(validTill)}</div>
+                <span>Valid till</span>
+                <strong>{fmtDate(validTill)}</strong>
               </div>
               <div>
-                <div className="mem-active-stat-label">Days Remaining</div>
-                <div className="mem-active-stat-val">{daysRemaining ?? "—"}</div>
-              </div>
-              <div>
-                <div className="mem-active-stat-label">Status</div>
-                <div className="mem-active-stat-val">Active</div>
+                <span>Days left</span>
+                <strong>{daysRemaining ?? "—"}</strong>
               </div>
             </div>
           </div>
 
-          {/* Benefits */}
+          {/* Benefits — compact chip grid */}
           <div className="mem-benefits-card">
             <div className="mem-benefits-title">Your benefits</div>
-            {visibleBenefits.map((b) => (
-              <div key={b} className="mem-benefit-item">
-                <div className="mem-benefit-icon"><Check size={16} /></div>
-                <div className="mem-benefit-body">
-                  <div className="mem-benefit-title">{b}</div>
+            <div className="mem-benefit-chips">
+              {BENEFITS.map((b) => (
+                <div key={b} className="mem-benefit-chip">
+                  <BadgeCheck size={13} color="#16A34A" />
+                  {b}
                 </div>
-                <BadgeCheck size={16} className="mem-benefit-check-right" color="#16A34A" />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          {/* Security */}
           <div className="mp-bottom-space" />
         </div>
       </div>

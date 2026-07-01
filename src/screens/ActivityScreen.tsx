@@ -221,6 +221,10 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
   const isMonthActive = monthFilter !== "All Dates";
   const isStatusActive = statusFilter !== "All Status";
 
+  const totalCredited = allEvents.filter(e => e.type === "disbursal").reduce((s, e) => s + e.amount, 0);
+  const totalRepaid = allEvents.filter(e => e.type === "repayment").reduce((s, e) => s + e.amount, 0);
+  const totalRequests = requests.length;
+
   return (
     <div className="hist-screen">
 
@@ -288,38 +292,37 @@ export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
           Array.from(grouped.entries()).map(([month, events]) => (
             <div key={month}>
               <div className="hist-month-label">{month}</div>
-              <div className="hist-tx-card">
-                {events.map((e, i) => (
-                  <div key={e.id} className={i > 0 ? "hist-tx-item-spaced" : undefined}>
-                    <div className="hist-tx-row">
-                      <TxIcon type={e.iconType} bg={e.iconBg} color={e.iconColor} done={e.done} />
-                      <div className="hist-tx-body">
-                        <div className="hist-tx-title">{e.title}</div>
-                        <div className="hist-tx-sub">{e.sub}</div>
-                        <div className="hist-tx-datetime">{e.datetime}</div>
+              {events.map((e, i) => (
+                <div key={e.id}>
+                  {i > 0 && <div className="hist-tx-divider" />}
+                  <div className="hist-tx-row">
+                    <TxIcon type={e.iconType} bg={e.iconBg} color={e.iconColor} done={e.done} />
+                    <div className="hist-tx-body">
+                      <div className="hist-tx-title">{e.title}</div>
+                      <div className="hist-tx-sub">{e.sub}</div>
+                      <div className="hist-tx-datetime">{e.datetime}</div>
+                    </div>
+                    <div className="hist-tx-right">
+                      <div className={`hist-tx-amount ${e.amountGreen ? "green" : e.amountRed ? "red" : ""}`}>
+                        {e.prefix}{formatMoney(e.amount)}
                       </div>
-                      <div className="hist-tx-right">
-                        <div className={`hist-tx-amount ${e.amountGreen ? "green" : e.amountRed ? "red" : ""}`}>
-                          {e.prefix}{formatMoney(e.amount)}
-                        </div>
-                        <span
-                          className={`hist-tx-status ${
-                            e.statusLabel === "Credited" || e.statusLabel === "Repaid"
-                              ? "chip-green"
-                              : e.statusLabel === "Pending" || e.statusLabel.toLowerCase().includes("scheduled")
-                              ? "chip-amber"
-                              : "chip-purple"
-                          }`}
-                          title={e.statusLabel}
-                          style={{ marginTop: 4 }}
-                        >
-                          {e.statusLabel}
-                        </span>
-                      </div>
+                      <span
+                        className={`hist-tx-status ${
+                          e.statusLabel === "Credited" || e.statusLabel === "Repaid"
+                            ? "chip-green"
+                            : e.statusLabel === "Pending" || e.statusLabel.toLowerCase().includes("scheduled")
+                            ? "chip-amber"
+                            : "chip-purple"
+                        }`}
+                        title={e.statusLabel}
+                        style={{ marginTop: 4 }}
+                      >
+                        {e.statusLabel}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           ))
         )}

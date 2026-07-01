@@ -2,7 +2,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
-  UserRoundPlus,
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { AdvanceRequest, AppState, View } from "../types/app";
@@ -55,6 +54,19 @@ function activeAdvance(requests: AdvanceRequest[]) {
   );
 }
 
+/* ── Avatar color palette — consistent per initial ─────────── */
+const AVATAR_COLORS = [
+  "#7B64FF", "#5B3CE3", "#A78BFA", "#6366F1",
+  "#8B5CF6", "#EC4899", "#14B8A6", "#F59E0B",
+];
+function avatarColor(name: string) {
+  const code = name.charCodeAt(0) || 65;
+  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
+function firstNameOnly(displayName: string) {
+  return displayName.split(" ")[0];
+}
+
 export function DashboardScreen({
   appState,
   notice,
@@ -85,18 +97,17 @@ export function DashboardScreen({
     : "—";
   const recent = latestRequest(requests);
 
+  const peer = appState.peerActivity;
+  const hasPeers = peer && peer.activeUsers > 0;
+
   return (
     <div className="home-screen-v2">
       {notice && <div className="home-notice-v2">{notice}</div>}
 
-      <section className="home-greeting-v2">
-        <h1>
-          {greeting()}, <em>{name}.</em>
-        </h1>
-      </section>
-
+      {/* ── Hero card — greeting folded in ── */}
       <section className="home-salary-v2">
         <div className="home-salary-ink-v2" />
+
         <div className="home-salary-top-v2">
           <div
             className="home-usage-ring-v2"
@@ -137,33 +148,28 @@ export function DashboardScreen({
         </div>
       </section>
 
+      {/* ── Repayment due card ── */}
       {repaymentDue > 0 && (
-        <section className="home-repayment-section-v2">
-          <div className="home-section-top-v2">
-            <span>Repayment</span>
-            <button type="button" onClick={() => onNavigate("repayments")}>
-              Schedule <ArrowRight size={16} />
-            </button>
+        <button
+          type="button"
+          className="home-repay-card-v2"
+          onClick={() => onNavigate("repayments")}
+        >
+          <div className="home-repay-card-left">
+            <div className="home-repay-card-label">Repayment Due</div>
+            <div className="home-repay-card-amount">{formatMoney(repaymentDue)}</div>
+            <div className="home-repay-card-date">Due on {repaymentDate}</div>
           </div>
-          <div className="home-repayment-v2">
-            <div className="home-repayment-amount-wrap-v2">
-              <span className="home-deduct-icon-v2">
-                <ArrowDown size={15} />
-              </span>
-              <div>
-                <span>Amount due</span>
-                <strong>{formatMoney(repaymentDue)}</strong>
-              </div>
-            </div>
-            <div>
-              <span>Due date</span>
-              <strong>{repaymentDate}</strong>
-            </div>
+          <div className="home-repay-card-right">
+            <span className="home-repay-card-icon"><ArrowDown size={16} /></span>
           </div>
-        </section>
+        </button>
       )}
 
-      <section className="home-activity-v2">
+      {/* ── Unified feed — Activity + Colleagues ── */}
+      <section className="home-feed-v2">
+
+        {/* Recent Activity */}
         <div className="home-section-top-v2">
           <span>Recent Activity</span>
           <button type="button" onClick={() => onNavigate("activity")}>
@@ -199,31 +205,55 @@ export function DashboardScreen({
             Your first advance activity will appear here.
           </div>
         )}
-      </section>
 
-      <section className="home-members-v2">
-        <div className="home-members-head-v2">
-          <div>
-            <span>Active Members</span>
-            <strong>128 colleagues are on board</strong>
+        {/* Divider between activity and colleagues */}
+        <div className="home-feed-divider-v2" />
+
+        {/* Colleagues — compact */}
+        {hasPeers ? (
+          <>
+            {/* Header: label + stacked avatars + count */}
+            <div className="home-peers-head-v2">
+              <span>Your Colleagues</span>
+              <div className="home-peers-right-v2">
+                <div className="home-peers-stack-v2">
+                  {peer!.recentActivity.slice(0, 3).map((item, i) => {
+                    const n = firstNameOnly(item.displayName);
+                    return (
+                      <div key={i} className="home-peer-avatar-sm-v2" style={{ background: avatarColor(n), marginLeft: i === 0 ? 0 : -8 }}>
+                        {n[0]?.toUpperCase() ?? "?"}
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className="home-peers-count-v2">
+                  {peer!.activeUsers} using MobPae
+                </span>
+              </div>
+            </div>
+            {/* Compact activity rows */}
+            {peer!.recentActivity.slice(0, 3).map((item, i) => {
+              const n = firstNameOnly(item.displayName);
+              const timeLabel = item.daysAgo === 0 ? "Today" : item.daysAgo === 1 ? "Yesterday" : `${item.daysAgo}d ago`;
+              return (
+                <div key={i} className="home-peer-row-v2">
+                  <div className="home-peer-avatar-v2" style={{ background: avatarColor(n) }}>
+                    {n[0]?.toUpperCase() ?? "?"}
+                  </div>
+                  <p className="home-peer-text-v2">
+                    <strong>{n}</strong> {item.action}
+                  </p>
+                  <span className="home-peer-time-v2">{timeLabel}</span>
+                </div>
+              );
+            })}
+          </>
+        ) : (
+          <div className="home-peers-empty-v2">
+            <span>🚀</span>
+            <p>Be the first from your company to use MobPae</p>
           </div>
-          <div className="home-member-stack-v2">
-            <span>AK</span>
-            <span>RP</span>
-            <span>SM</span>
-            <span>+124</span>
-          </div>
-        </div>
-        <div className="home-member-divider-v2" />
-        <div className="home-invite-v2">
-          <span className="home-invite-icon-v2">
-            <UserRoundPlus size={27} />
-          </span>
-          <strong>Refer a teammate, earn ₹500</strong>
-          <button type="button" onClick={() => onNavigate("help")}>
-            Invite
-          </button>
-        </div>
+        )}
       </section>
 
       <div className="mp-bottom-space" />

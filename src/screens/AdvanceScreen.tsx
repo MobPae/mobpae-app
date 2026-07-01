@@ -1,15 +1,12 @@
 import {
   ArrowRight,
   BadgeCheck,
-  Banknote,
   CalendarDays,
   CheckCircle,
   ChevronRight,
   Clock,
   CreditCard,
-  Gift,
   IndianRupee,
-  Info,
   RefreshCw,
   ShieldCheck,
   Wallet,
@@ -183,49 +180,43 @@ export function AdvanceScreen({
     return (
       <div className="adv-screen">
         <div className="screen-body adv-active-body">
-          <button
-            type="button"
-            className="adv-active-card"
-            onClick={() => onNavigate?.("repayments")}
-          >
-            <div className="adv-active-main">
-              <div className="adv-active-icon">
-                <CreditCard size={20} />
-              </div>
-              <div className="adv-active-info">
-                <strong>
-                  {advanceHeadline} {formatBackendMoney(principal)}
-                </strong>
-                <small className="adv-active-subline">
-                  {statusLabel} - {scheduleDate}
-                </small>
-              </div>
-              <ChevronRight size={22} />
-            </div>
 
-            <div className="adv-active-stats">
-              <div>
-                <span>Request date</span>
+          {/* ── Inline advance overview (no card) ── */}
+          <div className="adv-inline-hero">
+            <div className="adv-inline-top">
+              <div className="adv-inline-eyebrow">{advanceHeadline}</div>
+              <span className={isPaid ? "chip chip-green" : "chip chip-amber"}>{statusLabel}</span>
+            </div>
+            <div className="adv-inline-amount">{formatBackendMoney(principal)}</div>
+            <button
+              type="button"
+              className="adv-inline-link"
+              onClick={() => onNavigate?.("repayments")}
+            >
+              View repayment schedule <ChevronRight size={13} />
+            </button>
+            <div className="adv-inline-divider" />
+            <div className="adv-inline-stats">
+              <div className="adv-inline-stat">
+                <span>Requested</span>
                 <strong>{formatReadableDate(currentRequest.requestDate)}</strong>
               </div>
-              <div>
+              <div className="adv-inline-stat">
                 <span>Due by</span>
-                <strong>{formatReadableDate(currentRequest.recoveryDate)}</strong>
+                <strong>{scheduleDate}</strong>
               </div>
-              <div>
+              <div className="adv-inline-stat">
                 <span>Total payable</span>
-                <strong className="purple">
-                  {formatBackendMoney(totalRepayment)}
-                </strong>
+                <strong className="amber">{formatBackendMoney(totalRepayment)}</strong>
               </div>
             </div>
-          </button>
+          </div>
 
+          {/* ── Breakdown ── */}
           <div className="adv-calc-head">
             <h2>How we calculate</h2>
             <span>{rateLabel}</span>
           </div>
-
           <div className="adv-calc-list">
             <div className="adv-calc-row">
               <span className="adv-calc-icon">1</span>
@@ -239,11 +230,7 @@ export function AdvanceScreen({
               <span className="adv-calc-icon adv-calc-icon--warm">+</span>
               <div>
                 <strong>Interest</strong>
-                <small>
-                  {formatBackendMoney(principal)} ×{" "}
-                  {interestRate ? `${interestRate}% p.a.` : "rate"} ×{" "}
-                  {interestDays || "—"} days
-                </small>
+                <small>{formatBackendMoney(principal)} × {interestRate ? `${interestRate}% p.a.` : "rate"} × {interestDays || "—"} days</small>
               </div>
               <b className="orange">{formatBackendMoney(interest)}</b>
             </div>
@@ -255,19 +242,6 @@ export function AdvanceScreen({
               </div>
               <b>{formatBackendMoney(totalRepayment)}</b>
             </div>
-          </div>
-
-          <div className="adv-refer-card">
-            <div className="adv-refer-icon">🎁</div>
-            <div className="adv-refer-body">
-              <div className="adv-refer-title">Refer &amp; Earn Rewards</div>
-              <div className="adv-refer-sub">
-                Earn rewards on every successful referral.
-              </div>
-            </div>
-            <button type="button" className="adv-refer-btn">
-              Refer <ArrowRight size={16} />
-            </button>
           </div>
         </div>
       </div>
@@ -337,21 +311,6 @@ export function AdvanceScreen({
   if (step === "success") {
     return (
       <div className="adv-success-screen">
-        <div className="adv-success-topbar">
-          <div className="adv-success-topbar-left">
-            <img
-              src="/logo-icon.svg"
-              alt="MobPae"
-              width="22"
-              height="14"
-              style={{ objectFit: "contain" }}
-            />
-            MobPae
-          </div>
-          <div className="adv-success-topbar-right">
-            <ShieldCheck size={14} /> Secured
-          </div>
-        </div>
         <div className="adv-success-body">
           <div className="adv-success-check">
             <CheckCircle size={40} />
@@ -449,22 +408,10 @@ export function AdvanceScreen({
     const canConfirm = agree1 && agree2 && !submitting;
     return (
       <div className="adv-review-screen">
-        <div className="mp-topbar">
-          <button
-            type="button"
-            className="mp-topbar-back"
-            onClick={() => setStep("calculator")}
-          >
-            ← Back
+        <div className="adv-review-body">
+          <button type="button" className="adv-review-back" onClick={() => setStep("calculator")}>
+            ← Back to calculator
           </button>
-          <div className="mp-topbar-logo">
-            <span className="mp-topbar-logo-text" style={{ fontSize: 15 }}>
-              Review Request
-            </span>
-          </div>
-          <div style={{ width: 60 }} />
-        </div>
-        <div className="screen-body adv-review-body">
           <div className="adv-summary-card">
             <div className="adv-summary-hdr">
               <div className="adv-summary-icon">

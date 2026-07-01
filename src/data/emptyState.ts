@@ -36,6 +36,7 @@ export const emptyState: AppState = {
   requests: [],
   notifications: [],
   rawNotifications: [],
+  peerActivity: null,
 };
 
 export const emptyBankAccount: BankAccount = {

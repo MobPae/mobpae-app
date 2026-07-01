@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   Banknote,
   ChevronRight,
   CreditCard,
@@ -47,44 +46,34 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
 
       <div className="screen-body" style={{ padding: "12px 0" }}>
 
-        {/* Contact card */}
-        <div className="help-contact-card">
-          <div className="help-contact-icon">
-            <MessageCircle size={36} color="#5B3CE3" />
-          </div>
-          <div className="help-contact-body">
-            <div className="help-contact-title">Talk to Support</div>
-            <div className="help-contact-sub">
-              Our team is available Mon–Sat, 9am–6pm IST to help with any questions.
+        {/* ── Contact strip ── */}
+        <div className="help-contact-strip">
+          <div className="help-contact-strip-left">
+            <div className="help-contact-strip-icon"><MessageCircle size={18} color="#5B3CE3" /></div>
+            <div>
+              <div className="help-contact-strip-title">Support</div>
+              <div className="help-contact-strip-sub">Mon–Sat · 9am–6pm IST</div>
             </div>
-            <a
-              href={`mailto:${SUPPORT_EMAIL}`}
-              className="help-contact-btn"
-            >
-              <Mail size={14} /> {SUPPORT_EMAIL}
-            </a>
           </div>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="help-contact-strip-btn">
+            <Mail size={13} /> Email us
+          </a>
         </div>
 
-        {/* Browse Topics */}
-        <div style={{ padding: "4px 16px 8px", fontSize: 12, fontWeight: 800, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".06em" }}>
-          Browse Topics
-        </div>
+        {/* ── Topics ── */}
+        <div className="help-section-label">Browse Topics</div>
         <div className="help-topic-grid">
           {TOPICS.map((t) => (
             <div key={t.title} className="help-topic-card">
               <div className="help-topic-icon">{t.icon}</div>
               <div className="help-topic-title">{t.title}</div>
               <div className="help-topic-desc">{t.desc}</div>
-              <div className="help-topic-arrow"><ChevronRight size={12} /></div>
             </div>
           ))}
         </div>
 
-        {/* FAQ */}
-        <div style={{ padding: "0", fontSize: 12, fontWeight: 800, color: "#6B7280", textTransform: "uppercase", letterSpacing: ".06em", margin: "4px 16px 8px" }}>
-          Frequently Asked Questions
-        </div>
+        {/* ── FAQ ── */}
+        <div className="help-section-label">Common Questions</div>
         <div className="help-faq-card">
           {FAQS.map((faq, i) => (
             <div key={i} style={{ borderBottom: i < FAQS.length - 1 ? "1px solid #F3F1FF" : "none" }}>
@@ -94,7 +83,7 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 style={{ width: "100%", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}
               >
-                <HelpCircle size={16} className="help-faq-q-icon" />
+                <HelpCircle size={15} className="help-faq-q-icon" />
                 <span className="help-faq-q-text">{faq.q}</span>
                 <ChevronRight
                   size={14}
@@ -103,33 +92,19 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
                 />
               </button>
               {openFaq === i && (
-                <div style={{ padding: "0 16px 12px 44px", fontSize: 13, color: "#6B7280", lineHeight: 1.6 }}>
-                  {faq.a}
-                </div>
+                <div className="help-faq-answer">{faq.a}</div>
               )}
             </div>
           ))}
         </div>
 
-        {/* Security note */}
+        {/* ── Security note ── */}
         <div className="help-security-card">
-          <ShieldCheck size={20} className="help-security-icon" />
+          <ShieldCheck size={16} className="help-security-icon" />
           <div className="help-security-body">
             <div className="help-security-title">Your data is protected</div>
             <div className="help-security-sub">256-bit SSL · RBI compliant · Never share OTPs</div>
           </div>
-        </div>
-
-        {/* Email contact row */}
-        <div style={{ margin: "0 16px 16px", background: "white", borderRadius: 16, border: "1px solid #F0EEFF", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-          <Mail size={20} color="#5B3CE3" />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#0F0A3C" }}>Email Us</div>
-            <div style={{ fontSize: 12, color: "#6B7280" }}>Mon–Sat · 9am–6pm IST</div>
-          </div>
-          <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: "#5B3CE3", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-            Email <ArrowRight size={14} />
-          </a>
         </div>
 
         <div className="mp-bottom-space" />

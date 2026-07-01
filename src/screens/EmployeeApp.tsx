@@ -16,7 +16,6 @@ import { ForgotPasswordScreen } from "./ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./ResetPasswordScreen";
 import { NotificationsScreen } from "./NotificationsScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
-import { AppToast } from "../components/ui/AppToast";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
@@ -126,7 +125,6 @@ export function EmployeeApp() {
   };
 
   return (
-    <>
     <AppShell
       activeView={app.activeView}
       profile={app.appState.profile}
@@ -135,7 +133,9 @@ export function EmployeeApp() {
       onRefresh={app.refresh}
       onNavigate={navigate}
       onBack={handleShellBack}
+      uploadProfilePhoto={app.uploadProfilePhoto}
     >
+
       {/* ── Onboarding flow ─────────────────────────────────── */}
       {app.activeView === "onboarding-kyc" && (
         <OnboardingKycScreen
@@ -295,7 +295,5 @@ export function EmployeeApp() {
         />
       )}
     </AppShell>
-    <AppToast message={app.notice} onDismiss={app.clearNotice} />
-    </>
   );
 }

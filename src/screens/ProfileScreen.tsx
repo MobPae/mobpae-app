@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   BookOpen,
-  Building2,
-  Camera,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -14,15 +12,12 @@ import {
   Info,
   KeyRound,
   LogOut,
-  Mail,
   MessageSquare,
-  Phone,
   ScrollText,
   ShieldCheck,
   Sparkles,
-  Wallet,
 } from "lucide-react";
-import { getFileUrl, employeeApi, type AppInfoItem } from "../services/api";
+import { employeeApi, type AppInfoItem } from "../services/api";
 import type { AppState, BankAccount, KycDocumentType, View } from "../types/app";
 import { maskAccountNumber } from "../utils/format";
 import { SubPageHeader } from "../components/layout/SubPageHeader";
@@ -165,7 +160,7 @@ export function ProfileScreen({
   initialSection,
 }: ProfileScreenProps) {
   const { profile, membershipActive, membershipConfig } = appState;
-  const photoRef = useRef<HTMLInputElement>(null);
+  const _photoRef = useRef<HTMLInputElement>(null); // photo upload moved to AppShell header avatar
   const [appInfo, setAppInfo] = useState<AppInfoItem[]>([]);
 
   useEffect(() => {
@@ -295,90 +290,47 @@ export function ProfileScreen({
     <div className="prof-screen">
       <div className="screen-body" style={{ background: "var(--bg)" }}>
 
-        {/* ── Profile hero card ── */}
-        <section className="prof-hero-v2">
-          <div className="prof-hero-ink-v2" />
-          <div className="prof-hero-main-v2">
-            <div className="prof-avatar-wrap-v2">
-              <div className="prof-avatar-v2">
-                {profile.profilePhotoUrl ? (
-                  <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} />
-                ) : getInitials(profile.name || "M")}
-              </div>
-              <button
-                type="button"
-                className="prof-avatar-camera-v2"
-                onClick={() => photoRef.current?.click()}
-                aria-label="Update profile photo"
-              >
-                <Camera size={13} />
-              </button>
-              <input
-                ref={photoRef}
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  if (e.target.files?.[0]) uploadProfilePhoto(e.target.files[0]);
-                }}
-              />
+        {/* ── Profile hero — ID-card layout ── */}
+        <section className="prof-hero-v4">
+          <div className="prof-hero-v4-ink" />
+
+          {/* Identity row: monogram + name/ID/email */}
+          <div className="prof-hero-v4-identity">
+            <div className="prof-hero-v4-mono">
+              {getInitials(profile.name || "M")}
             </div>
-            <div className="prof-hero-copy-v2">
-              <h2>{profile.name || "Employee"}</h2>
-              <p>{profile.employer || "MobPae"}</p>
+            <div className="prof-hero-v4-texts">
+              <div className="prof-hero-v4-name">{profile.name || "Employee"}</div>
+              {(profile.employeeCode || profile.employer) && (
+                <div className="prof-hero-v4-meta">
+                  {[profile.employeeCode, profile.employer].filter(Boolean).join(" · ")}
+                </div>
+              )}
+              {profile.email && (
+                <div className="prof-hero-v4-email">{profile.email}</div>
+              )}
             </div>
           </div>
-          <div className="prof-hero-stats-v2">
-            <div>
-              <span>Employee ID</span>
-              <strong>{profile.employeeCode || "—"}</strong>
+
+          {/* Status grid — 3 cells */}
+          <div className="prof-status-grid">
+            <div className={`prof-status-cell${membershipActive ? " prof-status-cell--green" : ""}`}>
+              <Crown size={15} />
+              <div className="prof-status-cell-label">Plan</div>
+              <div className="prof-status-cell-val">{membershipActive ? "Active" : "Free"}</div>
             </div>
-            <div>
-              <span>Plan</span>
-              <strong className={membershipActive ? "green" : ""}>
-                <Crown size={16} /> {membershipActive ? "Member" : "Inactive"}
-              </strong>
+            <div className={`prof-status-cell${kycVerified ? " prof-status-cell--green" : " prof-status-cell--amber"}`}>
+              <ShieldCheck size={15} />
+              <div className="prof-status-cell-label">KYC</div>
+              <div className="prof-status-cell-val">{kycVerified ? "Done" : "Pending"}</div>
+            </div>
+            <div className={`prof-status-cell${bankLinked ? " prof-status-cell--blue" : ""}`}>
+              <CreditCard size={15} />
+              <div className="prof-status-cell-label">Bank</div>
+              <div className="prof-status-cell-val">{bankLinked ? "Linked" : "None"}</div>
             </div>
           </div>
         </section>
-
-        {/* ── Your Details (normal card, below hero) ── */}
-        <SectionLabel>Your Details</SectionLabel>
-        <div className="prof-list">
-          {profile.employer && (
-            <div className="prof-detail-row">
-              <div className="prof-row-icon prof-row-icon--purple">
-                <Building2 size={16} color="#5B3CE3" />
-              </div>
-              <div className="prof-row-main">
-                <div className="prof-row-sub">Employer</div>
-                <div className="prof-row-title">{profile.employer}</div>
-              </div>
-            </div>
-          )}
-          {profile.email && (
-            <div className="prof-detail-row">
-              <div className="prof-row-icon prof-row-icon--green">
-                <Mail size={16} color="#16A34A" />
-              </div>
-              <div className="prof-row-main">
-                <div className="prof-row-sub">Email</div>
-                <div className="prof-row-title">{profile.email}</div>
-              </div>
-            </div>
-          )}
-          {(profile as unknown as Record<string, string>).phone && (
-            <div className="prof-detail-row">
-              <div className="prof-row-icon prof-row-icon--warm">
-                <Phone size={16} color="#D97706" />
-              </div>
-              <div className="prof-row-main">
-                <div className="prof-row-sub">Phone</div>
-                <div className="prof-row-title">{(profile as unknown as Record<string, string>).phone}</div>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* ── Account ── */}
         <SectionLabel>Account</SectionLabel>
@@ -427,7 +379,7 @@ export function ProfileScreen({
         )}
 
         {/* ── Sign Out ── */}
-        <SectionLabel>Account</SectionLabel>
+        <SectionLabel>Session</SectionLabel>
         <ProfileCard>
           <SettingsRow icon={<LogOut size={16} />} label="Sign Out" sub="Log out of MobPae"
             danger onClick={onLogout} />
