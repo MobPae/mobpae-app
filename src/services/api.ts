@@ -5,6 +5,7 @@ import type {
   BankAccount,
   CouponValidation,
   DocumentStatus,
+  EligibilityResult,
   EmployeeDashboard,
   KycDocument,
   KycDocumentType,
@@ -51,6 +52,7 @@ type BackendSalaryRequest = {
   id: string;
   amount?: number | string;
   approvedAmount?: number | string | null;
+  // flat fields (old schema, still supported for compat)
   principalAmount?: number | string;
   interestAmount?: number | string;
   totalAmount?: number | string;
@@ -58,16 +60,33 @@ type BackendSalaryRequest = {
   interestDays?: number | string;
   interestRate?: number | string;
   requestedAt?: string;
+  approvedAt?: string | null;
   createdAt?: string;
   repaymentDate?: string | null;
   dueDate?: string | null;
   recoveryDate?: string | null;
-  disbursedAt?: string | null;  // when admin actually disbursed the advance
+  disbursedAt?: string | null;
   status?: string;
-  statusLabel?: string;   // human-readable label from backend
-  statusColor?: string;   // hex or CSS color from backend
+  statusLabel?: string;
+  statusColor?: string;
   remarks?: string | null;
-  repayment?: BackendRepayment | null;
+  // nested objects from presentSalaryRequest (new schema)
+  repayment?: (BackendRepayment & {
+    principalAmount?: number | string;
+    interestAmount?: number | string;
+    totalAmount?: number | string;
+    interestRate?: number | string;
+    interestDays?: number | string;
+    dueDate?: string;
+    status?: string;
+  }) | null;
+  disbursal?: { id?: string | null; status?: string | null; disbursedAt?: string | null } | null;
+  // lifecycle fields from presentSalaryRequest
+  progress?: number;
+  nextAction?: string;
+  nextActionLabel?: string;
+  allowedActions?: { cancel: boolean };
+  timeline?: Array<{ status: string; label: string; completed: boolean; completedAt: string | null }>;
 };
 
 type BackendRecoveryPreview = {
@@ -137,6 +156,7 @@ export type AppNotification = {
 
 type BackendMembershipNested = {
   id?: string;
+  planType?: string;
   planName?: string;
   amount?: string | number;
   startDate?: string;
@@ -146,12 +166,14 @@ type BackendMembershipNested = {
   discountAmount?: string | number;
   paymentReference?: string | null;
   paymentScreenshot?: string | null;
+  submittedAt?: string | null;
   remarks?: string | null;
 };
 
 type BackendMembership = {
   active?: boolean;
   status?: string;
+  planType?: string;
   planName?: string;
   amountPaid?: number;
   membershipFee?: number;
@@ -175,7 +197,20 @@ type BackendMembershipRequestResult = {
   membership?: BackendMembershipNested;
 };
 
+type BackendMembershipPlan = {
+  planType: string;
+  planName: string;
+  amount: number;
+  validityDays: number;
+  billingLabel: string;
+  perMonthLabel?: string | null;
+  preferred?: boolean;
+  savingsVsMonthly?: number | null;
+  savingsPercent?: number | null;
+};
+
 type BackendMembershipConfig = {
+  plans?: BackendMembershipPlan[];
   membershipFee?: number;
   membershipValidityDays?: number;
   freePlanTitle?: string;
@@ -377,24 +412,17 @@ const normalizeKycDocuments = (
 
 const normalizeRequestStatus = (status?: string): RequestStatus => {
   switch (status) {
-    case "SUBMITTED":
-      return "Submitted";
-    case "EMPLOYER_APPROVED":
-      return "Employer Approved";
-    case "AWAITING_MEMBERSHIP_PAYMENT":
-      return "Awaiting Membership";
-    case "READY_FOR_DISBURSAL":
-      return "Admin Approved";
-    case "DISBURSED":
-      return "Disbursed";
-    case "REPAYMENT_SCHEDULED":
-      return "Payment Scheduled";
-    case "REPAID":
-      return "Paid";
-    case "EMPLOYER_REJECTED":
-      return "Rejected";
-    default:
-      return "Submitted";
+    case "SUBMITTED":       return "Submitted";
+    case "EMPLOYER_APPROVED": return "Employer Approved";
+    case "AWAITING_MEMBERSHIP_PAYMENT": return "Awaiting Membership";
+    case "READY_FOR_DISBURSAL": return "Admin Approved";
+    case "DISBURSED":       return "Disbursed";
+    case "REPAYMENT_SCHEDULED": return "Payment Scheduled";
+    case "REPAID":          return "Paid";
+    case "EMPLOYER_REJECTED": return "Rejected";
+    case "CANCELLED":       return "Cancelled";
+    case "EXPIRED":         return "Expired";
+    default:                return "Submitted";
   }
 };
 
@@ -418,31 +446,106 @@ const normalizeRequests = (
   repayments: BackendRepayment[]
 ): AdvanceRequest[] =>
   requests.map((request) => {
-    const repayment = getRequestRepayment(request, repayments, requests.length);
+    // New backend returns nested repayment/disbursal objects; old backend used flat fields.
+    const nestedRepayment = request.repayment ?? null;
+    const legacyRepayment = getRequestRepayment(request, repayments, requests.length);
+    const repayment = nestedRepayment ?? legacyRepayment;
+
     const requestedAmount = toAmount(request.amount);
     const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
     const requestDate = request.requestedAt ?? request.createdAt ?? todayIso();
-    const disbursedAt = request.disbursedAt ?? null;
+
+    // disbursedAt: prefer disbursal object, then flat field
+    const disbursedAt = request.disbursal?.disbursedAt ?? request.disbursedAt ?? null;
+
+    // Recovery date: nested repayment.dueDate > repaymentDate > dueDate
     const recoveryDate =
+      nestedRepayment?.dueDate ??
       repayment?.dueDate ??
       request.repaymentDate ??
       request.dueDate ??
       request.recoveryDate ??
       "";
+
     const status = normalizeRequestStatus(request.status);
+
+    // Principal/interest/total: prefer nested repayment, then flat fields
     const principalAmount = toAmount(
-      repayment?.principalAmount ?? request.principalAmount ?? approvedAmount
+      nestedRepayment?.principalAmount ?? repayment?.principalAmount ?? request.principalAmount ?? approvedAmount
     );
     const interestAmount = toAmount(
-      repayment?.interestAmount ?? request.interestAmount
+      nestedRepayment?.interestAmount ?? repayment?.interestAmount ?? request.interestAmount
     );
     const totalRecoveryAmount = toAmount(
-      repayment?.totalAmount ??
-        request.totalAmount ??
-        request.totalRecoveryAmount
+      nestedRepayment?.totalAmount ?? repayment?.totalAmount ?? request.totalAmount ?? request.totalRecoveryAmount
     );
-    const interestDays = repayment?.interestDays ?? request.interestDays;
-    const interestRate = repayment?.interestRate ?? request.interestRate;
+    const rawInterestDays = nestedRepayment?.interestDays ?? repayment?.interestDays ?? request.interestDays;
+    const rawInterestRate = nestedRepayment?.interestRate ?? repayment?.interestRate ?? request.interestRate;
+    const repaymentStatus = nestedRepayment?.status ?? repayment?.status;
+
+    const isDisbursed = ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "");
+
+    // Prefer backend-provided timeline (from history) if available
+    const backendTimeline = request.timeline;
+    const builtTimeline: AdvanceRequest["timeline"] = backendTimeline
+      ? backendTimeline.map((step) => ({
+          status: normalizeRequestStatus(step.status),
+          timestamp: step.completedAt ?? "",
+          description: step.label,
+          done: step.completed,
+        }))
+      : [
+          {
+            status: "Submitted" as RequestStatus,
+            timestamp: requestDate,
+            description: "Advance request submitted successfully.",
+            done: true,
+          },
+          {
+            status: "Employer Approved" as RequestStatus,
+            timestamp: request.approvedAt ?? "",
+            description: "Approved by your employer.",
+            done: ["EMPLOYER_APPROVED","AWAITING_MEMBERSHIP_PAYMENT","READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+          },
+          {
+            status: "Admin Approved" as RequestStatus,
+            timestamp: "",
+            description: request.status === "AWAITING_MEMBERSHIP_PAYMENT"
+              ? "Activate membership to unlock disbursal."
+              : "Reviewed and approved by MobPae admin.",
+            done: ["READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+          },
+          {
+            status: "Disbursed" as RequestStatus,
+            timestamp: disbursedAt ?? "",
+            description: "Funds disbursed to your bank account.",
+            done: isDisbursed,
+          },
+          {
+            status: "Payment Scheduled" as RequestStatus,
+            timestamp: recoveryDate,
+            description: "Repayment scheduled from your salary.",
+            done: ["REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+          },
+          {
+            status: (request.status === "EMPLOYER_REJECTED" || request.status === "CANCELLED" || request.status === "EXPIRED"
+              ? "Rejected" : "Paid") as RequestStatus,
+            timestamp: recoveryDate,
+            description: request.status === "EMPLOYER_REJECTED"
+              ? "Request rejected by employer."
+              : request.status === "CANCELLED"
+                ? "Request cancelled."
+                : request.status === "EXPIRED"
+                  ? "Request expired after 3 days."
+                  : "Salary deduction completed.",
+            done:
+              repaymentStatus === "PAID" ||
+              request.status === "REPAID" ||
+              request.status === "EMPLOYER_REJECTED" ||
+              request.status === "CANCELLED" ||
+              request.status === "EXPIRED",
+          },
+        ];
 
     return {
       id: request.id,
@@ -450,90 +553,24 @@ const normalizeRequests = (
       approvedAmount,
       requestDate,
       status,
+      rawStatus: request.status,
       statusLabel: request.statusLabel,
       statusColor: request.statusColor,
       remarks: request.remarks ?? "",
       principalAmount,
       interestAmount,
       totalRecoveryAmount,
-      interestDays:
-        interestDays === undefined ? undefined : Number(interestDays),
-      interestRate:
-        interestRate === undefined ? undefined : Number(interestRate),
+      interestDays: rawInterestDays === undefined ? undefined : Number(rawInterestDays),
+      interestRate: rawInterestRate === undefined ? undefined : Number(rawInterestRate),
       recoveryDate,
-      recoveryStatus: repayment?.status === "PAID" ? "Completed" : "Scheduled",
-      disbursalStatus:
-        request.status === "DISBURSED" ||
-        request.status === "REPAYMENT_SCHEDULED" ||
-        request.status === "REPAID"
-          ? "Disbursed"
-          : "Pending",
-      timeline: [
-        {
-          status: "Submitted" as RequestStatus,
-          // requestedAt is always present — this is the most accurate timestamp
-          timestamp: requestDate,
-          description: "Advance request submitted successfully.",
-          done: true,
-        },
-        {
-          status: "Employer Approved" as RequestStatus,
-          // No separate approvedAt on the salary request — leave blank until backend adds it
-          timestamp: "",
-          description: "Approved by your employer.",
-          done: [
-            "EMPLOYER_APPROVED",
-            "AWAITING_MEMBERSHIP_PAYMENT",
-            "READY_FOR_DISBURSAL",
-            "DISBURSED",
-            "REPAYMENT_SCHEDULED",
-            "REPAID",
-          ].includes(request.status ?? ""),
-        },
-        {
-          status: "Admin Approved" as RequestStatus,
-          timestamp: "",
-          description:
-            request.status === "AWAITING_MEMBERSHIP_PAYMENT"
-              ? "Complete membership payment to proceed with disbursal."
-              : "Reviewed and approved by MobPae admin.",
-          done: [
-            "READY_FOR_DISBURSAL",
-            "DISBURSED",
-            "REPAYMENT_SCHEDULED",
-            "REPAID",
-          ].includes(request.status ?? ""),
-        },
-        {
-          status: "Disbursed" as RequestStatus,
-          // disbursedAt comes from the Disbursal record — real timestamp
-          timestamp: disbursedAt ?? "",
-          description: "Funds disbursed to your bank account.",
-          done: ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(
-            request.status ?? ""
-          ),
-        },
-        {
-          status: "Payment Scheduled" as RequestStatus,
-          // recoveryDate is the repayment dueDate — real date
-          timestamp: recoveryDate,
-          description: "Payment scheduled on salary date.",
-          done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(
-            request.status ?? ""
-          ),
-        },
-        {
-          status: (request.status === "EMPLOYER_REJECTED" ? "Rejected" : "Paid") as RequestStatus,
-          timestamp: recoveryDate,
-          description: request.status === "EMPLOYER_REJECTED"
-            ? "Request rejected by employer."
-            : "Salary deduction completed.",
-          done:
-            repayment?.status === "PAID" ||
-            request.status === "REPAID" ||
-            request.status === "EMPLOYER_REJECTED",
-        },
-      ],
+      recoveryStatus: repaymentStatus === "PAID" ? "Completed" : "Scheduled",
+      disbursalStatus: isDisbursed ? "Disbursed" : "Pending",
+      disbursalDate: disbursedAt ?? undefined,
+      progress: request.progress,
+      nextAction: request.nextAction,
+      nextActionLabel: request.nextActionLabel,
+      allowedActions: request.allowedActions,
+      timeline: builtTimeline,
     };
   });
 
@@ -869,7 +906,7 @@ export const employeeApi = {
           ? (() => {
               const v = membershipConfig.value;
               // Could be the object directly or wrapped in { data: ... }
-              if (v && typeof v === "object" && "membershipFee" in v) return v as BackendMembershipConfig;
+              if (v && typeof v === "object" && ("membershipFee" in v || "plans" in v || "membershipBenefits" in v)) return v as BackendMembershipConfig;
               const wrapped = v as { data?: BackendMembershipConfig };
               return wrapped?.data ?? (v as BackendMembershipConfig);
             })()
@@ -907,6 +944,19 @@ export const employeeApi = {
         membershipActive: membershipActiveFromEmployee ?? membershipData?.active ?? false,
         membershipConfig: (() => {
           const nested = membershipData?.membership;
+
+          // Plans from config (new multi-plan shape)
+          const plans = (membershipConfigData?.plans ?? []).map((p) => ({
+            planType: p.planType as 'MONTHLY' | 'BIANNUAL',
+            planName: p.planName,
+            amount: Number(p.amount),
+            validityDays: Number(p.validityDays),
+            billingLabel: p.billingLabel,
+            perMonthLabel: p.perMonthLabel ?? null,
+            preferred: p.preferred ?? false,
+            savingsVsMonthly: p.savingsVsMonthly ?? null,
+            savingsPercent: p.savingsPercent ?? null,
+          }));
 
           // Plan fee (list price) — from /membership/config, then /membership/me top-level
           const planFee = Number(
@@ -954,6 +1004,9 @@ export const employeeApi = {
                   ? `Valid till ${new Date(validTill).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
                   : "—");
           return {
+            plans,
+            membershipId: nested?.id ?? undefined,
+            planType: (nested?.planType ?? membershipData?.planType) as 'MONTHLY' | 'BIANNUAL' | undefined,
             planName: membershipData?.planName ?? nested?.planName ?? membershipConfigData?.membershipTitle ?? "",
             status: nested?.status ?? membershipData?.status,
             fee: planFee,
@@ -980,6 +1033,7 @@ export const employeeApi = {
             },
             paymentReference: nested?.paymentReference ?? undefined,
             paymentScreenshot: nested?.paymentScreenshot ?? undefined,
+            submittedAt: nested?.submittedAt ?? undefined,
             remarks: nested?.remarks ?? undefined,
           };
         })(),
@@ -1131,14 +1185,15 @@ export const employeeApi = {
     return filePath;
   },
 
-  async activateMembership(payload?: {
+  async activateMembership(payload: {
+    planType: 'MONTHLY' | 'BIANNUAL';
     couponCode?: string;
     paymentReference?: string;
     paymentScreenshot?: string;
   }) {
     return request<BackendMembershipRequestResult>("/membership/request", {
       method: "POST",
-      body: JSON.stringify(payload ?? {}),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -1283,5 +1338,36 @@ export const employeeApi = {
       cycleMessage: preview.cycleMessage,
       nextEligibleAfter: preview.nextEligibleAfter,
     };
+  },
+
+  async getEligibility(): Promise<EligibilityResult> {
+    const raw = await request<{
+      eligible?: boolean;
+      reasons?: Array<{ code: string; message: string }>;
+      nextAction?: string;
+      nextActionLabel?: string;
+      setup?: Array<{ key: string; label: string; status: string; completed: boolean }>;
+      limits?: { salaryInHand: number; approvedLimit: number; usedLimit: number; availableAdvance: number };
+      payroll?: { payrollDate: number | null; payrollCutoffDate: number | null };
+      membershipRequiredAfterEmployerApproval?: boolean;
+      outstandingRepayment?: { id: string; status: string; dueDate: string; totalAmount: number } | null;
+      activeRequest?: BackendSalaryRequest | null;
+    }>("/salary-requests/eligibility");
+    return {
+      eligible: raw.eligible ?? false,
+      reasons: raw.reasons ?? [],
+      nextAction: raw.nextAction ?? "REQUEST_ADVANCE",
+      nextActionLabel: raw.nextActionLabel ?? "",
+      setup: (raw.setup ?? []) as EligibilityResult["setup"],
+      limits: raw.limits ?? { salaryInHand: 0, approvedLimit: 0, usedLimit: 0, availableAdvance: 0 },
+      payroll: raw.payroll ?? { payrollDate: null, payrollCutoffDate: null },
+      membershipRequiredAfterEmployerApproval: raw.membershipRequiredAfterEmployerApproval ?? false,
+      outstandingRepayment: raw.outstandingRepayment ?? null,
+      activeRequest: raw.activeRequest ? normalizeRequests([raw.activeRequest], [])[0] : null,
+    };
+  },
+
+  async cancelSalaryRequest(id: string): Promise<void> {
+    await request(`/salary-requests/${id}/cancel`, { method: "POST", body: JSON.stringify({}) });
   },
 };

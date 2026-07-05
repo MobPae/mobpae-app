@@ -1,40 +1,30 @@
 import {
-  ArrowDown,
+  Archive,
+  ArrowDownToLine,
   ArrowRight,
-  ArrowUp,
+  CalendarDays,
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { AdvanceRequest, AppState, View } from "../types/app";
-import {
-  formatMoney,
-  formatReadableDate,
-  formatRequestStatus,
-  formatShortDate,
-} from "../utils/format";
+import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
+import type { Theme } from "../hooks/useTheme";
 
 type DashboardScreenProps = {
   appState: AppState;
   notice: string;
   onNavigate: (view: View) => void;
+  theme?: Theme;
 };
 
-function firstName(name?: string) {
-  return (name || "there").trim().split(/\s+/)[0] || "there";
-}
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function nextPaydayDate(payrollDay?: number | null) {
-  if (!payrollDay) return null;
-  const today = new Date();
-  const offset = today.getDate() > payrollDay ? 1 : 0;
-  return new Date(today.getFullYear(), today.getMonth() + offset, payrollDay);
-}
+const DARK = "#0C0C0E";
+const PANEL = "#17171B";
+const PANEL_2 = "#141418";
+const BORDER = "#29292F";
+const TEXT = "#F2F0EA";
+const MUTED = "#8A8892";
+const DIM = "#5C5C64";
+const WARM = "#B4591F";
+const GREEN = "#20A46A";
 
 function latestRequest(requests: AdvanceRequest[]) {
   return [...requests].sort(
@@ -54,26 +44,150 @@ function activeAdvance(requests: AdvanceRequest[]) {
   );
 }
 
-/* ── Avatar color palette — consistent per initial ─────────── */
-const AVATAR_COLORS = [
-  "#7B64FF", "#5B3CE3", "#A78BFA", "#6366F1",
-  "#8B5CF6", "#EC4899", "#14B8A6", "#F59E0B",
-];
-function avatarColor(name: string) {
-  const code = name.charCodeAt(0) || 65;
-  return AVATAR_COLORS[code % AVATAR_COLORS.length];
-}
 function firstNameOnly(displayName: string) {
-  return displayName.split(" ")[0];
+  return displayName.trim().split(/\s+/)[0] || "Colleague";
+}
+
+function maskBank(bankName?: string, accountNumber?: string) {
+  if (!accountNumber) return bankName || "Linked bank";
+  return `${bankName || "Bank"} ••${accountNumber.slice(-4)}`;
+}
+
+function peerTime(daysAgo: number) {
+  if (daysAgo <= 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  return `${daysAgo}d ago`;
+}
+
+function dashboardPalette(theme: Theme) {
+  if (theme === "light") {
+    return {
+      bg: "#FFFFFF",
+      panel: "#FFFFFF",
+      panel2: "#FFFFFF",
+      border: "#E9E6F1",
+      text: "#17151F",
+      muted: "#6B6878",
+      dim: "#9A97A8",
+      warm: "#B4591F",
+      green: "#1F9E67",
+      ring: "#5B3CE3",
+      ringTrack: "#EEEBF6",
+      divider: "#F1EEF7",
+      emptyBorder: "#E2DEEE",
+      emptyBg: "#FFFFFF",
+      ctaBg: "#5B3CE3",
+      ctaText: "#FFFFFF",
+      ctaIconBg: "#FFFFFF",
+      ctaIconText: "#5B3CE3",
+      iconTile: "#F5F3FB",
+      shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
+    };
+  }
+
+  return {
+    bg: DARK,
+    panel: PANEL,
+    panel2: PANEL_2,
+    border: BORDER,
+    text: TEXT,
+    muted: MUTED,
+    dim: DIM,
+    warm: WARM,
+    green: GREEN,
+    ring: TEXT,
+    ringTrack: "#2A2A30",
+    divider: "#1C1C20",
+    emptyBorder: "#303036",
+    emptyBg: "rgba(20,20,24,0.32)",
+    ctaBg: "#F4F1E8",
+    ctaText: "#11100D",
+    ctaIconBg: "#0F0E0C",
+    ctaIconText: "#F4F1E8",
+    iconTile: PANEL_2,
+    shadow: "0 18px 42px rgba(0,0,0,0.24)",
+  };
+}
+
+function hasVisibleRepayment(request?: AdvanceRequest) {
+  if (!request) return false;
+  return (
+    request.disbursalStatus === "Disbursed" ||
+    request.status === "Payment Scheduled" ||
+    request.status === "Paid" ||
+    request.status === "Recovered"
+  );
+}
+
+function SectionLabel({
+  children,
+  action,
+  colors,
+}: {
+  children: string;
+  action?: () => void;
+  colors: ReturnType<typeof dashboardPalette>;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 14,
+      }}
+    >
+      <span
+        style={{
+          color: colors.muted,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "0.28em",
+          textTransform: "uppercase",
+        }}
+      >
+        {children}
+      </span>
+      {action && (
+        <button
+          type="button"
+          onClick={action}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            color: colors.text,
+            fontSize: 13,
+            fontWeight: 650,
+            background: "transparent",
+            border: 0,
+          }}
+        >
+          View all <ArrowRight size={15} strokeWidth={2.1} />
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function DashboardScreen({
   appState,
   notice,
   onNavigate,
+  theme = "dark",
 }: DashboardScreenProps) {
-  const { profile, dashboard, requests } = appState;
-  const name = firstName(profile.name || dashboard?.employeeName);
+  const { profile, dashboard, requests, bankAccount, peerActivity } = appState;
+  const colors = dashboardPalette(theme);
+  const DARK = colors.bg;
+  const PANEL = colors.panel;
+  const PANEL_2 = colors.panel2;
+  const BORDER = colors.border;
+  const TEXT = colors.text;
+  const MUTED = colors.muted;
+  const DIM = colors.dim;
+  const WARM = colors.warm;
+  const GREEN = colors.green;
+
   const monthlySalary = dashboard?.salaryInHand ?? profile.salaryLimit ?? 0;
   const limit = dashboard?.approvedLimit ?? monthlySalary;
   const current = activeAdvance(requests);
@@ -82,213 +196,547 @@ export function DashboardScreen({
     : dashboard?.activeRequestAmount ?? 0;
   const availableNow =
     dashboard?.availableAdvance ?? Math.max(0, limit - advanceTaken);
+  const heroMetrics = [
+    { label: "Total limit", value: formatMoney(limit), tone: TEXT },
+    { label: "Used", value: formatMoney(advanceTaken), tone: advanceTaken > 0 ? WARM : TEXT },
+    { label: "Available", value: formatMoney(availableNow), tone: GREEN },
+  ];
   const usedPercent =
     limit > 0 ? Math.min(100, Math.round((advanceTaken / limit) * 100)) : 0;
-  const payday = nextPaydayDate(dashboard?.payrollDay);
-  const repaymentDue = current?.totalRecoveryAmount || advanceTaken;
-  const repaymentDate = current?.recoveryDate
-    ? formatReadableDate(current.recoveryDate)
-    : payday
-    ? payday.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
-  const recent = latestRequest(requests);
+  const hasAdvanceHistory = requests.length > 0 || advanceTaken > 0;
+  const primaryActionCopy = hasAdvanceHistory ? "Manage advance" : "Access advance";
+  const bankMeta = maskBank(bankAccount?.bankName, bankAccount?.accountNumber);
+  const recent = current ?? latestRequest(requests);
+  const repaymentAmount = recent?.totalRecoveryAmount || advanceTaken;
+  const repaymentDate = recent?.recoveryDate ? formatShortDate(recent.recoveryDate) : "Payday";
+  const recentIsDisbursed = recent?.disbursalStatus === "Disbursed";
+  const showRepaymentRow = hasVisibleRepayment(recent) && repaymentAmount > 0;
+  const peer = peerActivity;
+  const peerRows = peer?.recentActivity?.slice(0, 3) ?? [];
+  const peerCount = peer?.activeUsers ?? 0;
 
-  const peer = appState.peerActivity;
-  const hasPeers = peer && peer.activeUsers > 0;
+  const shellStyle: CSSProperties = {
+    minHeight: "100%",
+    background: DARK,
+    color: TEXT,
+    fontFamily: "'Space Grotesk', sans-serif",
+    padding: "20px 22px 28px",
+  };
 
   return (
-    <div className="home-screen-v2">
-      {notice && <div className="home-notice-v2">{notice}</div>}
+    <div style={shellStyle}>
+      {notice && (
+        <div
+          style={{
+            marginBottom: 14,
+            padding: "12px 14px",
+            border: `1px solid ${BORDER}`,
+            borderRadius: 16,
+            background: PANEL_2,
+            color: MUTED,
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          {notice}
+        </div>
+      )}
 
-      {/* ── Hero card — greeting folded in ── */}
-      <section className="home-salary-v2">
-        <div className="home-salary-ink-v2" />
-
-        <div className="home-salary-top-v2">
+      <section
+        style={{
+          border: `1px solid ${BORDER}`,
+          borderRadius: 22,
+          background: PANEL,
+          padding: "24px 22px 22px",
+          boxShadow: colors.shadow,
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "92px 1fr",
+            gap: 22,
+            alignItems: "center",
+          }}
+        >
           <div
-            className="home-usage-ring-v2"
-            style={{ "--usage": `${usedPercent * 3.6}deg` } as CSSProperties}
+            aria-label={`${usedPercent}% salary advance used`}
+            style={{
+              width: 78,
+              height: 78,
+              borderRadius: 999,
+              background: `conic-gradient(${colors.ring} ${usedPercent * 3.6}deg, ${colors.ringTrack} 0deg)`,
+              padding: 6,
+              display: "grid",
+              placeItems: "center",
+            }}
           >
-            <div>
-              <strong>{usedPercent}%</strong>
-              <span>USED</span>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: 999,
+                background: PANEL,
+                border: `1px solid ${BORDER}`,
+                display: "grid",
+                placeItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <span
+                style={{
+                  color: TEXT,
+                  fontSize: 15,
+                  fontWeight: 750,
+                  lineHeight: 1,
+                }}
+              >
+                {usedPercent}%
+              </span>
+              <span
+                style={{
+                  color: MUTED,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  marginTop: -12,
+                }}
+              >
+                Used
+              </span>
             </div>
           </div>
 
-          <div className="home-salary-main-v2">
-            <div className="home-eyebrow-v2">Monthly Salary</div>
-            <div className="home-salary-amount-v2">
+          <div>
+            <div
+              style={{
+                color: MUTED,
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.26em",
+                textTransform: "uppercase",
+                marginBottom: 8,
+              }}
+            >
+              Monthly Salary
+            </div>
+            <div
+              style={{
+                color: TEXT,
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 28,
+                fontWeight: 650,
+                letterSpacing: "-0.07em",
+                lineHeight: 1,
+              }}
+            >
               {monthlySalary ? formatMoney(monthlySalary) : "—"}
             </div>
-            <div className="home-updated-v2">
-              <span />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: MUTED,
+                fontSize: 13,
+                fontWeight: 600,
+                marginTop: 14,
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 99,
+                  background: GREEN,
+                }}
+              />
               {dashboard ? "Updated today" : "Syncing salary data"}
             </div>
           </div>
         </div>
 
-        <div className="home-salary-line-v2" />
+        <div
+          style={{
+            height: 1,
+            background: BORDER,
+            margin: "24px 0 20px",
+          }}
+        />
 
-        <div className="home-salary-bottom-v2">
-          <div>
-            <span>Available now</span>
-            <strong>{formatMoney(availableNow)}</strong>
-          </div>
-          <div>
-            <span>Advance taken</span>
-            <strong>{formatMoney(advanceTaken)}</strong>
-          </div>
-          <button type="button" onClick={() => onNavigate("advance")}>
-            Access <ArrowRight size={25} />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 8,
+            alignItems: "stretch",
+          }}
+        >
+          {heroMetrics.map((metric) => (
+            <div
+              key={metric.label}
+              style={{
+                minWidth: 0,
+                padding: "12px 10px",
+                borderRadius: 16,
+                border: `1px solid ${theme === "light" ? colors.divider : "rgba(242,240,234,0.045)"}`,
+                background: theme === "light" ? "#FBFAFF" : "rgba(12,12,14,0.26)",
+              }}
+            >
+              <div
+                style={{
+                  color: MUTED,
+                  fontSize: 10,
+                  lineHeight: 1,
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  marginBottom: 9,
+                }}
+              >
+                {metric.label}
+              </div>
+              <div
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  color: metric.tone,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  letterSpacing: "-0.06em",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {metric.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <button
+            type="button"
+            onClick={() => onNavigate("advance")}
+            style={{
+              width: "100%",
+              height: 50,
+              borderRadius: 18,
+              background: colors.ctaBg,
+              color: colors.ctaText,
+              padding: "0 8px 0 18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 14,
+              fontSize: 15,
+              fontWeight: 750,
+              whiteSpace: "nowrap",
+              boxShadow: theme === "light" ? "0 12px 32px -8px rgba(30,22,54,0.14)" : "0 14px 32px rgba(0,0,0,0.26)",
+            }}
+          >
+            {primaryActionCopy}
+            <span
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 11,
+                background: colors.ctaIconBg,
+                color: colors.ctaIconText,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <ArrowRight size={18} />
+            </span>
           </button>
         </div>
       </section>
 
-      {/* ── Repayment due card ── */}
-      {repaymentDue > 0 && (
-        <button
-          type="button"
-          className="home-repay-card-v2"
-          onClick={() => onNavigate("repayments")}
-        >
-          <div className="home-repay-card-left">
-            <div className="home-repay-card-label">Repayment Due</div>
-            <div className="home-repay-card-amount">{formatMoney(repaymentDue)}</div>
-            <div className="home-repay-card-date">Due on {repaymentDate}</div>
-          </div>
-          <div className="home-repay-card-right">
-            <span className="home-repay-card-icon"><ArrowDown size={16} /></span>
-          </div>
-        </button>
-      )}
+      <section style={{ marginTop: 30 }}>
+        <SectionLabel action={() => onNavigate("activity")} colors={colors}>Recent Activity</SectionLabel>
 
-      {/* ── Membership payment action required ── */}
-      {requests.some(r => r.status === "Awaiting Membership") && (
-        <button
-          type="button"
-          onClick={() => onNavigate("profile-membership")}
+        {hasAdvanceHistory && recent ? (
+          <div
+            style={{
+              border: `1px solid ${BORDER}`,
+              borderRadius: 22,
+              background: PANEL_2,
+              overflow: "hidden",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => onNavigate("activity")}
+              style={{
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: "42px 1fr auto",
+                alignItems: "center",
+                gap: 14,
+                padding: "18px 18px",
+                background: "transparent",
+                color: TEXT,
+                textAlign: "left",
+                borderBottom: `1px solid ${BORDER}`,
+              }}
+            >
+              <span
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                    background: recentIsDisbursed ? "rgba(31,158,103,0.10)" : colors.iconTile,
+                    color: recentIsDisbursed ? GREEN : "#C9C7D0",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                {recentIsDisbursed ? <ArrowDownToLine size={18} /> : <CalendarDays size={18} />}
+              </span>
+              <span style={{ minWidth: 0 }}>
+                <strong style={{ display: "block", fontSize: 15, fontWeight: 700 }}>
+                  {recentIsDisbursed ? "Advance credited" : "Advance requested"}
+                </strong>
+                <small
+                  style={{
+                    display: "block",
+                    color: MUTED,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    marginTop: 5,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {recentIsDisbursed ? `To ${bankMeta}` : formatRequestStatus(recent.status, recent.statusLabel)} ·{" "}
+                  {formatShortDate(recent.disbursalDate || recent.requestDate)}
+                </small>
+              </span>
+              <span
+                style={{
+                  color: recentIsDisbursed ? GREEN : TEXT,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 15,
+                  fontWeight: 650,
+                  letterSpacing: "-0.05em",
+                }}
+              >
+                {recentIsDisbursed ? "+ " : ""}
+                {formatMoney(recent.approvedAmount || recent.requestedAmount)}
+              </span>
+            </button>
+
+            {showRepaymentRow && (
+              <button
+                type="button"
+                onClick={() => onNavigate("repayments")}
+                style={{
+                  width: "100%",
+                  display: "grid",
+                  gridTemplateColumns: "42px 1fr auto",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "18px 18px",
+                  background: "transparent",
+                  color: TEXT,
+                  textAlign: "left",
+                }}
+              >
+                <span
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    background: "rgba(180,89,31,0.14)",
+                    color: WARM,
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <CalendarDays size={18} />
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <strong style={{ display: "block", fontSize: 15, fontWeight: 700 }}>
+                    Repayment scheduled
+                  </strong>
+                  <small
+                    style={{
+                      display: "block",
+                      color: MUTED,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      marginTop: 5,
+                    }}
+                  >
+                    Auto-deduct · {repaymentDate}
+                  </small>
+                </span>
+                <span
+                  style={{
+                    color: TEXT,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 15,
+                    fontWeight: 650,
+                    letterSpacing: "-0.05em",
+                  }}
+                >
+                  {formatMoney(repaymentAmount)}
+                </span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div
+            style={{
+              height: 116,
+              border: `1px dashed ${colors.emptyBorder}`,
+              borderRadius: 20,
+              display: "grid",
+              placeItems: "center",
+              textAlign: "center",
+              color: DIM,
+              background: colors.emptyBg,
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 999,
+                  border: `1px solid ${BORDER}`,
+                  display: "inline-grid",
+                  placeItems: "center",
+                  marginBottom: 14,
+                }}
+              >
+                <Archive size={17} />
+              </span>
+              <div style={{ fontSize: 13, fontWeight: 650 }}>
+                Your first advance will show up here.
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <div style={{ height: 1, background: colors.divider, margin: "28px 0 26px" }} />
+
+      <section>
+        <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
-            border: "1.5px solid #F59E0B",
-            borderRadius: 14,
-            padding: "12px 14px",
-            margin: "0 16px 12px",
-            width: "calc(100% - 32px)",
-            textAlign: "left",
-            cursor: "pointer",
+            justifyContent: "space-between",
+            marginBottom: 18,
           }}
         >
-          <span style={{ fontSize: 22 }}>🔐</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E" }}>
-              Action Required: Pay Membership
-            </div>
-            <div style={{ fontSize: 11.5, color: "#B45309", marginTop: 2 }}>
-              Your advance request is approved — complete membership to receive funds.
-            </div>
-          </div>
-          <span style={{ fontSize: 18, color: "#B45309" }}>›</span>
-        </button>
-      )}
-
-      {/* ── Unified feed — Activity + Colleagues ── */}
-      <section className="home-feed-v2">
-
-        {/* Recent Activity */}
-        <div className="home-section-top-v2">
-          <span>Recent Activity</span>
-          <button type="button" onClick={() => onNavigate("activity")}>
-            View all <ArrowRight size={16} />
-          </button>
-        </div>
-        {recent ? (
-          <button
-            type="button"
-            className="home-activity-row-v2"
-            onClick={() => onNavigate("activity")}
+          <span
+            style={{
+              color: MUTED,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.28em",
+              textTransform: "uppercase",
+            }}
           >
-            <span className="home-activity-icon-v2">
-              <ArrowUp size={15} />
-            </span>
-            <span className="home-activity-text-v2">
-              <strong>
-                {recent.disbursalStatus === "Disbursed"
-                  ? "Advance Credited"
-                  : "Advance Requested"}
-              </strong>
-              <small>
-                {formatShortDate(recent.disbursalDate || recent.requestDate)} ·{" "}
-                {formatRequestStatus(recent.status, recent.statusLabel)}
-              </small>
-            </span>
-            <span className="home-activity-money-v2">
-              +{formatMoney(recent.approvedAmount || recent.requestedAmount)}
-            </span>
-          </button>
-        ) : (
-          <div className="home-empty-v2">
-            Your first advance activity will appear here.
-          </div>
-        )}
-
-        {/* Divider between activity and colleagues */}
-        <div className="home-feed-divider-v2" />
-
-        {/* Colleagues — compact */}
-        {hasPeers ? (
-          <>
-            {/* Header: label + stacked avatars + count */}
-            <div className="home-peers-head-v2">
-              <span>Your Colleagues</span>
-              <div className="home-peers-right-v2">
-                <div className="home-peers-stack-v2">
-                  {peer!.recentActivity.slice(0, 3).map((item, i) => {
-                    const n = firstNameOnly(item.displayName);
-                    return (
-                      <div key={i} className="home-peer-avatar-sm-v2" style={{ background: avatarColor(n), marginLeft: i === 0 ? 0 : -8 }}>
-                        {n[0]?.toUpperCase() ?? "?"}
-                      </div>
-                    );
-                  })}
-                </div>
-                <span className="home-peers-count-v2">
-                  {peer!.activeUsers} using MobPae
-                </span>
+            Your colleagues
+          </span>
+          {peerCount > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex" }}>
+                {peerRows.slice(0, 3).map((item, i) => {
+                  const initial = firstNameOnly(item.displayName)[0]?.toUpperCase() ?? "M";
+                  return (
+                    <span
+                      key={`${item.displayName}-${i}`}
+                      style={{
+                        width: 21,
+                        height: 21,
+                        borderRadius: 999,
+                        marginLeft: i ? -6 : 0,
+                        background: theme === "light" ? "#F5F3FB" : "#25252B",
+                        border: `1px solid ${DARK}`,
+                        color: TEXT,
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {initial}
+                    </span>
+                  );
+                })}
               </div>
+              <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>
+                {peerCount} on Advance
+              </span>
             </div>
-            {/* Compact activity rows */}
-            {peer!.recentActivity.slice(0, 3).map((item, i) => {
-              const n = firstNameOnly(item.displayName);
-              const timeLabel = item.daysAgo === 0 ? "Today" : item.daysAgo === 1 ? "Yesterday" : `${item.daysAgo}d ago`;
+          )}
+        </div>
+
+        {peerRows.length > 0 ? (
+          <div style={{ display: "grid", gap: 18 }}>
+            {peerRows.map((item, i) => {
+              const name = firstNameOnly(item.displayName);
               return (
-                <div key={i} className="home-peer-row-v2">
-                  <div className="home-peer-avatar-v2" style={{ background: avatarColor(n) }}>
-                    {n[0]?.toUpperCase() ?? "?"}
-                  </div>
-                  <p className="home-peer-text-v2">
-                    <strong>{n}</strong> {item.action}
-                  </p>
-                  <span className="home-peer-time-v2">{timeLabel}</span>
+                <div
+                  key={`${item.displayName}-${item.action}-${i}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "42px 1fr auto",
+                    gap: 14,
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 999,
+                      border: `1px solid ${BORDER}`,
+                      background: PANEL_2,
+                      color: TEXT,
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: 15,
+                      fontWeight: 750,
+                    }}
+                  >
+                    {name[0]?.toUpperCase() ?? "M"}
+                  </span>
+                  <span style={{ minWidth: 0, color: MUTED, fontSize: 13.5, fontWeight: 600 }}>
+                    <strong style={{ color: TEXT, fontWeight: 750 }}>{name}</strong>{" "}
+                    {item.action}
+                  </span>
+                  <span
+                    style={{
+                      color: DIM,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {peerTime(item.daysAgo)}
+                  </span>
                 </div>
               );
             })}
-          </>
+          </div>
         ) : (
-          <div className="home-peers-empty-v2">
-            <span>🚀</span>
-            <p>Be the first from your company to use MobPae</p>
+          <div style={{ color: DIM, fontSize: 13, fontWeight: 600 }}>
+            Colleague activity will appear here.
           </div>
         )}
       </section>
-
-      <div className="mp-bottom-space" />
     </div>
   );
 }

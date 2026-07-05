@@ -1,15 +1,15 @@
 import { useRef } from "react";
 import {
   ArrowRight,
-  BadgeCheck,
-  CheckCircle,
-  Clock,
+  Check,
+  CreditCard,
   FileText,
+  IdCard,
   Loader2,
   ShieldCheck,
-  UploadCloud,
-  XCircle,
+  Upload,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import type { KycDocument, KycDocumentType, View } from "../types/app";
 
 type Props = {
@@ -18,29 +18,67 @@ type Props = {
   onUpload: (type: KycDocumentType, file: File) => void;
   onContinue: (view: View) => void;
   bankConnected: boolean;
+  mode?: "setup" | "profile";
 };
 
-const KYC_DOCS: { type: KycDocumentType; label: string; hint: string }[] = [
-  { type: "PAN",         label: "PAN Card",    hint: "Clear image of front side" },
-  { type: "AADHAR",      label: "Aadhaar Card", hint: "Front & back of Aadhaar" },
-  { type: "SALARY_SLIP", label: "Salary Slip",  hint: "Last 1–3 months slip" },
+type KycDocConfig = {
+  type: KycDocumentType;
+  label: string;
+  hint: string;
+  icon: ReactNode;
+};
+
+const KYC_DOCS: KycDocConfig[] = [
+  {
+    type: "PAN",
+    label: "PAN Card",
+    hint: "Clear image of front side",
+    icon: <CreditCard size={17} strokeWidth={1.9} />,
+  },
+  {
+    type: "AADHAR",
+    label: "Aadhaar Card",
+    hint: "Front & back of Aadhaar",
+    icon: <IdCard size={17} strokeWidth={1.9} />,
+  },
+  {
+    type: "SALARY_SLIP",
+    label: "Salary Slip",
+    hint: "Last 1-3 months slip",
+    icon: <FileText size={17} strokeWidth={1.9} />,
+  },
 ];
 
-function StatusChip({ status }: { status: string }) {
-  if (status === "Verified")
-    return <span className="chip chip-green"><span className="chip-dot" /> Verified</span>;
-  if (status === "Under Review")
-    return <span className="chip chip-amber"><span className="chip-dot" /> Under Review</span>;
-  if (status === "Rejected")
-    return <span className="chip chip-red"><span className="chip-dot" /> Rejected</span>;
-  return <span className="chip chip-gray">Not Uploaded</span>;
+function isUploaded(status?: string) {
+  return status === "Under Review" || status === "Verified";
 }
 
-function StatusIcon({ status }: { status: string }) {
-  if (status === "Verified") return <CheckCircle size={18} color="#16A34A" />;
-  if (status === "Under Review") return <Clock size={18} color="#D97706" />;
-  if (status === "Rejected") return <XCircle size={18} color="#DC2626" />;
-  return <UploadCloud size={18} color="#5B3CE3" />;
+function isRejected(status?: string) {
+  return status === "Rejected";
+}
+
+function DocStatus({ status }: { status?: string }) {
+  if (isUploaded(status)) {
+    return (
+      <span className="kycv2-chip kycv2-chip--uploaded">
+        <span /> Uploaded
+      </span>
+    );
+  }
+
+  if (isRejected(status)) {
+    return (
+      <span className="kycv2-chip kycv2-chip--rejected">
+        <span /> Rejected
+      </span>
+    );
+  }
+
+  return (
+    <span className="kycv2-chip">
+      <span /> Not uploaded
+    </span>
+  );
 }
 
 export function OnboardingKycScreen({
@@ -49,121 +87,132 @@ export function OnboardingKycScreen({
   onUpload,
   onContinue,
   bankConnected,
+  mode = "setup",
 }: Props) {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const allDocsVerified = documents.length > 0 && documents.every((d) => d.status === "Verified");
-  const allVerified = allDocsVerified;
-  const docDoneCount = documents.filter((d) => d.status !== "Not Uploaded").length;
-  const doneCount = docDoneCount;
-  const totalRequirements = KYC_DOCS.length;
 
   function getDoc(type: KycDocumentType) {
-    return documents.find((d) => d.documentType === type);
+    return documents.find((document) => document.documentType === type);
   }
 
-  const nextView: View = bankConnected ? "advance" : "onboarding-bank";
-  const ctaLabel = bankConnected ? "Continue to Advance" : "Continue to Bank Account";
+  const uploadedCount = KYC_DOCS.filter(({ type }) => isUploaded(getDoc(type)?.status)).length;
+  const allUploaded = uploadedCount === KYC_DOCS.length;
+  const progress = Math.round((uploadedCount / KYC_DOCS.length) * 100);
+  const nextView: View = bankConnected ? "home" : "onboarding-bank";
+  const ctaLabel = allUploaded
+    ? bankConnected
+      ? "Go to home"
+      : "Continue to bank account"
+    : "Upload all documents to continue";
+  const isProfileMode = mode === "profile";
 
   return (
-    <div className="onb-screen">
-
-      {/* Hero */}
-      <div className="onb-hero">
-        <div className="onb-hero-text">
-          <div className="onb-hero-title">KYC Verification</div>
-          <div className="onb-hero-sub">
-            Upload your documents to verify your identity and unlock salary advances.
-          </div>
-          {doneCount > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-              <span className="chip chip-purple">{doneCount}/{totalRequirements} uploaded</span>
-            </div>
-          )}
+    <div className={`kycv2-screen${isProfileMode ? " kycv2-screen--profile" : ""}`}>
+      <section className="kycv2-hero">
+        <div>
+          <div className="kycv2-kicker">{isProfileMode ? "KYC documents" : "Step 3 of 4"}</div>
+          <h1>Verify your identity</h1>
+          <p>
+            {isProfileMode
+              ? "View or replace your submitted documents whenever required."
+              : "Upload your documents to unlock salary advances."}
+          </p>
         </div>
-        <div className="onb-hero-illus-box">
-          <ShieldCheck size={32} />
+        <div className="kycv2-hero-icon">
+          <ShieldCheck size={25} strokeWidth={1.9} />
         </div>
-      </div>
+        <div className="kycv2-progress">
+          <span style={{ width: `${progress}%` }} />
+        </div>
+        <div className="kycv2-progress-count">{uploadedCount}/3</div>
+      </section>
 
-      <div className="onb-body">
+      <section className="kycv2-docs">
+        {KYC_DOCS.map((config) => {
+          const document = getDoc(config.type);
+          const status = document?.status ?? "Not Uploaded";
+          const uploaded = isUploaded(status);
+          const rejected = isRejected(status);
+          const isUploading = uploadingKycType === config.type;
+          const actionLabel = uploaded ? "Replace" : rejected ? "Re-upload" : "Upload";
 
-        {/* Document list */}
-        <div className="onb-doc-card">
-          {KYC_DOCS.map(({ type, label, hint }) => {
-            const doc = getDoc(type);
-            const status = doc?.status ?? "Not Uploaded";
-            const isUploading = uploadingKycType === type;
-            const canUpload = status !== "Verified";
-            return (
-              <div key={type} className="onb-doc-row">
-                <div className="onb-doc-icon">
-                  {isUploading ? <Loader2 size={18} className="spin" /> : <StatusIcon status={status} />}
-                </div>
-                <div className="onb-doc-body">
-                  <div className="onb-doc-title">{label}</div>
-                  <div className="onb-doc-sub">{doc?.note || hint}</div>
-                  <div className="onb-status-line">
-                    {status === "Under Review" && <span className="onb-uploaded-label">Uploaded</span>}
-                    <StatusChip status={status} />
-                  </div>
-                </div>
-                {canUpload && !isUploading && (
-                  <button
-                    type="button"
-                    className="mp-link-btn"
-                    onClick={() => fileRefs.current[type]?.click()}
-                    style={{ fontSize: 12, flexShrink: 0 }}
-                  >
-                    <UploadCloud size={14} /> Upload
-                  </button>
-                )}
-                <input
-                  ref={(el) => { fileRefs.current[type] = el; }}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
-                  style={{ display: "none" }}
-                  onChange={(e) => { if (e.target.files?.[0]) onUpload(type, e.target.files[0]); }}
-                />
+          return (
+            <article
+              key={config.type}
+              className={[
+                "kycv2-doc-card",
+                uploaded ? "is-uploaded" : "",
+                rejected ? "is-rejected" : "",
+              ].filter(Boolean).join(" ")}
+            >
+              <span className="kycv2-doc-icon">
+                {isUploading ? <Loader2 size={18} className="spin" /> : config.icon}
+              </span>
+
+              <div className="kycv2-doc-text">
+                <h2>{config.label}</h2>
+                <p>{document?.note && rejected ? document.note : config.hint}</p>
+                <DocStatus status={status} />
               </div>
-            );
-          })}
-        </div>
 
-        {/* Tips */}
-        <div className="onb-tips-card">
-          <div className="onb-tips-hdr"><FileText size={14} /> Document tips</div>
-          {[
-            "Use clear, well-lit photos",
-            "All text must be readable",
-            "No blurry or cropped images",
-            "Max file size: 5 MB",
-          ].map((tip) => (
-            <div key={tip} className="onb-tip-row">
-              <CheckCircle size={12} className="onb-tip-check" color="#16A34A" />
-              {tip}
-            </div>
-          ))}
-        </div>
+              <button
+                type="button"
+                className={uploaded ? "kycv2-doc-action kycv2-doc-action--ghost" : "kycv2-doc-action"}
+                disabled={isUploading}
+                onClick={() => fileRefs.current[config.type]?.click()}
+              >
+                {uploaded ? <Check size={14} /> : <Upload size={14} />}
+                {isUploading ? "Uploading" : actionLabel}
+              </button>
 
-      </div>
+              <input
+                ref={(element) => { fileRefs.current[config.type] = element; }}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                hidden
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) onUpload(config.type, file);
+                  event.currentTarget.value = "";
+                }}
+              />
+            </article>
+          );
+        })}
+      </section>
 
-      {/* Footer */}
-      <div className="onb-footer">
-        <button
-          type="button"
-          className="mp-btn-primary"
-          onClick={() => onContinue(nextView)}
-        >
-          {allVerified ? (
-            <><BadgeCheck size={16} /> All Verified — {ctaLabel}</>
-          ) : (
-            <>{ctaLabel} <ArrowRight size={16} /></>
-          )}
-        </button>
-        <div className="onb-secure-note">
-          <ShieldCheck size={12} /> Documents are encrypted and stored securely
+      <section className="kycv2-tips">
+        <div className="kycv2-tips-title">
+          <FileText size={14} />
+          Document tips
         </div>
-      </div>
+        <div className="kycv2-tip-grid">
+          <span>Clear photos</span>
+          <span>Readable text</span>
+          <span>No cropped edges</span>
+          <span>Under 5 MB</span>
+        </div>
+      </section>
+
+      {!isProfileMode && (
+        <div className="kycv2-footer">
+          <button
+            type="button"
+            className="kycv2-primary"
+            disabled={!allUploaded}
+            onClick={() => onContinue(nextView)}
+          >
+            <span>{ctaLabel}</span>
+            <span className="kycv2-primary-icon">
+              <ArrowRight size={21} strokeWidth={2.4} />
+            </span>
+          </button>
+          <div className="kycv2-secure">
+            <ShieldCheck size={13} />
+            Documents are encrypted and stored securely
+          </div>
+        </div>
+      )}
     </div>
   );
 }

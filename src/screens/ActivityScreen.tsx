@@ -1,384 +1,487 @@
-import { CalendarDays, ChevronDown, Download, Shield } from "lucide-react";
-import { useState } from "react";
+import { ArrowDownToLine, CheckCircle2, Clock3 } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { AdvanceRequest, BankAccount } from "../types/app";
 import { formatMoney, formatRequestStatus } from "../utils/format";
-import type { AdvanceRequest, View } from "../types/app";
+import type { Theme } from "../hooks/useTheme";
 
 type ActivityScreenProps = {
   requests: AdvanceRequest[];
-  onNavigate: (view: View) => void;
+  bankAccount?: BankAccount | null;
+  theme?: Theme;
 };
 
 type Tab = "all" | "advances" | "repayments";
 
-function formatDatetime(iso?: string) {
-  if (!iso || iso === "Pending") return "Pending";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  const date = d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
-  return `${date} • ${time}`;
-}
-
-type TxEvent = {
+type ActivityEvent = {
   id: string;
-  type: "request" | "disbursal" | "repayment";
+  type: "request" | "credit" | "repayment";
   title: string;
-  sub: string;
-  datetime: string;
-  sortTs: number;
+  subtitle: string;
   amount: number;
-  prefix: "+" | "−" | "";
-  amountGreen: boolean;
-  amountRed: boolean;
-  iconBg: string;
-  iconColor: string;
-  iconType: "wallet" | "calendar" | "emi";
-  statusLabel: string;
-  done: boolean;
+  prefix: "+" | "-" | "";
+  date: string;
+  monthKey: string;
+  sortTs: number;
+  tone: "green" | "warm" | "default";
 };
 
-function expandRequest(req: AdvanceRequest): TxEvent[] {
-  const events: TxEvent[] = [];
-  const amount = req.approvedAmount || req.requestedAmount;
-  const id = req.id;
-  const isDone = req.disbursalStatus === "Disbursed" || req.recoveryStatus === "Completed";
+const DARK = "#0C0C0E";
+const PANEL_SOFT = "#141418";
+const BORDER = "#29292F";
+const TEXT = "#F2F0EA";
+const MUTED = "#8A8892";
+const DIM = "#5C5C64";
+const GREEN = "#20A46A";
+const WARM = "#B4591F";
+
+function activityPalette(theme: Theme) {
+  if (theme === "light") {
+    return {
+      bg: "#FFFFFF",
+      panel: "#FFFFFF",
+      panelSoft: "#F5F3FB",
+      border: "#E9E6F1",
+      rule: "#F1EEF7",
+      text: "#17151F",
+      muted: "#6B6878",
+      dim: "#9A97A8",
+      activeBg: "#5B3CE3",
+      activeText: "#FFFFFF",
+      green: "#1F9E67",
+      warm: "#B4591F",
+      shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
+    };
+  }
+
+  return {
+    bg: DARK,
+    panel: "rgba(20,20,24,0.72)",
+    panelSoft: PANEL_SOFT,
+    border: BORDER,
+    rule: "#1D1D21",
+    text: TEXT,
+    muted: MUTED,
+    dim: DIM,
+    activeBg: "#F4F1E8",
+    activeText: "#11100D",
+    green: GREEN,
+    warm: WARM,
+    shadow: "none",
+  };
+}
+
+function formatDay(dateStr?: string) {
+  if (!dateStr) return "—";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+}
+
+function formatMonth(dateStr?: string) {
+  if (!dateStr) return "Unknown";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  return date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+}
+
+function bankLabel(bankAccount?: BankAccount | null) {
+  if (!bankAccount?.accountNumber) return "To linked bank";
+  return `To ${bankAccount.bankName || "Bank"} ••${bankAccount.accountNumber.slice(-4)}`;
+}
+
+function requestAmount(request: AdvanceRequest) {
+  return request.approvedAmount || request.requestedAmount || request.principalAmount || 0;
+}
+
+function hasVisibleRepayment(request: AdvanceRequest) {
+  return (
+    request.disbursalStatus === "Disbursed" ||
+    request.status === "Payment Scheduled" ||
+    request.status === "Paid" ||
+    request.status === "Recovered"
+  );
+}
+
+function expandRequest(request: AdvanceRequest, bankAccount?: BankAccount | null): ActivityEvent[] {
+  const amount = requestAmount(request);
+  const events: ActivityEvent[] = [];
+  const requestTs = new Date(request.requestDate).getTime();
 
   events.push({
-    id: `${id}-req`,
+    id: `${request.id}-requested`,
     type: "request",
-    title: "Advance Requested",
-    sub: `Salary advance of ${formatMoney(amount)}`,
-    datetime: formatDatetime(req.requestDate),
-    sortTs: new Date(req.requestDate).getTime(),
+    title: "Advance requested",
+    subtitle: formatRequestStatus(request.status, request.statusLabel),
     amount,
     prefix: "",
-    amountGreen: false,
-    amountRed: false,
-    iconBg: "#EEE9FF",
-    iconColor: "#5B3CE3",
-    iconType: "calendar",
-    statusLabel: formatRequestStatus(req.status, req.statusLabel),
-    done: isDone,
+    date: formatDay(request.requestDate),
+    monthKey: formatMonth(request.requestDate),
+    sortTs: Number.isNaN(requestTs) ? 0 : requestTs,
+    tone: "default",
   });
 
-  if (req.disbursalStatus === "Disbursed") {
-    const disbursedAt = (req as unknown as Record<string, string>).disbursedAt || req.requestDate;
+  if (request.disbursalStatus === "Disbursed") {
+    const disbursedAt = request.disbursalDate || request.requestDate;
+    const disbursalTs = new Date(disbursedAt).getTime();
     events.push({
-      id: `${id}-dis`,
-      type: "disbursal",
-      title: "Advance Credited",
-      sub: `${formatMoney(amount)} credited to your bank account`,
-      datetime: formatDatetime(disbursedAt),
-      sortTs: new Date(disbursedAt).getTime() + 1,
+      id: `${request.id}-credited`,
+      type: "credit",
+      title: "Advance credited",
+      subtitle: bankLabel(bankAccount),
       amount,
       prefix: "+",
-      amountGreen: true,
-      amountRed: false,
-      iconBg: "#DCFCE7",
-      iconColor: "#16A34A",
-      iconType: "wallet",
-      statusLabel: "Credited",
-      done: true,
+      date: formatDay(disbursedAt),
+      monthKey: formatMonth(disbursedAt),
+      sortTs: (Number.isNaN(disbursalTs) ? 0 : disbursalTs) + 2,
+      tone: "green",
     });
   }
 
-  if (req.recoveryStatus === "Completed" && req.recoveryDate) {
+  if (
+    hasVisibleRepayment(request) &&
+    request.recoveryDate &&
+    (request.recoveryStatus === "Completed" || request.recoveryStatus === "Scheduled")
+  ) {
+    const recoveryTs = new Date(request.recoveryDate).getTime();
     events.push({
-      id: `${id}-rep`,
+      id: `${request.id}-repayment`,
       type: "repayment",
-      title: "Advance Repaid",
-      sub: "Recovered from salary settlement",
-      datetime: formatDatetime(req.recoveryDate),
-      sortTs: new Date(req.recoveryDate).getTime(),
-      amount: req.totalRecoveryAmount || amount,
-      prefix: "−",
-      amountGreen: false,
-      amountRed: true,
-      iconBg: "#FEF3C7",
-      iconColor: "#D97706",
-      iconType: "emi",
-      statusLabel: "Repaid",
-      done: true,
+      title: request.recoveryStatus === "Completed" ? "Repayment" : "Repayment scheduled",
+      subtitle: request.recoveryStatus === "Completed" ? "Auto-deducted from salary" : "Auto-deduct from salary",
+      amount: request.totalRecoveryAmount || amount,
+      prefix: "-",
+      date: formatDay(request.recoveryDate),
+      monthKey: formatMonth(request.recoveryDate),
+      sortTs: (Number.isNaN(recoveryTs) ? 0 : recoveryTs) + 1,
+      tone: "warm",
     });
   }
 
   return events;
 }
 
-function TxIcon({ type, bg, color, done }: { type: TxEvent["iconType"]; bg: string; color: string; done: boolean }) {
+function EmptyActivity({ colors }: { colors: ReturnType<typeof activityPalette> }) {
   return (
-    <div style={{ width: 46, height: 46, borderRadius: 14, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
-      {type === "wallet" && (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <rect x="2" y="5" width="20" height="14" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
-          <path d="M2 10h20" stroke={color} strokeWidth="1.8"/>
-          <circle cx="17" cy="14" r="1.2" fill={color}/>
-        </svg>
-      )}
-      {type === "calendar" && (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="4" width="18" height="17" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
-          <path d="M16 2v4M8 2v4M3 10h18" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
-          <circle cx="12" cy="15" r="1.5" fill={color}/>
-        </svg>
-      )}
-      {type === "emi" && (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="4" width="18" height="17" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
-          <path d="M16 2v4M8 2v4M3 10h18" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
-          <path d="M8 14h4M8 17h6" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
-        </svg>
-      )}
-      {done && (
-        <div style={{ position: "absolute", bottom: -3, right: -3, width: 16, height: 16, borderRadius: "50%", background: "#16A34A", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
-          <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-            <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+    <div
+      style={{
+        minHeight: "calc(100dvh - 170px)",
+        display: "grid",
+        placeItems: "center",
+        textAlign: "center",
+        padding: "0 24px 56px",
+      }}
+    >
+      <div>
+        <div
+          style={{
+            width: 74,
+            height: 74,
+            borderRadius: 999,
+            border: `1px solid ${colors.border}`,
+            background: colors.panelSoft,
+            color: colors.dim,
+            display: "grid",
+            placeItems: "center",
+            margin: "0 auto 28px",
+          }}
+        >
+          <Clock3 size={28} strokeWidth={1.7} />
         </div>
-      )}
+        <h1
+          style={{
+            margin: 0,
+            color: colors.text,
+            fontSize: 22,
+            fontWeight: 750,
+            letterSpacing: "-0.04em",
+          }}
+        >
+          No activity yet
+        </h1>
+        <p
+          style={{
+            margin: "18px auto 0",
+            maxWidth: 285,
+            color: colors.muted,
+            fontSize: 14,
+            fontWeight: 600,
+            lineHeight: 1.55,
+          }}
+        >
+          Your advances and repayments will show up here the moment you make your first request.
+        </p>
+      </div>
     </div>
   );
 }
 
-function exportCSV(events: TxEvent[]) {
-  const header = ["Date/Time", "Type", "Description", "Amount", "Status"];
-  const rows = events.map(e => [
-    e.datetime,
-    e.title,
-    e.sub,
-    `${e.prefix}${e.amount}`,
-    e.statusLabel,
-  ]);
-  const csv = [header, ...rows]
-    .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `mobpae-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+function ActivityIcon({
+  tone,
+  type,
+  colors,
+}: {
+  tone: ActivityEvent["tone"];
+  type: ActivityEvent["type"];
+  colors: ReturnType<typeof activityPalette>;
+}) {
+  const color = tone === "green" ? colors.green : tone === "warm" ? colors.warm : colors.dim;
+  const background =
+    tone === "green"
+      ? "rgba(32,164,106,0.13)"
+      : tone === "warm"
+        ? "rgba(180,89,31,0.13)"
+        : colors.panelSoft;
+
+  return (
+    <span
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 13,
+        background,
+        color,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
+      }}
+    >
+      {type === "credit" ? (
+        <ArrowDownToLine size={18} strokeWidth={2} />
+      ) : type === "repayment" ? (
+        <span style={{ fontSize: 20, lineHeight: 1 }}>↑</span>
+      ) : (
+        <CheckCircle2 size={17} strokeWidth={1.9} />
+      )}
+    </span>
+  );
 }
 
-const STATUS_CYCLE = ["All Status", "Pending", "Credited", "Repaid"] as const;
-type StatusFilter = typeof STATUS_CYCLE[number];
-
-export function ActivityScreen({ requests, onNavigate }: ActivityScreenProps) {
-  const awaitingMembership = requests.some(r => r.status === "Awaiting Membership");
+export function ActivityScreen({ requests, bankAccount, theme = "dark" }: ActivityScreenProps) {
   const [tab, setTab] = useState<Tab>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All Status");
-  const [monthFilter, setMonthFilter] = useState<string>("All Dates");
+  const colors = activityPalette(theme);
 
-  const allEvents = requests.flatMap(expandRequest).sort((a, b) => b.sortTs - a.sortTs);
+  const allEvents = useMemo(
+    () =>
+      requests
+        .flatMap((request) => expandRequest(request, bankAccount))
+        .sort((a, b) => b.sortTs - a.sortTs),
+    [bankAccount, requests],
+  );
 
-  // Derive available months from data
-  const availableMonths = Array.from(new Set(
-    allEvents.map(e => {
-      const ts = new Date(e.sortTs);
-      return isNaN(ts.getTime()) ? null : ts.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
-    }).filter(Boolean)
-  )) as string[];
+  const filtered = allEvents.filter((event) => {
+    if (tab === "advances") return event.type === "request" || event.type === "credit";
+    if (tab === "repayments") return event.type === "repayment";
+    return true;
+  });
 
-  const cycleMonth = () => {
-    const opts = ["All Dates", ...availableMonths];
-    const idx = opts.indexOf(monthFilter);
-    setMonthFilter(opts[(idx + 1) % opts.length]);
-  };
+  const totalAdvanced = allEvents
+    .filter((event) => event.type === "credit")
+    .reduce((sum, event) => sum + event.amount, 0);
+  const totalRepaid = allEvents
+    .filter((event) => event.type === "repayment" && event.title === "Repayment")
+    .reduce((sum, event) => sum + event.amount, 0);
 
-  const cycleStatus = () => {
-    const idx = STATUS_CYCLE.indexOf(statusFilter);
-    setStatusFilter(STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length]);
-  };
+  const grouped = filtered.reduce<Map<string, ActivityEvent[]>>((map, event) => {
+    if (!map.has(event.monthKey)) map.set(event.monthKey, []);
+    map.get(event.monthKey)!.push(event);
+    return map;
+  }, new Map());
 
-  const filtered = allEvents
-    .filter(e => {
-      if (tab === "advances") return e.type === "request" || e.type === "disbursal";
-      if (tab === "repayments") return e.type === "repayment";
-      return true;
-    })
-    .filter(e => statusFilter === "All Status" || e.statusLabel === statusFilter)
-    .filter(e => {
-      if (monthFilter === "All Dates") return true;
-      const ts = new Date(e.sortTs);
-      return ts.toLocaleDateString("en-IN", { month: "short", year: "numeric" }) === monthFilter;
-    });
-
-  // Group by month
-  const grouped = new Map<string, TxEvent[]>();
-  for (const e of filtered) {
-    const ts = new Date(e.sortTs);
-    const key = isNaN(ts.getTime()) ? "Unknown" : ts.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-    if (!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key)!.push(e);
+  if (allEvents.length === 0) {
+    return <EmptyActivity colors={colors} />;
   }
 
-  const TABS: { id: Tab; label: string }[] = [
+  const tabs: Array<{ id: Tab; label: string }> = [
     { id: "all", label: "All" },
     { id: "advances", label: "Advances" },
     { id: "repayments", label: "Repayments" },
   ];
 
-  const isMonthActive = monthFilter !== "All Dates";
-  const isStatusActive = statusFilter !== "All Status";
-
-  const totalCredited = allEvents.filter(e => e.type === "disbursal").reduce((s, e) => s + e.amount, 0);
-  const totalRepaid = allEvents.filter(e => e.type === "repayment").reduce((s, e) => s + e.amount, 0);
-  const totalRequests = requests.length;
-
   return (
-    <div className="hist-screen">
-
-      {/* ── Tabs ── */}
-      <div className="hist-tabs-wrap">
-        {TABS.map(({ id, label }) => (
-          <button key={id} type="button" className={`hist-tab ${tab === id ? "active" : ""}`} onClick={() => setTab(id)}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Filter bar ── */}
-      <div className="hist-filter-bar">
-        <button
-          type="button"
-          className="hist-filter-btn"
-          onClick={cycleMonth}
-          style={isMonthActive ? { background: "#ECEAFF", color: "#5B3CE3", borderColor: "#C4B5FD" } : undefined}
-        >
-          <CalendarDays size={13} /> {monthFilter} <ChevronDown size={12} />
-        </button>
-        <button
-          type="button"
-          className="hist-filter-btn"
-          onClick={cycleStatus}
-          style={isStatusActive ? { background: "#ECEAFF", color: "#5B3CE3", borderColor: "#C4B5FD" } : undefined}
-        >
-          {statusFilter} <ChevronDown size={12} />
-        </button>
-        <button
-          type="button"
-          className="hist-export-btn"
-          onClick={() => exportCSV(filtered)}
-          disabled={filtered.length === 0}
-        >
-          <Download size={13} /> Export
-        </button>
-      </div>
-
-      {/* ── Membership payment banner ── */}
-      {awaitingMembership && (
-        <button
-          type="button"
-          onClick={() => onNavigate("profile-membership")}
+    <div
+      style={{
+        minHeight: "100%",
+        background: colors.bg,
+        color: colors.text,
+        fontFamily: "'Space Grotesk', sans-serif",
+        padding: "18px 22px 34px",
+      }}
+    >
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
-            border: "1.5px solid #F59E0B",
-            borderRadius: 12,
-            padding: "12px 14px",
-            margin: "0 0 12px",
-            width: "100%",
-            textAlign: "left",
-            cursor: "pointer",
+            border: `1px solid ${colors.border}`,
+            borderRadius: 18,
+            background: colors.panel,
+            padding: "17px 16px",
+            boxShadow: colors.shadow,
           }}
         >
-          <span style={{ fontSize: 20 }}>🔐</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E" }}>
-              Action Required: Pay Membership
-            </div>
-            <div style={{ fontSize: 11.5, color: "#B45309", marginTop: 2 }}>
-              Your advance is approved — complete membership payment to receive funds.
-            </div>
+          <div style={{ color: colors.muted, fontSize: 12, fontWeight: 650, marginBottom: 14 }}>
+            Total advanced
           </div>
-          <span style={{ fontSize: 18, color: "#B45309" }}>›</span>
-        </button>
-      )}
-
-      {/* ── Body ── */}
-      <div className="screen-body hist-body">
-
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 16px" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#6B7280", marginBottom: 4 }}>No transactions found</div>
-            <div style={{ fontSize: 12, color: "#9CA3AF" }}>
-              {isMonthActive || isStatusActive
-                ? "Try changing the filters above"
-                : "Your advance history will appear here"}
-            </div>
-            {(isMonthActive || isStatusActive) && (
-              <button
-                type="button"
-                className="mp-link-btn"
-                style={{ marginTop: 12, fontSize: 13 }}
-                onClick={() => { setMonthFilter("All Dates"); setStatusFilter("All Status"); }}
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-        ) : (
-          Array.from(grouped.entries()).map(([month, events]) => (
-            <div key={month}>
-              <div className="hist-month-label">{month}</div>
-              {events.map((e, i) => (
-                <div key={e.id}>
-                  {i > 0 && <div className="hist-tx-divider" />}
-                  <div className="hist-tx-row">
-                    <TxIcon type={e.iconType} bg={e.iconBg} color={e.iconColor} done={e.done} />
-                    <div className="hist-tx-body">
-                      <div className="hist-tx-title">{e.title}</div>
-                      <div className="hist-tx-sub">{e.sub}</div>
-                      <div className="hist-tx-datetime">{e.datetime}</div>
-                    </div>
-                    <div className="hist-tx-right">
-                      <div className={`hist-tx-amount ${e.amountGreen ? "green" : e.amountRed ? "red" : ""}`}>
-                        {e.prefix}{formatMoney(e.amount)}
-                      </div>
-                      <span
-                        className={`hist-tx-status ${
-                          e.statusLabel === "Credited" || e.statusLabel === "Repaid"
-                            ? "chip-green"
-                            : e.statusLabel.toLowerCase().includes("membership") || e.statusLabel === "Pending" || e.statusLabel.toLowerCase().includes("scheduled")
-                            ? "chip-amber"
-                            : "chip-purple"
-                        }`}
-                        title={e.statusLabel}
-                        style={{ marginTop: 4 }}
-                      >
-                        {e.statusLabel}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))
-        )}
-
-        {/* Security note */}
-        <div className="hist-security-note">
-          <Shield size={14} color="#9CA3AF" />
-          <div className="hist-security-text">
-            <span>
-              All transactions are secure & encrypted.{" "}
-              <button
-                type="button"
-                style={{ color: "#5B3CE3", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "inherit", padding: 0 }}
-                onClick={() => onNavigate("help")}
-              >
-                Contact support
-              </button>
-            </span>
+          <div
+            style={{
+              color: colors.text,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 18,
+              fontWeight: 650,
+              letterSpacing: "-0.06em",
+            }}
+          >
+            {formatMoney(totalAdvanced)}
           </div>
         </div>
-
-        <div className="mp-bottom-space" />
+        <div
+          style={{
+            border: `1px solid ${colors.border}`,
+            borderRadius: 18,
+            background: colors.panel,
+            padding: "17px 16px",
+            boxShadow: colors.shadow,
+          }}
+        >
+          <div style={{ color: colors.muted, fontSize: 12, fontWeight: 650, marginBottom: 14 }}>
+            Total repaid
+          </div>
+          <div
+            style={{
+              color: colors.green,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 18,
+              fontWeight: 650,
+              letterSpacing: "-0.06em",
+            }}
+          >
+            {formatMoney(totalRepaid)}
+          </div>
+        </div>
       </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, marginBottom: 28 }}>
+        {tabs.map((item) => {
+          const active = item.id === tab;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setTab(item.id)}
+              style={{
+                height: 38,
+                borderRadius: 13,
+                border: `1px solid ${active ? colors.activeBg : colors.border}`,
+                background: active ? colors.activeBg : "transparent",
+                color: active ? colors.activeText : colors.muted,
+                padding: "0 15px",
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: 13,
+                fontWeight: 750,
+              }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div
+          style={{
+            border: `1px dashed ${colors.border}`,
+            borderRadius: 18,
+            minHeight: 130,
+            display: "grid",
+            placeItems: "center",
+            color: colors.muted,
+            fontSize: 13,
+            fontWeight: 650,
+            textAlign: "center",
+            padding: 24,
+          }}
+        >
+          No {tab === "advances" ? "advance" : "repayment"} activity for this filter.
+        </div>
+      ) : (
+        Array.from(grouped.entries()).map(([month, events]) => (
+          <section key={month} style={{ marginTop: 24 }}>
+            <div
+              style={{
+                color: colors.muted,
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.28em",
+                textTransform: "uppercase",
+                marginBottom: 18,
+              }}
+            >
+              {month}
+            </div>
+            <div>
+              {events.map((event, index) => {
+                const amountColor = event.tone === "green" ? colors.green : event.tone === "warm" ? colors.text : colors.muted;
+
+                return (
+                  <div key={event.id}>
+                    {index > 0 && <div style={{ height: 1, background: colors.rule, margin: "16px 0" }} />}
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "48px 1fr auto",
+                        gap: 12,
+                        alignItems: "center",
+                      }}
+                    >
+                      <ActivityIcon tone={event.tone} type={event.type} colors={colors} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ color: colors.text, fontSize: 15, fontWeight: 750, lineHeight: 1.08 }}>
+                          {event.title}
+                        </div>
+                        <div
+                          style={{
+                            color: colors.muted,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            marginTop: 7,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {event.subtitle}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div
+                          style={{
+                            color: amountColor,
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: 15,
+                            fontWeight: 650,
+                            letterSpacing: "-0.05em",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {event.prefix ? `${event.prefix} ` : ""}
+                          {formatMoney(event.amount)}
+                        </div>
+                        <div style={{ color: colors.dim, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 600, marginTop: 8 }}>
+                          {event.date}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))
+      )}
+
+      {filtered.length > 0 && (
+        <div style={{ color: colors.dim, textAlign: "center", fontSize: 12, fontWeight: 650, marginTop: 28 }}>
+          That’s everything from this year
+        </div>
+      )}
     </div>
   );
 }

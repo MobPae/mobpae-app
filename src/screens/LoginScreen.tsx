@@ -1,321 +1,389 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+
+type Theme = "dark" | "light";
 
 type LoginScreenProps = {
   error: string;
   loading: boolean;
   onLogin: (email: string, password: string) => Promise<void>;
   onForgotPassword?: () => void;
+  theme?: Theme;
 };
 
-const P  = "#5B3CE3";
-const PD = "#4A2FD4";
-const PL = "#7B64FF";
+function loginPalette(theme: Theme) {
+  if (theme === "light") {
+    return {
+      SURFACE:    "#FFFFFF",
+      PANEL:      "#F5F3FB",
+      PANEL_SOFT: "#FAFAFA",
+      BORDER:     "#E9E6F1",
+      BORDER_FOC: "#C4BBE8",
+      TEXT:       "#17151F",
+      MUTED:      "#6B6878",
+      DIM:        "#9A97A8",
+      CREAM:      "#5B3CE3",
+      CREAM_DIS:  "rgba(91,60,227,0.32)",
+      CTA_TEXT:   "#FFFFFF",
+      CTA_ICON_BG:"#FFFFFF",
+      CTA_ICON_C: "#5B3CE3",
+      GREEN:      "#1F9E67",
+      WARM:       "#B4591F",
+      GLOW:       "radial-gradient(circle at 50% 4%, rgba(91,60,227,0.06), transparent 38%), #FFFFFF",
+      CARD_BG:    "linear-gradient(180deg, rgba(91,60,227,0.04), rgba(91,60,227,0.015))",
+      CARD_BORDER:"rgba(91,60,227,0.1)",
+      DIVIDER:    "linear-gradient(90deg, transparent, #DDD9F0, transparent)",
+    };
+  }
+  return {
+    SURFACE:    "#0C0C0E",
+    PANEL:      "#141418",
+    PANEL_SOFT: "#17171B",
+    BORDER:     "#29292F",
+    BORDER_FOC: "#3C3C42",
+    TEXT:       "#F2F0EA",
+    MUTED:      "#8A8892",
+    DIM:        "#5C5C64",
+    CREAM:      "#F4F1E8",
+    CREAM_DIS:  "rgba(242,240,234,0.42)",
+    CTA_TEXT:   "#0C0C0E",
+    CTA_ICON_BG:"#0C0C0E",
+    CTA_ICON_C: "#F4F1E8",
+    GREEN:      "#20A46A",
+    WARM:       "#B4591F",
+    GLOW:       "radial-gradient(circle at 50% 4%, rgba(242,240,234,0.055), transparent 38%), #0C0C0E",
+    CARD_BG:    "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012))",
+    CARD_BORDER:"rgba(255,255,255,0.035)",
+    DIVIDER:    "linear-gradient(90deg, transparent, #1E1E22, transparent)",
+  };
+}
 
-/* ── Floating-label outlined input ───────────────────────────── */
-function FloatingInput({
-  label, type, value, onChange, autoComplete, rightSlot,
-}: {
-  label: string; type: string; value: string;
-  onChange: (v: string) => void; autoComplete?: string;
-  rightSlot?: React.ReactNode;
-}) {
-  const [focused, setFocused] = useState(false);
-  const active = focused || value.length > 0;
-
+function LogoMark({ bg, shadow }: { bg: string; shadow: string }) {
   return (
-    <div style={{ position: "relative", marginBottom: 22 }}>
-      <div style={{
-        display: "flex", alignItems: "center",
-        border: `2px solid ${focused ? P : "#A78BFA"}`,
-        borderRadius: 14,
-        padding: "15px 16px",
-        minHeight: 56,
-        background: focused ? "#FAFAFE" : "white",
-        transition: "border-color 0.2s, background 0.2s, box-shadow 0.2s",
-        boxShadow: focused ? `0 0 0 4px rgba(91,60,227,0.12)` : "none",
-      }}>
-        <input
-          type={type}
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          autoComplete={autoComplete}
-          required
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={{
-            flex: 1, border: "none", outline: "none",
-            fontSize: 15, fontWeight: 500, color: "#1a1a2e",
-            fontFamily: "'Inter', sans-serif",
-            background: "transparent",
-          }}
-        />
-        {rightSlot}
-      </div>
-      {/* Floating label */}
-      <label style={{
-        position: "absolute",
-        left: 14,
-        top: active ? -10 : "50%",
-        transform: active ? "none" : "translateY(-50%)",
-        fontSize: active ? 11 : 15,
-        fontWeight: 800,
-        fontFamily: "'Inter', sans-serif",
-        color: active ? (focused ? P : P) : "#A78BFA",
-        background: "white",
-        padding: "0 5px",
-        pointerEvents: "none",
-        transition: "all 0.2s ease",
-        letterSpacing: active ? "0.08em" : 0,
-        textTransform: active ? "uppercase" : "none",
-      }}>
-        {label}
-      </label>
+    <div
+      style={{
+        width: 82,
+        height: 82,
+        borderRadius: "50%",
+        background: bg,
+        display: "grid",
+        placeItems: "center",
+        boxShadow: shadow,
+      }}
+    >
+      <img
+        src="/logo-icon.svg"
+        alt="MobPae"
+        style={{ width: 56, height: 40, objectFit: "contain" }}
+      />
     </div>
   );
 }
 
-export function LoginScreen({ error, loading, onLogin, onForgotPassword }: LoginScreenProps) {
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const isSuccessMessage = error.toLowerCase().includes("successfully");
+function AuthField({
+  label,
+  type,
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+  icon,
+  rightSlot,
+  p,
+}: {
+  label: string;
+  type: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete?: string;
+  placeholder?: string;
+  icon: React.ReactNode;
+  rightSlot?: React.ReactNode;
+  p: ReturnType<typeof loginPalette>;
+}) {
+  const [focused, setFocused] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!loading && email && password) void onLogin(email, password);
+  return (
+    <label style={{ display: "block", marginBottom: 20 }}>
+      <span
+        style={{
+          display: "block",
+          marginBottom: 10,
+          color: p.MUTED,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "0.28em",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+      <div
+        style={{
+          minHeight: 62,
+          border: `1px solid ${focused ? p.BORDER_FOC : p.BORDER}`,
+          borderRadius: 16,
+          background: p.PANEL,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "0 16px",
+          transition: "border-color 0.18s ease, background 0.18s ease",
+        }}
+      >
+        <span style={{ color: focused ? p.TEXT : p.MUTED, display: "grid", placeItems: "center" }}>
+          {icon}
+        </span>
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          required
+          style={{
+            flex: 1,
+            minWidth: 0,
+            border: 0,
+            outline: 0,
+            color: p.TEXT,
+            background: "transparent",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: 15,
+            fontWeight: 650,
+            letterSpacing: "0.06em",
+          }}
+        />
+        {rightSlot}
+      </div>
+    </label>
+  );
+}
+
+export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme = "dark" }: LoginScreenProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const isSuccessMessage = error.toLowerCase().includes("successfully");
+  const canSubmit = Boolean(email && password && !loading);
+  const p = loginPalette(theme);
+
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (canSubmit) void onLogin(email, password);
   };
 
   return (
-    <div style={{
-      position: "relative", display: "flex", flexDirection: "column",
-      flex: 1, background: "white", overflow: "hidden",
-      fontFamily: "Inter, sans-serif",
-    }}>
-
-      {/* ══════════════════════════════════════════
-          PURPLE HERO — top 46% with gradient + deco
-          ══════════════════════════════════════════ */}
-      <div style={{
-        position: "relative",
-        background: `linear-gradient(145deg, ${PD} 0%, ${P} 55%, ${PL} 100%)`,
-        paddingTop: 56,
-        paddingBottom: 80,
-        overflow: "hidden",
-        flexShrink: 0,
-      }}>
-
-        {/* Decorative glowing circles */}
-        <div style={{
-          position: "absolute", top: -50, right: -50,
-          width: 200, height: 200, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", bottom: 40, left: -60,
-          width: 160, height: 160, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-        {/* Small sparkle dots */}
-        {[
-          { x: "75%", y: "20%", r: 3 },
-          { x: "15%", y: "60%", r: 2 },
-          { x: "85%", y: "65%", r: 4 },
-          { x: "30%", y: "15%", r: 2.5 },
-        ].map((d, i) => (
-          <div key={i} style={{
-            position: "absolute", left: d.x, top: d.y,
-            width: d.r * 2, height: d.r * 2, borderRadius: "50%",
-            background: "rgba(255,255,255,0.45)",
-            pointerEvents: "none",
-          }} />
-        ))}
-
-        {/* Logo + branding */}
-        <div style={{
-          display: "flex", flexDirection: "column",
-          alignItems: "center", gap: 14,
-          position: "relative", zIndex: 1,
-        }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: 22,
-            background: "rgba(255,255,255,0.18)",
-            backdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-          }}>
-            <img
-              src="/logo-icon.svg" alt="MobPae"
-              width="44" height="29"
-              style={{ filter: "brightness(0) invert(1)", objectFit: "contain" }}
-            />
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <p style={{ fontSize: 26, fontWeight: 800, color: "white", margin: 0, letterSpacing: "-0.5px" }}>
-              MobPae
-            </p>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", margin: "4px 0 0", fontWeight: 400 }}>
-              Your salary, when you need it.
-            </p>
+    <div
+      style={{
+        minHeight: "100%",
+        flex: 1,
+        background: p.GLOW,
+        color: p.TEXT,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "28px 24px",
+        fontFamily: "'Space Grotesk', sans-serif",
+      }}
+    >
+        <div style={{ display: "grid", placeItems: "center", gap: 14, marginBottom: 34 }}>
+          <LogoMark
+            bg={theme === "light" ? "#FFFFFF" : p.CREAM}
+            shadow={theme === "light"
+              ? "0 8px 28px rgba(91,60,227,0.18), 0 0 0 1.5px rgba(91,60,227,0.12)"
+              : "0 14px 40px rgba(242,240,234,0.12)"}
+          />
+          <div
+            style={{
+              color: p.TEXT,
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.34em",
+              textTransform: "uppercase",
+            }}
+          >
+            MobPae
           </div>
         </div>
-      </div>
 
-      {/* ══════════════════════════════════════════
-          MULTI-LAYER WAVE — transitions hero → form
-          ══════════════════════════════════════════ */}
-      <div style={{
-        position: "relative", marginTop: -70,
-        flexShrink: 0, lineHeight: 0,
-      }}>
-        <svg viewBox="0 0 390 90" preserveAspectRatio="none"
-          style={{ width: "100%", height: 90, display: "block" }}>
-          {/* Back wave — bright lavender */}
-          <path
-            d="M0,30 C60,70 130,0 210,35 C280,65 340,10 390,28 L390,90 L0,90 Z"
-            fill="rgba(167,139,250,0.65)"
-          />
-          {/* Mid wave — medium purple */}
-          <path
-            d="M0,50 C80,10 160,75 260,45 C330,25 370,55 390,42 L390,90 L0,90 Z"
-            fill="rgba(124,97,255,0.50)"
-          />
-          {/* Front wave — white */}
-          <path
-            d="M0,65 C70,30 170,80 270,58 C350,40 375,68 390,60 L390,90 L0,90 Z"
-            fill="white"
-          />
-        </svg>
-      </div>
+        <form onSubmit={submit} style={{ padding: "0 0 28px" }}>
+          <div style={{ marginBottom: 26 }}>
+            <h1
+              style={{
+                margin: 0,
+                color: p.TEXT,
+                fontSize: 28,
+                lineHeight: 1.08,
+                fontWeight: 700,
+                letterSpacing: "-0.04em",
+              }}
+            >
+              Welcome back
+            </h1>
+            <p
+              style={{
+                margin: "10px 0 0",
+                color: p.MUTED,
+                fontSize: 14,
+                lineHeight: 1.45,
+                fontWeight: 500,
+              }}
+            >
+              Sign in to access your salary advances.
+            </p>
+          </div>
 
-      {/* ══════════════════════════════════════════
-          FORM SECTION
-          ══════════════════════════════════════════ */}
-      <div style={{
-        flex: 1, background: "white",
-        padding: "0 28px 36px",
-        display: "flex", flexDirection: "column",
-        position: "relative",
-      }}>
-
-        {/* Subtle bottom-right accent */}
-        <svg viewBox="0 0 160 160" style={{
-          position: "absolute", bottom: 0, right: 0,
-          width: 140, height: 140, pointerEvents: "none", opacity: 0.07,
-        }}>
-          <circle cx="140" cy="140" r="100" fill={P} />
-          <circle cx="140" cy="140" r="60"  fill={PL} />
-        </svg>
-
-        {/* Section title */}
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{
-            fontSize: 22, fontWeight: 800, color: "#1a1a2e",
-            margin: "0 0 4px", letterSpacing: "-0.4px",
-          }}>
-            Welcome back 👋
-          </h2>
-          <p style={{ fontSize: 13, color: "#8B92A5", margin: 0, fontWeight: 400 }}>
-            Sign in to access your account
-          </p>
-        </div>
-
-        <form onSubmit={submit} style={{ position: "relative", zIndex: 1 }}>
-
-          <FloatingInput
-            label="Email"
+          <AuthField
+            label="Email ID"
             type="email"
             value={email}
             onChange={setEmail}
             autoComplete="email"
+            placeholder="you@company.com"
+            icon={<Mail size={17} strokeWidth={1.9} />}
+            p={p}
           />
 
-          <FloatingInput
-            label="Password"
-            type={showPass ? "text" : "password"}
-            value={password}
-            onChange={setPassword}
-            autoComplete="current-password"
-            rightSlot={
+          <div style={{ position: "relative" }}>
+            <AuthField
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+              placeholder="Password"
+              icon={<Lock size={17} strokeWidth={1.9} />}
+              p={p}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    border: 0,
+                    borderRadius: "50%",
+                    background: "transparent",
+                    color: p.MUTED,
+                    display: "grid",
+                    placeItems: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              }
+            />
+            {onForgotPassword && (
               <button
                 type="button"
-                onClick={() => setShowPass(v => !v)}
+                onClick={onForgotPassword}
                 style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: 0, display: "flex", flexShrink: 0, color: P,
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  border: 0,
+                  background: "transparent",
+                  color: theme === "light" ? "#5B3CE3" : p.TEXT,
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 650,
+                  cursor: "pointer",
                 }}
               >
-                {showPass ? <EyeOff size={20} /> : <Lock size={20} />}
+                Forgot?
               </button>
-            }
-          />
+            )}
+          </div>
 
-          {/* Forgot password */}
-          {onForgotPassword && (
-            <div style={{ textAlign: "right", marginTop: -12, marginBottom: 20 }}>
-              <button
-                type="button" onClick={onForgotPassword}
-                style={{
-                  background: "none", border: "none", color: P,
-                  fontSize: 13, fontWeight: 600, cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                Forgot password?
-              </button>
-            </div>
-          )}
-
-          {/* Message */}
           {error && (
-            <div style={{
-              background: isSuccessMessage ? "#DCFCE7" : "#FEE2E2",
-              color: isSuccessMessage ? "#15803D" : "#B91C1C",
-              borderRadius: 12,
-              padding: "11px 14px", fontSize: 13, marginBottom: 16,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span>{isSuccessMessage ? "✓" : "⚠"}</span> {error}
+            <div
+              style={{
+                margin: "2px 0 18px",
+                border: `1px solid ${isSuccessMessage ? "rgba(31,158,103,0.35)" : "rgba(180,89,31,0.4)"}`,
+                background: isSuccessMessage ? "rgba(31,158,103,0.1)" : "rgba(180,89,31,0.12)",
+                color: isSuccessMessage ? p.GREEN : "#D9905A",
+                borderRadius: 14,
+                padding: "12px 14px",
+                fontSize: 13,
+                lineHeight: 1.35,
+                fontWeight: 600,
+              }}
+            >
+              {error}
             </div>
           )}
 
-          {/* Login button */}
           <button
             type="submit"
-            disabled={!email || !password || loading}
+            disabled={!canSubmit}
             style={{
               width: "100%",
-              background: !email || !password || loading
-                ? "#A09CF0"
-                : `linear-gradient(135deg, ${PD} 0%, ${PL} 100%)`,
-              color: "white", border: "none",
-              borderRadius: 16, padding: "17px",
-              fontSize: 16, fontWeight: 700,
-              fontFamily: "Inter, sans-serif",
-              cursor: loading || !email || !password ? "not-allowed" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: !email || !password || loading
-                ? "none"
-                : "0 8px 24px rgba(91,60,227,0.38)",
-              transition: "all 0.2s",
-              letterSpacing: "0.02em",
+              height: 64,
+              border: 0,
+              borderRadius: 18,
+              background: canSubmit ? p.CREAM : p.CREAM_DIS,
+              color: p.CTA_TEXT,
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 16,
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 8px 0 26px",
+              cursor: canSubmit ? "pointer" : "not-allowed",
+              boxShadow: canSubmit
+                ? (theme === "light"
+                  ? "0 16px 42px rgba(91,60,227,0.22)"
+                  : "0 16px 42px rgba(242,240,234,0.12)")
+                : "none",
             }}
           >
-            {loading ? <span className="mp-spinner" /> : "Login"}
+            <span>{loading ? "Signing in..." : "Sign in"}</span>
+            <span
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 14,
+                background: p.CTA_ICON_BG,
+                color: p.CTA_ICON_C,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              {loading ? <span className="cta-spinner" /> : <ArrowRight size={24} strokeWidth={2.2} />}
+            </span>
           </button>
 
-          {/* Bottom hint */}
-          <p style={{
-            textAlign: "center", fontSize: 12, color: "#B0B7C3",
-            marginTop: 20, lineHeight: 1.6,
-          }}>
-            Your account is created by your employer.<br />
-            Contact HR if you haven't received credentials.
-          </p>
+          <div
+            style={{
+              marginTop: 34,
+              height: 1,
+              background: p.DIVIDER,
+            }}
+          />
+
+          <div
+            style={{
+              marginTop: 28,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              color: p.DIM,
+              fontSize: 12,
+              fontWeight: 500,
+              textAlign: "center",
+            }}
+          >
+            <ShieldCheck size={14} strokeWidth={1.8} />
+            <span>Bank-grade encryption. Your data stays private.</span>
+          </div>
         </form>
-      </div>
     </div>
   );
 }

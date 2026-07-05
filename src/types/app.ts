@@ -20,7 +20,7 @@ export type View =
   | "help";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
-export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered";
+export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered" | "Cancelled" | "Expired";
 
 export type SelfieStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
@@ -78,14 +78,22 @@ export type BankAccount = {
   verified?: boolean;
 };
 
+export type SetupItem = {
+  key: "KYC" | "BANK_ACCOUNT" | "MEMBERSHIP";
+  label: string;
+  status: string;
+  completed: boolean;
+};
+
 export type AdvanceRequest = {
   id: string;
   requestedAmount: number;
   approvedAmount: number;
   requestDate: string;
   status: RequestStatus;
-  statusLabel?: string;   // backend-provided human-readable label
-  statusColor?: string;   // backend-provided hex/CSS color
+  rawStatus?: string;       // backend raw status string (e.g. "SUBMITTED")
+  statusLabel?: string;     // backend-provided human-readable label
+  statusColor?: string;     // backend-provided hex/CSS color
   remarks: string;
   principalAmount: number;
   interestAmount: number;
@@ -96,6 +104,11 @@ export type AdvanceRequest = {
   recoveryStatus: "Scheduled" | "Completed";
   disbursalDate?: string;
   disbursalStatus: "Pending" | "Disbursed";
+  // Backend-driven lifecycle fields (from presentSalaryRequest)
+  progress?: number;
+  nextAction?: string;
+  nextActionLabel?: string;
+  allowedActions?: { cancel: boolean };
   timeline: Array<{
     status: RequestStatus;
     timestamp: string;
@@ -104,22 +117,49 @@ export type AdvanceRequest = {
   }>;
 };
 
+export type EligibilityResult = {
+  eligible: boolean;
+  reasons: Array<{ code: string; message: string }>;
+  nextAction: string;
+  nextActionLabel: string;
+  setup: SetupItem[];
+  limits: {
+    salaryInHand: number;
+    approvedLimit: number;
+    usedLimit: number;
+    availableAdvance: number;
+  };
+  payroll: { payrollDate: number | null; payrollCutoffDate: number | null };
+  membershipRequiredAfterEmployerApproval: boolean;
+  outstandingRepayment: {
+    id: string;
+    status: string;
+    dueDate: string;
+    totalAmount: number;
+  } | null;
+  activeRequest: AdvanceRequest | null;
+};
+
 export type MembershipPlan = {
-  id: "free" | "plus";
-  name: string;
-  price: number;
-  priceLabel: string;
-  features: string[];
-  advanceLimit: number;
-  fee: number;
-  feeLabel: string;
-  isCurrentPlan?: boolean;
+  planType: 'MONTHLY' | 'BIANNUAL';
+  planName: string;
+  amount: number;
+  validityDays: number;
+  billingLabel: string;
+  perMonthLabel: string | null;
+  preferred: boolean;
+  savingsVsMonthly: number | null;
+  savingsPercent: number | null;
 };
 
 export type MembershipConfig = {
+  // Available plans from config
+  plans: MembershipPlan[];
   // Active member fields
+  membershipId?: string;
+  planType?: 'MONTHLY' | 'BIANNUAL' | string;
   planName: string;
-  fee: number;                  // membershipFee from config or amountPaid from /me
+  fee: number;                  // amountPaid from /me or selected plan amount
   status?: "PENDING" | "ACTIVE" | "REJECTED" | "EXPIRED" | "CANCELLED" | string;
   couponDiscount: number;
   couponCode?: string;
@@ -145,16 +185,14 @@ export type MembershipConfig = {
   };
   paymentReference?: string;
   paymentScreenshot?: string;
+  submittedAt?: string;
   remarks?: string;
 };
 
 export type CouponValidation = {
   valid: boolean;
   couponCode: string;
-  membershipAmount: number;
   discountAmount: number;
-  payableAmount: number;
-  savings: number;
 };
 
 export type RecoveryPreview = {

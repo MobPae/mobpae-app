@@ -1,13 +1,59 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { emptyBankAccount, emptyState } from "../data/emptyState";
 import { employeeApi } from "../services/api";
-import type { AppState, BankAccount, CouponValidation, KycDocumentType, RecoveryPreview, View } from "../types/app";
+import type { AppState, BankAccount, CouponValidation, EligibilityResult, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 
-const REFRESH_COOLDOWN_MS = 30_000; // 30 s between auto-refreshes on tab switch
+const REFRESH_COOLDOWN_MS = 5 * 60_000; // 5 min between silent background refreshes
+const ACTIVE_VIEW_KEY = "mobpae_employee_active_view";
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const REQUIRED_KYC_TYPES: KycDocumentType[] = ["PAN", "AADHAR", "SALARY_SLIP"];
+const RESTORABLE_VIEWS = new Set<View>([
+  "home",
+  "advance",
+  "repayments",
+  "activity",
+  "profile",
+  "profile-kyc",
+  "profile-bank",
+  "profile-membership",
+  "change-password",
+  "onboarding-kyc",
+  "onboarding-bank",
+  "notifications",
+  "help",
+]);
+
+function readStoredActiveView(): View | null {
+  try {
+    const stored = window.localStorage.getItem(ACTIVE_VIEW_KEY) as View | null;
+    return stored && RESTORABLE_VIEWS.has(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeActiveView(view: View) {
+  try {
+    if (RESTORABLE_VIEWS.has(view)) {
+      window.localStorage.setItem(ACTIVE_VIEW_KEY, view);
+    } else {
+      window.localStorage.removeItem(ACTIVE_VIEW_KEY);
+    }
+  } catch {
+    // Local storage may be unavailable in private browsing; navigation still works in memory.
+  }
+}
+
+function clearStoredActiveView() {
+  try {
+    window.localStorage.removeItem(ACTIVE_VIEW_KEY);
+  } catch {
+    // No-op.
+  }
+}
 
 function validateUpload(file: File, allowPdf: boolean): string | null {
   if (file.size > MAX_UPLOAD_BYTES) return "File must be smaller than 5 MB.";
@@ -26,7 +72,7 @@ export function useEmployeeApp() {
     const v = params.get("view");
     // Only allow pre-login views to be deep-linked via URL
     if (v === "reset-password" || v === "forgot-password") return v as View;
-    return "home";
+    return employeeApi.hasSession() ? readStoredActiveView() ?? "home" : "home";
   });
   const lastRefreshAt = useRef<number>(0);
   const [appState, setAppState] = useState<AppState>(emptyState);
@@ -50,6 +96,8 @@ export function useEmployeeApp() {
   const [changePasswordError, setChangePasswordError] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingSelfie, setUploadingSelfie] = useState(false);
+  const [eligibility, setEligibility] = useState<EligibilityResult | null>(null);
+  const [cancellingAdvance, setCancellingAdvance] = useState(false);
   const suppressNextSessionExpiredRef = useRef(false);
   const clearNotice = useCallback(() => setNotice(""), []);
 
@@ -57,9 +105,15 @@ export function useEmployeeApp() {
     const hasExistingData = loadState === "ready" || Boolean(appState.profile.id);
     setLoadState("loading");
     try {
-      const nextState = await employeeApi.loadAppState();
+      // Load app state and eligibility in parallel; eligibility is best-effort
+      const [nextState, eligResult] = await Promise.all([
+        employeeApi.loadAppState(),
+        employeeApi.getEligibility().catch(() => null),
+      ]);
+
       lastRefreshAt.current = Date.now();
       setAppState(nextState);
+      setEligibility(eligResult);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
       setEditingBank(false);
       setCouponValidation(null);
@@ -95,6 +149,16 @@ export function useEmployeeApp() {
     void loadEmployee(false);
   }, []);
 
+  useEffect(() => {
+    if (!notice) return;
+
+    const timer = window.setTimeout(() => {
+      setNotice("");
+    }, 4500);
+
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
   // When a 401 is detected in the API layer, clear session state so the login screen shows.
   useEffect(() => {
     const handleExpired = () => {
@@ -102,9 +166,11 @@ export function useEmployeeApp() {
         suppressNextSessionExpiredRef.current = false;
         return;
       }
+      clearStoredActiveView();
       setIsLoggedIn(false);
       setAppState(emptyState);
       setLoadState("idle");
+      setActiveViewRaw("home");
       setLoginError("Your session has expired. Please sign in again.");
     };
     window.addEventListener("mobpae:session:expired", handleExpired);
@@ -137,6 +203,7 @@ export function useEmployeeApp() {
       // Backend invalidates all sessions on password change — clear tokens and force re-login
       suppressNextSessionExpiredRef.current = true;
       employeeApi.logout();
+      clearStoredActiveView();
       setIsLoggedIn(false);
       setActiveView("home");
       setLoginError("Password changed successfully. Please sign in again.");
@@ -154,6 +221,7 @@ export function useEmployeeApp() {
 
   const logout = () => {
     employeeApi.logout();
+    clearStoredActiveView();
     setIsLoggedIn(false);
     setActiveView("home");
   };
@@ -166,23 +234,40 @@ export function useEmployeeApp() {
     await employeeApi.resetPassword(token, newPassword);
   };
 
-  const kycComplete =
-    appState.documents.length >= 3 &&
-    appState.documents.every((document) => document.status === "Verified");
-  const kycSubmitted =
-    appState.documents.length >= 3 &&
-    appState.documents.every((document) => document.status !== "Not Uploaded");
-  const bankComplete = Boolean(appState.bankAccount?.verified);
-  const bankSubmitted = Boolean(appState.bankAccount);
+  // Prefer eligibility.setup for setup-step completion (handles PENDING bank correctly)
+  const kycSetup = eligibility?.setup.find((s) => s.key === "KYC");
+  const bankSetup = eligibility?.setup.find((s) => s.key === "BANK_ACCOUNT");
+
+  const requiredKycDocuments = REQUIRED_KYC_TYPES.map((type) =>
+    appState.documents.find((document) => document.documentType === type)
+  );
+  const allRequiredKycVerified = requiredKycDocuments.every(
+    (document) => document?.status === "Verified"
+  );
+  const allRequiredKycSubmitted = requiredKycDocuments.every(
+    (document) => document?.status === "Verified" || document?.status === "Under Review"
+  );
+
+  const kycComplete = allRequiredKycVerified || Boolean(kycSetup?.completed && allRequiredKycSubmitted);
+  const kycSubmitted = allRequiredKycSubmitted;
+  const bankComplete = bankSetup ? bankSetup.completed : Boolean(appState.bankAccount?.verified);
+  // bankSubmitted = bank is at least submitted (PENDING or VERIFIED), not NOT_ADDED
+  const bankSubmitted = bankSetup ? bankSetup.status !== "NOT_ADDED" : Boolean(appState.bankAccount);
+
   const membershipSubmitted =
     appState.membershipActive ||
     appState.membershipConfig.status === "PENDING" ||
     Boolean(appState.membershipConfig.paymentScreenshot);
-  const activeRequest = appState.requests.find(
-    (request) => !["Paid", "Recovered", "Rejected"].includes(request.status)
+
+  // Prefer eligibility.activeRequest (richest, from presentSalaryRequest) over local state
+  const activeRequest = eligibility?.activeRequest ?? appState.requests.find(
+    (request) => !["Paid", "Recovered", "Rejected", "Cancelled", "Expired"].includes(request.status)
   );
   const activeRecovery = Boolean(activeRequest);
   const membershipFee = appState.membershipConfig.fee;
+
+  // Available advance limit: eligibility is most accurate source
+  const advanceLimit = eligibility?.limits.availableAdvance ?? appState.profile.salaryLimit;
 
   const onboardingSteps = useMemo(
     () => [
@@ -204,18 +289,18 @@ export function useEmployeeApp() {
     return "";
   }, [activeRequest, appState.profile.accountActive, appState.bankAccount, bankComplete, kycComplete, kycSubmitted]);
 
-  const eligibleForAdvance = !nextBlocker;
+  // Backend eligibility is authoritative when available
+  const eligibleForAdvance = eligibility ? eligibility.eligible : !nextBlocker;
 
   useEffect(() => {
-    const limit = appState.profile.salaryLimit;
-    if (limit <= 0) return;
-    // Clamp current selection to [500, limit] when limit changes
-    setAdvanceAmount((cur) => Math.min(Math.max(cur, Math.min(500, limit)), limit));
-  }, [appState.profile.salaryLimit]);
+    if (advanceLimit <= 0) return;
+    // Clamp current selection to [500, advanceLimit] when limit changes
+    setAdvanceAmount((cur) => Math.min(Math.max(cur, Math.min(500, advanceLimit)), advanceLimit));
+  }, [advanceLimit]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    if (advanceAmount < 500 || advanceAmount > appState.profile.salaryLimit) {
+    if (advanceAmount < 500 || advanceAmount > advanceLimit) {
       setPreview(null);
       setPreviewLoading(false);
       return;
@@ -253,6 +338,7 @@ export function useEmployeeApp() {
       setEditingBank(false);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to save bank account. Please try again.");
+      throw error;
     } finally {
       setSavingBank(false);
     }
@@ -295,7 +381,7 @@ export function useEmployeeApp() {
         ...current,
         profile: { ...current.profile, profilePhotoUrl: filePath },
       }));
-      setNotice("Profile photo updated.");
+      setNotice("");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to upload photo. Please try again.");
     } finally {
@@ -376,7 +462,11 @@ export function useEmployeeApp() {
     setCouponError("");
   };
 
-  const activateMembership = async (paymentScreenshot?: File, paymentReference?: string) => {
+  const activateMembership = async (
+    paymentScreenshot?: File,
+    paymentReference?: string,
+    planType: 'MONTHLY' | 'BIANNUAL' = 'BIANNUAL',
+  ) => {
     const uploadIssue = paymentScreenshot ? validateUpload(paymentScreenshot, false) : null;
     if (uploadIssue) {
       setNotice(uploadIssue);
@@ -389,6 +479,7 @@ export function useEmployeeApp() {
         ? await employeeApi.uploadMembershipScreenshot(paymentScreenshot)
         : undefined;
       const result = await employeeApi.activateMembership({
+        planType,
         couponCode: couponValidation?.couponCode,
         paymentReference: paymentReference?.trim() || undefined,
         paymentScreenshot: screenshotPath,
@@ -400,12 +491,15 @@ export function useEmployeeApp() {
         membershipConfig: {
           ...current.membershipConfig,
           status: membership?.status ?? "PENDING",
+          planType: membership?.planType as 'MONTHLY' | 'BIANNUAL' ?? planType,
+          membershipId: membership?.id ?? current.membershipConfig.membershipId,
           planName: membership?.planName ?? current.membershipConfig.planName,
           amountPayable: membership?.amount
             ? Number(membership.amount)
             : current.membershipConfig.amountPayable,
           paymentReference: membership?.paymentReference ?? current.membershipConfig.paymentReference,
           paymentScreenshot: membership?.paymentScreenshot ?? current.membershipConfig.paymentScreenshot,
+          submittedAt: new Date().toISOString(),
           remarks: membership?.remarks ?? current.membershipConfig.remarks,
         }
       }));
@@ -424,24 +518,27 @@ export function useEmployeeApp() {
   const submitSalaryAdvance = async () => {
     setSubmittingAdvance(true);
     try {
-      const savedRequest = await employeeApi.submitSalaryAdvance(appState.profile.id, advanceAmount);
-      setAppState((current) => ({
-        ...current,
-        requests: [savedRequest, ...current.requests],
-        dashboard: current.dashboard
-          ? {
-              ...current.dashboard,
-              activeRequestStatus: "SUBMITTED"
-            }
-          : current.dashboard,
-        notifications: [`Request ${savedRequest.id} submitted for employer approval.`, ...current.notifications].slice(0, 5)
-      }));
-      setNotice("Salary advance request submitted for employer approval.");
+      await employeeApi.submitSalaryAdvance(appState.profile.id, advanceAmount);
+      // Refresh so eligibility + requests reflect the new submission
+      void loadEmployee();
       setActiveView("activity");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to submit salary advance request.");
     } finally {
       setSubmittingAdvance(false);
+    }
+  };
+
+  const cancelAdvanceRequest = async (id: string) => {
+    setCancellingAdvance(true);
+    try {
+      await employeeApi.cancelSalaryRequest(id);
+      void loadEmployee();
+      setNotice("Advance request cancelled.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to cancel request. Please try again.");
+    } finally {
+      setCancellingAdvance(false);
     }
   };
 
@@ -458,6 +555,7 @@ export function useEmployeeApp() {
   // Tab-switch wrapper: silently background-refresh if cooldown has passed
   const setActiveView = useCallback((view: View) => {
     setActiveViewRaw(view);
+    storeActiveView(view);
     const now = Date.now();
     if (
       isLoggedIn &&
@@ -474,15 +572,19 @@ export function useEmployeeApp() {
     activeView,
     activatingMembership,
     advanceAmount,
+    advanceLimit,
     appState,
     bankComplete,
     bankSubmitted,
     bankForm,
     cancelBankEdit,
+    cancelAdvanceRequest,
+    cancellingAdvance,
     couponError,
     couponValidation,
     clearCoupon,
     editingBank,
+    eligibility,
     eligibleForAdvance,
     isLoggedIn,
     kycComplete,

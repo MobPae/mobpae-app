@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { ArrowRight, Building2, ChevronRight, Landmark, Search, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Landmark,
+  Lock,
+  ShieldCheck,
+} from "lucide-react";
 import type { BankAccount, View } from "../types/app";
 
 type Props = {
@@ -11,164 +18,238 @@ type Props = {
   kycSubmitted: boolean;
 };
 
-const POPULAR_BANKS = [
-  { name: "HDFC Bank",           letter: "H", color: "#e8192c" },
-  { name: "ICICI Bank",          letter: "I", color: "#f37322" },
-  { name: "Axis Bank",           letter: "A", color: "#97144d" },
-  { name: "SBI",                 letter: "S", color: "#1a3c8f" },
-  { name: "Kotak Bank",          letter: "K", color: "#ed1c24" },
-  { name: "Yes Bank",            letter: "Y", color: "#00599d" },
-  { name: "IndusInd Bank",       letter: "I", color: "#006fba" },
-  { name: "Punjab National",     letter: "P", color: "#e31837" },
-  { name: "Bank of Baroda",      letter: "B", color: "#f58220" },
-  { name: "Canara Bank",         letter: "C", color: "#006a4e" },
-];
+function cleanAccount(value: string) {
+  return value.replace(/\s+/g, "");
+}
 
-type Step = "pick" | "form";
+function formatAccount(value: string) {
+  return cleanAccount(value)
+    .replace(/\D/g, "")
+    .replace(/(.{5})/g, "$1 ")
+    .trim();
+}
 
-export function OnboardingBankScreen({ bankForm, savingBank, onBankFormChange, onSaveBank, onContinue, kycSubmitted }: Props) {
-  const [step, setStep] = useState<Step>("pick");
-  const [search, setSearch] = useState("");
+function maskAccount(value: string) {
+  const digits = cleanAccount(value);
+  const last = digits.slice(-4) || "0000";
+  return `••••  ••••  ${last}`;
+}
 
-  const filtered = POPULAR_BANKS.filter((b) =>
-    b.name.toLowerCase().includes(search.toLowerCase())
+function StatusBadge({ verified }: { verified?: boolean }) {
+  return (
+    <span className={`bankv2-status ${verified ? "is-verified" : "is-pending"}`}>
+      <span />
+      {verified ? "Verified" : "Pending"}
+    </span>
   );
+}
 
-  function pickBank(name: string) {
-    onBankFormChange("bankName", name);
-    setStep("form");
+function BankInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+  autoComplete,
+  suffix,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  autoComplete?: string;
+  suffix?: ReactNode;
+}) {
+  return (
+    <label className="bankv2-field">
+      <span>{label}</span>
+      <div className="bankv2-input-wrap">
+        <input
+          value={value}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        {suffix}
+      </div>
+    </label>
+  );
+}
+
+export function OnboardingBankScreen({
+  bankForm,
+  savingBank,
+  onBankFormChange,
+  onSaveBank,
+  onContinue,
+  kycSubmitted,
+}: Props) {
+  const [confirmAccount, setConfirmAccount] = useState("");
+  const [showLinkedAccount, setShowLinkedAccount] = useState(() => Boolean(cleanAccount(bankForm.accountNumber)));
+
+  useEffect(() => {
+    if (!bankForm.accountNumber) {
+      setConfirmAccount("");
+      setShowLinkedAccount(false);
+    }
+  }, [bankForm.accountNumber]);
+
+  const accountNumber = cleanAccount(bankForm.accountNumber);
+  const confirmNumber = cleanAccount(confirmAccount);
+  const accountMatches = accountNumber.length > 0 && accountNumber === confirmNumber;
+  const nextView: View = kycSubmitted ? "home" : "onboarding-kyc";
+  const nextLabel = kycSubmitted ? "Go to Home" : "Continue to KYC";
+
+  const canSubmit = useMemo(() => {
+    return Boolean(
+      bankForm.bankName.trim() &&
+        bankForm.accountHolderName.trim() &&
+        accountNumber &&
+        accountMatches &&
+        bankForm.ifscCode.trim()
+    );
+  }, [accountMatches, accountNumber, bankForm.accountHolderName, bankForm.bankName, bankForm.ifscCode]);
+
+  const handleSave = async () => {
+    if (!canSubmit || savingBank) return;
+    try {
+      await onSaveBank();
+      setShowLinkedAccount(true);
+    } catch {
+      // The app hook already surfaces the API error through the shared notice.
+    }
+  };
+
+  if (showLinkedAccount && !savingBank) {
+    const heading = kycSubmitted ? "You’re all set" : "Bank linked";
+    const message = kycSubmitted
+      ? "Identity verified and bank linked. You can now request salary advances."
+      : "Your salary account is linked. Finish KYC to unlock salary advances.";
+
+    return (
+      <div className="bankv2-screen">
+        <section className="bankv2-hero">
+          <div>
+            <div className="bankv2-kicker">Step 4 of 4</div>
+            <h1>Link your bank</h1>
+            <p>Where we’ll send advances and auto-recover on payday.</p>
+          </div>
+          <div className="bankv2-hero-icon">
+            <Landmark size={27} strokeWidth={1.8} />
+          </div>
+        </section>
+
+        <section className="bankv2-account-card">
+          <div className="bankv2-account-top">
+            <span>Primary account</span>
+            <StatusBadge verified={bankForm.verified} />
+          </div>
+          <h2>{bankForm.bankName || "Bank Account"}</h2>
+          <div className="bankv2-card-number">{maskAccount(bankForm.accountNumber)}</div>
+          <div className="bankv2-card-rule" />
+          <div className="bankv2-card-meta">
+            <div>
+              <span>Holder</span>
+              <strong>{bankForm.accountHolderName || "—"}</strong>
+            </div>
+            <div>
+              <span>IFSC</span>
+              <strong>{bankForm.ifscCode || "—"}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="bankv2-success">
+          <div className="bankv2-success-ring">
+            <Check size={31} strokeWidth={2.4} />
+          </div>
+          <h2>{heading}</h2>
+          <p>{message}</p>
+        </section>
+
+        <div className="bankv2-footer">
+          <button type="button" className="bankv2-primary" onClick={() => onContinue(nextView)}>
+            <span>{nextLabel}</span>
+            <span className="bankv2-primary-icon">
+              <ArrowRight size={24} strokeWidth={2.2} />
+            </span>
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  const nextView: View = kycSubmitted ? "advance" : "onboarding-kyc";
-  const skipLabel = kycSubmitted ? "Skip — Go to Advance" : "Skip — Add KYC First";
-
   return (
-    <div className="onb-screen">
+    <div className="bankv2-screen">
+      <section className="bankv2-hero">
+        <div>
+          <div className="bankv2-kicker">Step 4 of 4</div>
+          <h1>Link your bank</h1>
+          <p>Where we’ll send advances and auto-recover on payday.</p>
+        </div>
+        <div className="bankv2-hero-icon">
+          <Landmark size={27} strokeWidth={1.8} />
+        </div>
+      </section>
 
-      {/* Hero */}
-      <div className="onb-hero" style={{ background: "white" }}>
-        <div className="onb-hero-text">
-          <div className="onb-hero-title">Bank Account</div>
-          <div className="onb-hero-sub">
-            Add your salary account to receive advances and for auto-repayment.
-          </div>
-        </div>
-        <div className="onb-hero-illus-box">
-          <Landmark size={36} color="#5B3CE3" />
-        </div>
+      <section className="bankv2-form">
+        <BankInput
+          label="Bank name"
+          value={bankForm.bankName}
+          placeholder="e.g. HDFC Bank"
+          autoComplete="organization"
+          onChange={(value) => onBankFormChange("bankName", value)}
+        />
+        <BankInput
+          label="Account holder name"
+          value={bankForm.accountHolderName}
+          placeholder="As per bank records"
+          autoComplete="name"
+          onChange={(value) => onBankFormChange("accountHolderName", value)}
+        />
+        <BankInput
+          label="Account number"
+          value={formatAccount(bankForm.accountNumber)}
+          placeholder="Enter account number"
+          autoComplete="off"
+          onChange={(value) => onBankFormChange("accountNumber", cleanAccount(value))}
+        />
+        <BankInput
+          label="Re-enter account number"
+          value={formatAccount(confirmAccount)}
+          placeholder="Re-enter to confirm"
+          autoComplete="off"
+          onChange={(value) => setConfirmAccount(cleanAccount(value))}
+          suffix={accountMatches ? <CheckCircle2 className="bankv2-input-check" size={18} /> : null}
+        />
+        <BankInput
+          label="IFSC code"
+          value={bankForm.ifscCode}
+          placeholder="e.g. HDFC0001234"
+          autoComplete="off"
+          onChange={(value) => onBankFormChange("ifscCode", value.toUpperCase())}
+        />
+      </section>
+
+      <div className="bankv2-note">
+        <Lock size={15} strokeWidth={1.8} />
+        A ₹1 verification deposit confirms the account.
       </div>
 
-      <div className="screen-body onb-body" style={{ padding: "12px 16px" }}>
-
-        {step === "pick" ? (
-          <>
-            {/* Search */}
-            <div className="mp-input-wrap" style={{ marginBottom: 12 }}>
-              <span className="mp-input-icon"><Search size={16} /></span>
-              <input
-                className="mp-input"
-                type="text"
-                placeholder="Search your bank..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-
-            {/* Bank grid */}
-            <div style={{ background: "white", borderRadius: 16, border: "1px solid #F0EEFF", overflow: "hidden", marginBottom: 12 }}>
-              {filtered.map((bank) => (
-                <button
-                  key={bank.name}
-                  type="button"
-                  onClick={() => pickBank(bank.name)}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderBottom: "1px solid #F3F1FF", width: "100%", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "left", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "#F3F1FF" }}
-                >
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: bank.color + "1a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 15, color: bank.color, flexShrink: 0 }}>
-                    {bank.letter}
-                  </div>
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "#0F0A3C" }}>{bank.name}</span>
-                  <ChevronRight size={16} color="#9CA3AF" />
-                </button>
-              ))}
-              {filtered.length === 0 && (
-                <div style={{ padding: "20px 16px", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>No banks found</div>
-              )}
-            </div>
-
-            {/* Manual entry */}
-            <button
-              type="button"
-              onClick={() => setStep("form")}
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "white", borderRadius: 12, border: "1.5px dashed #C4BBFF", width: "100%", cursor: "pointer", fontFamily: "inherit", marginBottom: 12 }}
-            >
-              <Building2 size={20} color="#5B3CE3" />
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "#5B3CE3", textAlign: "left" }}>Enter bank details manually</span>
-              <ChevronRight size={16} color="#5B3CE3" />
-            </button>
-          </>
-        ) : (
-          <>
-            {/* Manual form */}
-            {bankForm.bankName && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#F9F8FF", borderRadius: 12, padding: "10px 14px", marginBottom: 12 }}>
-                <Landmark size={16} color="#5B3CE3" />
-                <span style={{ fontSize: 14, fontWeight: 600, color: "#5B3CE3" }}>{bankForm.bankName}</span>
-                <button type="button" onClick={() => { onBankFormChange("bankName", ""); setStep("pick"); }} style={{ marginLeft: "auto", fontSize: 11, color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>Change</button>
-              </div>
-            )}
-
-            {[
-              { field: "bankName" as keyof BankAccount, label: "Bank Name", placeholder: "e.g. HDFC Bank", type: "text" },
-              { field: "accountHolderName" as keyof BankAccount, label: "Account Holder Name", placeholder: "As per bank records", type: "text" },
-              { field: "accountNumber" as keyof BankAccount, label: "Account Number", placeholder: "Enter account number", type: "text" },
-              { field: "ifscCode" as keyof BankAccount, label: "IFSC Code", placeholder: "e.g. HDFC0001234", type: "text" },
-              { field: "upiId" as keyof BankAccount, label: "UPI ID (Optional)", placeholder: "e.g. name@upi", type: "text" },
-            ].map(({ field, label, placeholder, type }) => (
-              <div key={field} className="mp-field">
-                <label className="mp-label">{label}</label>
-                <div className="mp-input-wrap">
-                  <input
-                    className="mp-input"
-                    type={type}
-                    placeholder={placeholder}
-                    value={(bankForm[field] as string) || ""}
-                    onChange={e => onBankFormChange(field, e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
-
-            <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-              <ShieldCheck size={12} color="#16A34A" /> Your bank details are encrypted and never shared.
-            </div>
-          </>
-        )}
-
-        <div className="mp-bottom-space" />
-      </div>
-
-      {/* Footer */}
-      <div className="onb-footer">
-        {step === "form" && (
-          <button
-            type="button"
-            className="mp-btn-primary"
-            disabled={savingBank || !bankForm.accountNumber || !bankForm.ifscCode || !bankForm.accountHolderName}
-            style={{ marginBottom: 8 }}
-            onClick={async () => { await onSaveBank(); onContinue(nextView); }}
-          >
-            {savingBank ? <span className="mp-spinner" /> : <>Save & Continue <ArrowRight size={16} /></>}
-          </button>
-        )}
+      <div className="bankv2-footer bankv2-footer--form">
         <button
           type="button"
-          className={step === "form" ? "mp-btn-outline" : "mp-btn-primary"}
-          onClick={() => onContinue(nextView)}
+          className="bankv2-primary"
+          disabled={!canSubmit || savingBank}
+          onClick={handleSave}
         >
-          {step === "pick" ? <>{skipLabel} <ArrowRight size={16} /></> : "Skip"}
+          <span>{savingBank ? "Linking account..." : "Verify & link account"}</span>
+          <span className="bankv2-primary-icon">
+            <ArrowRight size={24} strokeWidth={2.2} />
+          </span>
         </button>
-        <div className="onb-secure-note" style={{ marginTop: 8 }}>
-          <ShieldCheck size={12} /> 256-bit encrypted · RBI compliant
+        <div className="bankv2-secure">
+          <ShieldCheck size={13} strokeWidth={1.8} />
+          Bank details are encrypted and stored securely
         </div>
       </div>
     </div>

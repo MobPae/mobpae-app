@@ -18,6 +18,7 @@ export const emptyState: AppState = {
   bankAccount: null,
   membershipActive: false,
   membershipConfig: {
+    plans: [],
     planName: "",
     fee: 0,
     couponDiscount: 0,

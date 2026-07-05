@@ -16,11 +16,15 @@ import { ForgotPasswordScreen } from "./ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./ResetPasswordScreen";
 import { NotificationsScreen } from "./NotificationsScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
+import { useTheme } from "../hooks/useTheme";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
+  const theme = useTheme();
   const notifBackRef = useRef<View>("home");
   const onboardingBackRef = useRef<View>("advance");
+  const rootClassName = `app-root app-root--${theme.theme}`;
+  const shellClassName = `phone-shell phone-shell--${theme.theme}`;
 
   const openOnboarding = (view: "onboarding-kyc" | "onboarding-bank", backTo: View = "advance") => {
     onboardingBackRef.current = backTo;
@@ -45,11 +49,12 @@ export function EmployeeApp() {
   if (!app.isLoggedIn) {
     if (app.activeView === "forgot-password") {
       return (
-        <div className="app-root">
-          <div className="phone-shell">
+        <div className={rootClassName}>
+          <div className={shellClassName}>
             <ForgotPasswordScreen
               onBack={() => app.setActiveView("home")}
               onForgotPassword={app.forgotPassword}
+              theme={theme.theme}
             />
           </div>
         </div>
@@ -62,25 +67,27 @@ export function EmployeeApp() {
         window.history.replaceState({}, "", window.location.pathname);
       }
       return (
-        <div className="app-root">
-          <div className="phone-shell">
+        <div className={rootClassName}>
+          <div className={shellClassName}>
             <ResetPasswordScreen
               token={token}
               onBack={() => app.setActiveView("home")}
               onResetPassword={app.resetPassword}
+              theme={theme.theme}
             />
           </div>
         </div>
       );
     }
     return (
-      <div className="app-root">
-        <div className="phone-shell">
+      <div className={rootClassName}>
+        <div className={shellClassName}>
           <LoginScreen
             error={app.loginError}
             loading={app.loadState === "loading"}
             onLogin={app.login}
             onForgotPassword={() => app.setActiveView("forgot-password")}
+            theme={theme.theme}
           />
         </div>
       </div>
@@ -89,8 +96,8 @@ export function EmployeeApp() {
 
   if (app.loadState === "idle" || app.loadState === "loading") {
     return (
-      <div className="app-root">
-        <div className="phone-shell">
+      <div className={rootClassName}>
+        <div className={shellClassName}>
           <div className="boot-screen">
             <div className="boot-loader" aria-label="Loading MobPae">
               <span /><span /><span />
@@ -109,11 +116,16 @@ export function EmployeeApp() {
     if (app.activeView === "onboarding-kyc" && view === "onboarding-bank") {
       onboardingBackRef.current = "onboarding-kyc";
     }
+    if (app.activeView === "onboarding-bank" && view === "onboarding-kyc") {
+      onboardingBackRef.current = "onboarding-bank";
+    }
     app.setActiveView(view);
   };
 
   const handleShellBack = () => {
-    if (app.activeView === "onboarding-kyc") return app.setActiveView("advance");
+    if (app.activeView === "onboarding-kyc") {
+      return app.setActiveView(onboardingBackRef.current === "onboarding-bank" ? "onboarding-bank" : "advance");
+    }
     if (app.activeView === "onboarding-bank") {
       return app.setActiveView(onboardingBackRef.current === "onboarding-kyc" ? "onboarding-kyc" : "advance");
     }
@@ -131,6 +143,7 @@ export function EmployeeApp() {
       onNavigate={navigate}
       onBack={handleShellBack}
       uploadProfilePhoto={app.uploadProfilePhoto}
+      theme={theme.theme}
     >
 
       {/* ── Onboarding flow ─────────────────────────────────── */}
@@ -175,6 +188,7 @@ export function EmployeeApp() {
           appState={app.appState}
           notice={app.notice}
           onNavigate={navigate}
+          theme={theme.theme}
         />
       )}
 
@@ -189,6 +203,9 @@ export function EmployeeApp() {
           onValidateCoupon={app.validateCoupon}
           onClearCoupon={app.clearCoupon}
           onNavigate={navigate}
+          onRefresh={app.refresh}
+          refreshing={app.refreshing}
+          theme={theme.theme}
         />
       )}
 
@@ -196,7 +213,7 @@ export function EmployeeApp() {
         <AdvanceScreen
           amount={app.advanceAmount}
           eligible={app.eligibleForAdvance}
-          limit={app.appState.profile.salaryLimit}
+          limit={app.advanceLimit}
           nextBlocker={app.nextBlocker}
           preview={app.preview}
           previewLoading={app.previewLoading}
@@ -208,11 +225,19 @@ export function EmployeeApp() {
           kycSubmitted={app.kycSubmitted}
           bankComplete={app.bankComplete}
           bankSubmitted={app.bankSubmitted}
+          membershipConfig={app.appState.membershipConfig}
+          membershipActive={app.appState.membershipActive}
+          membershipRequiredAfterEmployerApproval={app.eligibility?.membershipRequiredAfterEmployerApproval}
+          bankAccount={app.appState.bankAccount}
+          kycDocumentCount={app.appState.documents.filter((document) => document.status !== "Not Uploaded").length}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
+          onCancelRequest={app.cancelAdvanceRequest}
+          cancellingRequest={app.cancellingAdvance}
           blockerActionLabel={advanceBlockerActionLabel}
           onResolveBlocker={resolveAdvanceBlocker}
           onNavigate={navigate}
+          theme={theme.theme}
         />
       )}
 
@@ -221,11 +246,16 @@ export function EmployeeApp() {
           requests={app.appState.requests}
           bankAccount={app.appState.bankAccount}
           onNavigate={navigate}
+          theme={theme.theme}
         />
       )}
 
       {app.activeView === "activity" && (
-        <ActivityScreen requests={app.appState.requests} onNavigate={navigate} />
+        <ActivityScreen
+          requests={app.appState.requests}
+          bankAccount={app.appState.bankAccount}
+          theme={theme.theme}
+        />
       )}
 
       {app.activeView === "change-password" && (
@@ -235,6 +265,10 @@ export function EmployeeApp() {
           onSubmit={app.changePassword}
           onClearError={() => app.setChangePasswordError("")}
           onBack={() => app.setActiveView("profile")}
+          onNotifications={() => navigate("notifications")}
+          onRefresh={app.refresh}
+          refreshing={app.refreshing}
+          theme={theme.theme}
         />
       )}
 
@@ -244,6 +278,7 @@ export function EmployeeApp() {
           onBack={() => app.setActiveView(notifBackRef.current)}
           onMarkRead={app.markNotificationRead}
           onMarkAllRead={app.markAllNotificationsRead}
+          theme={theme.theme}
         />
       )}
 
@@ -265,6 +300,10 @@ export function EmployeeApp() {
           onCancelBankEdit={app.cancelBankEdit}
           onSaveBank={app.saveBankAccount}
           onUpdateUpiId={app.updateUpiId}
+          onRefresh={app.refresh}
+          refreshing={app.refreshing}
+          theme={theme.theme}
+          onThemeChange={theme.setTheme}
           onBankFormChange={(field, value) =>
             app.setBankForm((prev) => ({ ...prev, [field]: value }))
           }

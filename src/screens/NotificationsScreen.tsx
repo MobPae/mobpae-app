@@ -1,12 +1,13 @@
-import { Banknote, Bell, BellOff, Check, CheckCheck, CreditCard, Info, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Banknote, Bell, Check, CheckCheck, CreditCard, Info, Landmark, ShieldCheck } from "lucide-react";
 import type { AppNotification } from "../services/api";
-import { SubPageHeader } from "../components/layout/SubPageHeader";
+import type { Theme } from "../hooks/useTheme";
 
 type Props = {
   notifications: AppNotification[];
   onBack: () => void;
   onMarkRead: (id: string) => Promise<void>;
   onMarkAllRead: () => Promise<void>;
+  theme?: Theme;
 };
 
 function timeAgo(iso: string): string {
@@ -23,6 +24,7 @@ function getNotifIcon(title: string) {
   const t = title.toLowerCase();
   if (t.includes("advance") || t.includes("salary") || t.includes("disburse")) return <Banknote size={18} />;
   if (t.includes("repayment") || t.includes("payment") || t.includes("recovery")) return <CreditCard size={18} />;
+  if (t.includes("bank")) return <Landmark size={18} />;
   if (t.includes("approved") || t.includes("success")) return <Check size={18} />;
   return <Info size={18} />;
 }
@@ -31,6 +33,7 @@ function getNotifIconClass(title: string) {
   const t = title.toLowerCase();
   if (t.includes("approved") || t.includes("disburse") || t.includes("success")) return "notif-icon-green";
   if (t.includes("repayment") || t.includes("payment") || t.includes("recovery")) return "notif-icon-purple";
+  if (t.includes("bank")) return "notif-icon-neutral";
   return "notif-icon-amber";
 }
 
@@ -50,7 +53,7 @@ function groupByDate(notifications: AppNotification[]) {
   return map;
 }
 
-export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkAllRead }: Props) {
+export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkAllRead, theme = "dark" }: Props) {
   const sorted = [...notifications].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -58,69 +61,74 @@ export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkA
   const grouped = groupByDate(sorted);
 
   return (
-    <div className="notif-screen">
-
-      {/* Header */}
-      <div style={{ position: "relative" }}>
-        <SubPageHeader
-          title={`Notifications${unread.length > 0 ? ` (${unread.length})` : ""}`}
-          onBack={onBack}
-        />
+    <div className={`notif-screen notif-screen--${theme}`}>
+      <header className="notif-topbar">
+        <button type="button" className="notif-back" onClick={onBack} aria-label="Back">
+          <ArrowLeft size={20} strokeWidth={2.25} />
+        </button>
+        <div className="notif-heading">
+          <span>Notifications</span>
+          {unread.length > 0 && <strong>{unread.length}</strong>}
+        </div>
         {unread.length > 0 && (
           <button
             type="button"
-            className="mp-link-btn"
-            style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12 }}
+            className="notif-all-read"
             onClick={onMarkAllRead}
           >
-            <CheckCheck size={14} /> All read
+            <CheckCheck size={16} strokeWidth={2.2} />
+            <span>All read</span>
           </button>
         )}
-      </div>
+      </header>
 
-      <div className="screen-body notif-body">
-
+      <div className="notif-body">
         {sorted.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "56px 24px" }}>
-            <BellOff size={40} color="#D1D5DB" style={{ margin: "0 auto 16px", display: "block" }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#6B7280", marginBottom: 6 }}>No notifications yet</div>
-            <div style={{ fontSize: 13, color: "#9CA3AF" }}>You'll see advance updates and alerts here.</div>
+          <div className="notif-empty">
+            <div className="notif-empty-orb">
+              <Bell size={34} strokeWidth={1.8} />
+            </div>
+            <h2>You’re all caught up</h2>
+            <p>New alerts about your advances and account will appear here.</p>
           </div>
         ) : (
           Array.from(grouped.entries()).map(([dateLabel, items]) => (
-            <div key={dateLabel}>
-              <div className="notif-date-pill">{dateLabel}</div>
-              <div className="notif-card">
-                {items.map((n, i) => (
-                  <div key={n.id}>
-                    {i > 0 && <div className="notif-row-divider" />}
-                    <div
-                      className={`notif-row${!n.isRead ? " unread" : ""}`}
-                      onClick={() => { if (!n.isRead) void onMarkRead(n.id); }}
-                      style={{ cursor: !n.isRead ? "pointer" : "default" }}
-                    >
-                      {!n.isRead && <div className="notif-unread-bar" />}
-                      <div className={`notif-icon ${getNotifIconClass(n.title)}`}>
-                        {getNotifIcon(n.title)}
-                      </div>
-                      <div className="notif-body-col">
-                        <div className="notif-title">{n.title}</div>
-                        <div className="notif-sub">{n.message}</div>
-                        <div className="notif-time">{timeAgo(n.createdAt)}</div>
-                      </div>
-                    </div>
-                  </div>
+            <section className="notif-group" key={dateLabel}>
+              <div className="notif-date-label">{dateLabel}</div>
+              <div className="notif-list">
+                {items.map((n) => (
+                  <button
+                    type="button"
+                    key={n.id}
+                    className={`notif-row${!n.isRead ? " unread" : ""}`}
+                    onClick={() => { if (!n.isRead) void onMarkRead(n.id); }}
+                    disabled={n.isRead}
+                  >
+                    {!n.isRead && <span className="notif-unread-bar" aria-hidden="true" />}
+                    <span className={`notif-icon ${getNotifIconClass(n.title)}`}>
+                      {getNotifIcon(n.title)}
+                    </span>
+                    <span className="notif-body-col">
+                      <span className="notif-title">
+                        {n.title}
+                        {!n.isRead && <i aria-hidden="true" />}
+                      </span>
+                      <span className="notif-sub">{n.message}</span>
+                      <span className="notif-time">{timeAgo(n.createdAt)}</span>
+                    </span>
+                  </button>
                 ))}
               </div>
-            </div>
+            </section>
           ))
         )}
 
-        {/* Security note */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0 4px", fontSize: 11, color: "#9CA3AF" }}>
-          <ShieldCheck size={12} color="#16A34A" />
-          Notifications are encrypted and private
-        </div>
+        {sorted.length > 0 && (
+          <div className="notif-security-note">
+            <ShieldCheck size={13} strokeWidth={1.9} />
+            <span>Notifications are encrypted and private</span>
+          </div>
+        )}
 
         <div className="mp-bottom-space" />
       </div>
