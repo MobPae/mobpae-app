@@ -186,6 +186,12 @@ export function RepaymentScheduleScreen({
   const WARM = colors.warm;
   const GREEN = colors.green;
   const request = activeRepayment(requests);
+  const activeRepaymentCount = requests.filter(
+    (r) =>
+      (r.disbursalStatus === "Disbursed" || r.status === "Payment Scheduled") &&
+      r.recoveryStatus === "Scheduled" &&
+      !["Paid", "Recovered", "Rejected", "Cancelled", "Expired"].includes(r.status),
+  ).length || 1;
 
   if (!request) {
     return <EmptyRepayment colors={colors} />;
@@ -196,7 +202,8 @@ export function RepaymentScheduleScreen({
   const total = request.totalRecoveryAmount || principal + interest;
   const dueDate = request.recoveryDate;
   const left = daysLeft(dueDate);
-  const progress = Math.max(5, Math.min(100, 100 - Math.round((left / Math.max(request.interestDays || left || 1, 1)) * 100)));
+  const totalDays = request.interestDays || Math.max(left, 1);
+  const progress = Math.min(100, Math.max(0, 100 - Math.round((left / totalDays) * 100)));
 
   return (
     <div
@@ -244,7 +251,9 @@ export function RepaymentScheduleScreen({
               {formatMoney(total)}
             </div>
             <div style={{ color: MUTED, fontSize: 13, fontWeight: 600, marginTop: 14 }}>
-              1 active advance · recovers this cycle
+              {activeRepaymentCount === 1
+                ? "1 active advance · recovers this cycle"
+                : `${activeRepaymentCount} active advances · recovers this cycle`}
             </div>
           </div>
           <span

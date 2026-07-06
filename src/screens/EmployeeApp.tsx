@@ -15,6 +15,8 @@ import { OnboardingDoneScreen } from "./OnboardingDoneScreen";
 import { ForgotPasswordScreen } from "./ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./ResetPasswordScreen";
 import { NotificationsScreen } from "./NotificationsScreen";
+import { HelpScreen } from "./HelpScreen";
+import { LegalScreen } from "./LegalScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
 import { useTheme } from "../hooks/useTheme";
 
@@ -22,6 +24,7 @@ export function EmployeeApp() {
   const app = useEmployeeApp();
   const theme = useTheme();
   const notifBackRef = useRef<View>("home");
+  const legalBackRef = useRef<View>("profile");
   const onboardingBackRef = useRef<View>("advance");
   const rootClassName = `app-root app-root--${theme.theme}`;
   const shellClassName = `phone-shell phone-shell--${theme.theme}`;
@@ -110,6 +113,7 @@ export function EmployeeApp() {
 
   const navigate = (view: View) => {
     if (view === "notifications") notifBackRef.current = app.activeView as View;
+    if (view === "legal") legalBackRef.current = app.activeView as View;
     if (app.activeView === "advance" && (view === "onboarding-kyc" || view === "onboarding-bank")) {
       onboardingBackRef.current = "advance";
     }
@@ -130,6 +134,8 @@ export function EmployeeApp() {
       return app.setActiveView(onboardingBackRef.current === "onboarding-kyc" ? "onboarding-kyc" : "advance");
     }
     if (app.activeView === "onboarding-done") return app.setActiveView("advance");
+    if (app.activeView === "legal") return app.setActiveView(legalBackRef.current);
+    if (app.activeView === "help") return app.setActiveView("profile");
     return app.setActiveView("home");
   };
 
@@ -278,6 +284,19 @@ export function EmployeeApp() {
           onBack={() => app.setActiveView(notifBackRef.current)}
           onMarkRead={app.markNotificationRead}
           onMarkAllRead={app.markAllNotificationsRead}
+          theme={theme.theme}
+        />
+      )}
+
+      {app.activeView === "help" && (
+        <HelpScreen
+          onBack={() => app.setActiveView("profile")}
+        />
+      )}
+
+      {app.activeView === "legal" && (
+        <LegalScreen
+          onBack={() => app.setActiveView(legalBackRef.current)}
           theme={theme.theme}
         />
       )}

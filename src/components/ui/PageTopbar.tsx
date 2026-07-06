@@ -1,5 +1,5 @@
 import { Bell } from "lucide-react";
-import { getFileUrl } from "../../services/api";
+import { useSignedUrl } from "../../hooks/useSignedUrl";
 import type { EmployeeProfile, View } from "../../types/app";
 
 type Props = {
@@ -22,6 +22,8 @@ export function PageTopbar({
   onNavigate,
   onAvatarClick,
 }: Props) {
+  const profilePhotoUrl = useSignedUrl(profile.profilePhotoUrl);
+
   return (
     <div className="dash-v5-topbar">
       <div className="page-topbar-title">{title}</div>
@@ -42,8 +44,8 @@ export function PageTopbar({
           onClick={onAvatarClick ?? (() => onNavigate("profile"))}
         >
           {getInitials(profile.name || "M")}
-          {profile.profilePhotoUrl && (
-            <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name}
+          {profilePhotoUrl && (
+            <img src={profilePhotoUrl} alt={profile.name}
               onError={(e) => { e.currentTarget.style.display = "none"; }} />
           )}
         </button>

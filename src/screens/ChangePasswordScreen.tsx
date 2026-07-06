@@ -138,7 +138,7 @@ export function ChangePasswordScreen({
         background:
           "radial-gradient(circle at 50% 4%, var(--cp-glow), transparent 40%), var(--cp-surface)",
         color: TEXT,
-        padding: "24px 22px 30px",
+        padding: "max(24px, env(safe-area-inset-top, 0px)) 22px 30px",
         fontFamily: "'Space Grotesk', sans-serif",
       }}
     >

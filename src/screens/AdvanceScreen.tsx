@@ -1710,7 +1710,23 @@ export function AdvanceScreen({
                         </small>
                         {maskedBankAccount}
                       </span>
-                      <span style={{ color: colors.dim, fontSize: 13, fontWeight: 700 }}>Change</span>
+                      <button
+                        type="button"
+                        onClick={() => onNavigate?.("profile-bank")}
+                        style={{
+                          background: "transparent",
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 8,
+                          color: colors.muted,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          padding: "5px 10px",
+                          cursor: "pointer",
+                          fontFamily: "'Space Grotesk', sans-serif",
+                        }}
+                      >
+                        Change
+                      </button>
                     </div>
 
                     <div
@@ -1788,16 +1804,24 @@ export function AdvanceScreen({
                         {preview ? formatMoney(preview.total) : formatMoney(amount)}
                       </strong>{" "}
                       on my payday and accept the{" "}
-                      <a
-                        href="#terms"
+                      <button
+                        type="button"
+                        onClick={() => onNavigate?.("legal")}
                         style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
                           color: colors.text,
                           textDecoration: "underline",
                           textUnderlineOffset: 3,
+                          fontSize: "inherit",
+                          fontWeight: "inherit",
+                          fontFamily: "inherit",
+                          cursor: "pointer",
                         }}
                       >
                         advance terms
-                      </a>.
+                      </button>.
                     </span>
                   </label>
 

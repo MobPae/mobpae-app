@@ -1,4 +1,4 @@
-import { ArrowDownToLine, CheckCircle2, Clock3 } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, CheckCircle2, Clock3 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { AdvanceRequest, BankAccount } from "../types/app";
 import { formatMoney, formatRequestStatus } from "../utils/format";
@@ -248,7 +248,7 @@ function ActivityIcon({
       {type === "credit" ? (
         <ArrowDownToLine size={18} strokeWidth={2} />
       ) : type === "repayment" ? (
-        <span style={{ fontSize: 20, lineHeight: 1 }}>↑</span>
+        <ArrowUpFromLine size={17} strokeWidth={2} />
       ) : (
         <CheckCircle2 size={17} strokeWidth={1.9} />
       )}
@@ -477,11 +477,19 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
         ))
       )}
 
-      {filtered.length > 0 && (
-        <div style={{ color: colors.dim, textAlign: "center", fontSize: 12, fontWeight: 650, marginTop: 28 }}>
-          That’s everything from this year
-        </div>
-      )}
+      {filtered.length > 0 && (() => {
+        const oldest = filtered[filtered.length - 1];
+        const oldestYear = oldest?.sortTs ? new Date(oldest.sortTs).getFullYear() : new Date().getFullYear();
+        const currentYear = new Date().getFullYear();
+        const label = oldestYear < currentYear
+          ? `That’s everything since ${oldestYear}`
+          : "That’s everything from this year";
+        return (
+          <div style={{ color: colors.dim, textAlign: "center", fontSize: 12, fontWeight: 650, marginTop: 28 }}>
+            {label}
+          </div>
+        );
+      })()}
     </div>
   );
 }

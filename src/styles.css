@@ -14063,6 +14063,14 @@ html[data-theme="light"] body {
   border-color: #26262B !important;
   box-shadow: none !important;
 }
+.help-topic-card--active {
+  border-color: #B4591F !important;
+  background: rgba(180, 89, 31, 0.08) !important;
+}
+.phone-shell--light .help-topic-card--active {
+  border-color: #5B3CE3 !important;
+  background: rgba(91, 60, 227, 0.06) !important;
+}
 .phone-shell--dark .help-topic-icon {
   background: rgba(107, 69, 244, 0.15) !important;
   color: #9A7DF5 !important;
@@ -14146,16 +14154,23 @@ html[data-theme="light"] body {
   padding-right: 20px !important;
 }
 
-/* ============================================================
-   Advance screen layout: screen-body must be a flex column so
-   that minHeight:100% on the advance screen outer div resolves
-   to the screen-body's allocated height, enabling the sticky-
-   footer CTA pattern and correct flex:1 distribution.
-   ============================================================ */
-.phone-shell .screen-body {
-  display: flex !important;
-  flex-direction: column !important;
+/* pbv2-screen (bank verified view) shown fullscreen — needs safe-area top */
+.phone-shell .pbv2-screen {
+  padding-top: max(22px, env(safe-area-inset-top, 0px)) !important;
 }
+
+/* sub-page-header when rendered fullscreen (Help page — no AppShell header above) */
+.screen-body--fullscreen .sub-page-header {
+  padding-top: max(16px, env(safe-area-inset-top, 0px)) !important;
+  min-height: auto !important;
+}
+
+/* ============================================================
+   screen-body: block scroll container (not flex — flex on a
+   scroll container breaks iOS Safari scroll for children that
+   use minHeight:100%).
+   ============================================================ */
+/* (flex override removed — was causing iOS scroll snap-back) */
 
 /* ============================================================
    Notifications redesign — dark/light theme parity
@@ -15134,12 +15149,12 @@ html[data-theme="light"] body {
    The TabBar component is inline-styled, so target its real class here rather
    than older .bottom-nav rules from the previous design system. */
 .phone-shell .app-tabbar {
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
-  padding: 0 12px !important;
-  align-items: center !important;
-  align-content: center !important;
+  height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  min-height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  max-height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 0 12px env(safe-area-inset-bottom, 0px) !important;
+  align-items: flex-start !important;
+  align-content: flex-start !important;
   box-sizing: border-box !important;
 }
 
@@ -15172,16 +15187,16 @@ html[data-theme="light"] body {
     bottom: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: 64px !important;
-    min-height: 64px !important;
-    max-height: 64px !important;
-    align-items: center !important;
-    align-content: center !important;
+    height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    align-items: flex-start !important;
+    align-content: flex-start !important;
     transform: none !important;
   }
 
   .phone-shell .screen-body {
-    padding-bottom: 72px !important;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 

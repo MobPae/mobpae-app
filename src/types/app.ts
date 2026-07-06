@@ -17,7 +17,8 @@ export type View =
   | "forgot-password"
   | "reset-password"
   | "notifications"
-  | "help";
+  | "help"
+  | "legal";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
 export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered" | "Cancelled" | "Expired";

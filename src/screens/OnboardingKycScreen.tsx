@@ -38,7 +38,7 @@ const KYC_DOCS: KycDocConfig[] = [
   {
     type: "AADHAR",
     label: "Aadhaar Card",
-    hint: "Front & back of Aadhaar",
+    hint: "Upload both sides as one image",
     icon: <IdCard size={17} strokeWidth={1.9} />,
   },
   {

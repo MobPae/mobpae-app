@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { Bell, Camera, ChevronLeft, ChevronRight, RefreshCw, User } from "lucide-react";
 import { TabBar } from "./TabBar";
 import type { EmployeeProfile, View } from "../../types/app";
-import { getFileUrl } from "../../services/api";
+import { useSignedUrl } from "../../hooks/useSignedUrl";
 import type { Theme } from "../../hooks/useTheme";
 
 type AppShellProps = {
@@ -25,6 +25,8 @@ const FULLSCREEN_DARK_VIEWS: View[] = [
   "profile-bank",
   "profile-kyc",
   "change-password",
+  "help",
+  "legal",
 ];
 const HEADER_VIEWS: View[] = [...TAB_VIEWS, ...ONBOARDING_VIEWS];
 const DARK_SURFACE = "#0C0C0E";
@@ -95,6 +97,7 @@ export function AppShell({
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const profilePhotoUrl = useSignedUrl(profile.profilePhotoUrl);
 
   const isOnboarding = ONBOARDING_VIEWS.includes(activeView);
   const isFullscreenDark = FULLSCREEN_DARK_VIEWS.includes(activeView);
@@ -171,12 +174,12 @@ export function AppShell({
                 style={{
                   ...themedIconButton,
                   overflow: "hidden",
-                  borderColor: profile.profilePhotoUrl ? palette.avatarBorder : palette.border,
+                  borderColor: profilePhotoUrl ? palette.avatarBorder : palette.border,
                 }}
               >
-                {profile.profilePhotoUrl ? (
+                {profilePhotoUrl ? (
                   <img
-                    src={getFileUrl(profile.profilePhotoUrl)}
+                    src={profilePhotoUrl}
                     alt={profile.name}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -328,8 +331,8 @@ export function AppShell({
                   aria-label="Change profile photo"
                   disabled={!uploadProfilePhoto}
                 >
-                  {profile.profilePhotoUrl ? (
-                    <img src={getFileUrl(profile.profilePhotoUrl)} alt={profile.name} />
+                  {profilePhotoUrl ? (
+                    <img src={profilePhotoUrl} alt={profile.name} />
                   ) : (
                     <span className="psheet-avatar-initials">{getInitials(profile.name || "M")}</span>
                   )}

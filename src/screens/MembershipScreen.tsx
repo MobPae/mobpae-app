@@ -201,7 +201,7 @@ function Header({
     justifyContent: "center", flexShrink: 0, cursor: "pointer",
   } as const;
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px 0" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "max(16px, env(safe-area-inset-top, 0px)) 22px 0" }}>
       <button type="button" onClick={onBack} aria-label="Back" style={{ ...btn, color: TEXT }}>
         <ChevronLeft size={20} strokeWidth={2} />
       </button>

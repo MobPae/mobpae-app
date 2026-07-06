@@ -319,7 +319,7 @@ export function DashboardScreen({
                 marginBottom: 8,
               }}
             >
-              Monthly Salary
+              Take-home Salary
             </div>
             <div
               style={{
@@ -361,9 +361,22 @@ export function DashboardScreen({
           style={{
             height: 1,
             background: BORDER,
-            margin: "24px 0 20px",
+            margin: "24px 0 16px",
           }}
         />
+
+        <div
+          style={{
+            color: MUTED,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            marginBottom: 10,
+          }}
+        >
+          Advance limit
+        </div>
 
         <div
           style={{

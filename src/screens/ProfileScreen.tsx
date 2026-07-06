@@ -7,7 +7,6 @@ import {
   CreditCard,
   Crown,
   FileText,
-  Globe2,
   HelpCircle,
   Info,
   KeyRound,
@@ -18,9 +17,9 @@ import {
   RefreshCw,
   ShieldCheck,
   Sun,
-  UserPlus,
 } from "lucide-react";
-import { getFileUrl } from "../services/api";
+import { useSignedUrl } from "../hooks/useSignedUrl";
+import { APP_VERSION } from "../config";
 import type { AppState, BankAccount, KycDocumentType, View } from "../types/app";
 import type { Theme } from "../hooks/useTheme";
 import { maskAccountNumber } from "../utils/format";
@@ -260,12 +259,13 @@ function ProfileRow({
   );
 }
 
-function LegalRow() {
+function LegalRow({ onClick }: { onClick: () => void }) {
   return (
     <ProfileRow
       icon={<FileText size={18} />}
       title="Terms & Privacy"
       subtitle="Legal and data policy"
+      onClick={onClick}
     />
   );
 }
@@ -381,6 +381,7 @@ export function ProfileScreen({
         ? "6 Months"
         : "Member");
   const photoRef = useRef<HTMLInputElement>(null);
+  const profilePhotoUrl = useSignedUrl(profile.profilePhotoUrl);
 
   const kycVerified =
     appState.documents.every((d) => d.status === "Verified") &&
@@ -565,9 +566,9 @@ export function ProfileScreen({
               cursor: uploadingPhoto ? "wait" : "pointer",
             }}
           >
-            {profile.profilePhotoUrl ? (
+            {profilePhotoUrl ? (
               <img
-                src={getFileUrl(profile.profilePhotoUrl)}
+                src={profilePhotoUrl}
                 alt={profile.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -768,11 +769,6 @@ export function ProfileScreen({
           onClick={() => onNavigate("change-password")}
         />
         <ProfileRow
-          icon={<Globe2 size={18} />}
-          title="Language"
-          subtitle="English (India)"
-        />
-        <ProfileRow
           icon={theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
           title="Appearance"
           subtitle={theme === "dark" ? "Dark theme" : "Light theme"}
@@ -793,12 +789,7 @@ export function ProfileScreen({
           subtitle="FAQs and contact us"
           onClick={() => onNavigate("help")}
         />
-        <ProfileRow
-          icon={<UserPlus size={18} />}
-          title="Refer a colleague"
-          subtitle="Share your invite link"
-        />
-        <LegalRow />
+        <LegalRow onClick={() => onNavigate("legal")} />
       </RowGroup>
 
       <button
@@ -836,7 +827,7 @@ export function ProfileScreen({
           paddingBottom: 8,
         }}
       >
-        MobPae · v2.4.1
+        MobPae · v{APP_VERSION}
       </div>
 
       <input
