@@ -48,29 +48,34 @@ type BackendKycDocument = {
   note?: string;
 };
 
-type BackendSalaryRequest = {
+type BackendLoanApplication = {
   id: string;
-  amount?: number | string;
-  approvedAmount?: number | string | null;
-  // flat fields (old schema, still supported for compat)
+  // v3.1 field names
+  applicationNumber?: string;
+  requestedAmount?: number | string;
+  adminApprovedAmount?: number | string | null;
+  employerApprovedAmount?: number | string | null;
+  submittedAt?: string;
+  // repayment breakdown (from nested repayment object)
   principalAmount?: number | string;
   interestAmount?: number | string;
   totalAmount?: number | string;
   totalRecoveryAmount?: number | string;
   interestDays?: number | string;
   interestRate?: number | string;
-  requestedAt?: string;
+  // dates
   approvedAt?: string | null;
   createdAt?: string;
   repaymentDate?: string | null;
   dueDate?: string | null;
   recoveryDate?: string | null;
   disbursedAt?: string | null;
+  // status
   status?: string;
   statusLabel?: string;
   statusColor?: string;
   remarks?: string | null;
-  // nested objects from presentSalaryRequest (new schema)
+  // nested objects
   repayment?: (BackendRepayment & {
     principalAmount?: number | string;
     interestAmount?: number | string;
@@ -80,14 +85,17 @@ type BackendSalaryRequest = {
     dueDate?: string;
     status?: string;
   }) | null;
-  disbursal?: { id?: string | null; status?: string | null; disbursedAt?: string | null } | null;
-  // lifecycle fields from presentSalaryRequest
+  disbursal?: { id?: string | null; status?: string | null; disbursedAt?: string | null; disbursedAmount?: number | string | null } | null;
+  // lifecycle fields
   progress?: number;
   nextAction?: string;
   nextActionLabel?: string;
   allowedActions?: { cancel: boolean };
   timeline?: Array<{ status: string; label: string; completed: boolean; completedAt: string | null }>;
 };
+
+/** @deprecated alias kept for type-compat during migration */
+type BackendSalaryRequest = BackendLoanApplication;
 
 type BackendRecoveryPreview = {
   // New contract fields
@@ -116,7 +124,7 @@ type BackendRecoveryPreview = {
 
 type BackendRepayment = {
   id: string;
-  salaryRequestId?: string;
+  loanApplicationId?: string;
   principalAmount?: number | string;
   interestAmount?: number | string;
   totalAmount?: number | string;
@@ -124,7 +132,7 @@ type BackendRepayment = {
   interestRate?: number | string;
   dueDate?: string;
   status?: string;
-  salaryRequest?: BackendSalaryRequest;
+  loanApplication?: BackendLoanApplication;
 };
 
 type BackendNotification = {
@@ -429,33 +437,33 @@ const normalizeRequestStatus = (status?: string): RequestStatus => {
 const toAmount = (value: unknown) => Number(value ?? 0);
 const todayIso = () => new Date().toISOString();
 const getRequestRepayment = (
-  request: BackendSalaryRequest,
+  request: BackendLoanApplication,
   repayments: BackendRepayment[],
   requestCount: number
 ) =>
   request.repayment ??
   repayments.find(
     (item) =>
-      item.salaryRequest?.id === request.id ||
-      item.salaryRequestId === request.id
+      item.loanApplication?.id === request.id ||
+      item.loanApplicationId === request.id
   ) ??
   (requestCount === 1 && repayments.length === 1 ? repayments[0] : undefined);
 
 const normalizeRequests = (
-  requests: BackendSalaryRequest[],
+  requests: BackendLoanApplication[],
   repayments: BackendRepayment[]
 ): AdvanceRequest[] =>
   requests.map((request) => {
-    // New backend returns nested repayment/disbursal objects; old backend used flat fields.
+    // v3.1: backend returns nested repayment/disbursal objects with renamed fields.
     const nestedRepayment = request.repayment ?? null;
     const legacyRepayment = getRequestRepayment(request, repayments, requests.length);
     const repayment = nestedRepayment ?? legacyRepayment;
 
-    const requestedAmount = toAmount(request.amount);
-    const approvedAmount = toAmount(request.approvedAmount ?? request.amount);
-    const requestDate = request.requestedAt ?? request.createdAt ?? todayIso();
+    const requestedAmount = toAmount(request.requestedAmount);
+    const approvedAmount = toAmount(request.adminApprovedAmount ?? request.employerApprovedAmount ?? request.requestedAmount);
+    const requestDate = request.submittedAt ?? request.createdAt ?? todayIso();
 
-    // disbursedAt: prefer disbursal object, then flat field
+    // disbursedAt: prefer disbursal object (v3.1: disbursal.disbursedAt), then flat field
     const disbursedAt = request.disbursal?.disbursedAt ?? request.disbursedAt ?? null;
 
     // Recovery date: nested repayment.dueDate > repaymentDate > dueDate
@@ -549,6 +557,7 @@ const normalizeRequests = (
 
     return {
       id: request.id,
+      applicationNumber: request.applicationNumber,
       requestedAmount,
       approvedAmount,
       requestDate,
@@ -591,7 +600,7 @@ const buildActivity = (
       (repayment) =>
         `Payment ${
           repayment.status?.toLowerCase() ?? "scheduled"
-        } for request ${repayment.salaryRequest?.id ?? repayment.id}.`
+        } for application ${repayment.loanApplication?.id ?? repayment.id}.`
     );
   return [...notificationItems, ...requestItems, ...repaymentItems].slice(0, 5);
 };
@@ -828,13 +837,13 @@ export const employeeApi = {
           | null
         >("/bank-accounts/my", { suppressSessionExpiry: true }),
         request<
-          | BackendSalaryRequest[]
+          | BackendLoanApplication[]
           | {
-              requests?: BackendSalaryRequest[];
-              data?: BackendSalaryRequest[];
-              items?: BackendSalaryRequest[];
+              requests?: BackendLoanApplication[];
+              data?: BackendLoanApplication[];
+              items?: BackendLoanApplication[];
             }
-        >("/salary-requests/my", { suppressSessionExpiry: true }),
+        >("/loan-applications/my", { suppressSessionExpiry: true }),
         request<
           | BackendRepayment[]
           | {
@@ -873,7 +882,7 @@ export const employeeApi = {
       );
       const requestData =
         salaryRequests.status === "fulfilled"
-          ? unwrapArray(salaryRequests.value, "requests")
+          ? unwrapArray(salaryRequests.value as BackendLoanApplication[] | { requests?: BackendLoanApplication[]; data?: BackendLoanApplication[]; items?: BackendLoanApplication[] }, "requests")
           : [];
       const repaymentData =
         repayments.status === "fulfilled"
@@ -1270,8 +1279,8 @@ export const employeeApi = {
   },
 
   async submitSalaryAdvance(employeeId: string, amount: number) {
-    const requestData = await request<BackendSalaryRequest>(
-      "/salary-requests",
+    const requestData = await request<BackendLoanApplication>(
+      "/loan-applications",
       {
         method: "POST",
         body: JSON.stringify({ amount }),
@@ -1317,11 +1326,7 @@ export const employeeApi = {
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {
     const preview = await request<BackendRecoveryPreview>(
-      "/salary-requests/preview",
-      {
-        method: "POST",
-        body: JSON.stringify({ amount }),
-      }
+      `/loan-applications/preview?amount=${encodeURIComponent(amount)}`,
     );
     return {
       principal:     preview.principalAmount  ?? preview.principal     ?? amount,
@@ -1351,8 +1356,8 @@ export const employeeApi = {
       payroll?: { payrollDate: number | null; payrollCutoffDate: number | null };
       membershipRequiredAfterEmployerApproval?: boolean;
       outstandingRepayment?: { id: string; status: string; dueDate: string; totalAmount: number } | null;
-      activeRequest?: BackendSalaryRequest | null;
-    }>("/salary-requests/eligibility");
+      activeRequest?: BackendLoanApplication | null;
+    }>("/loan-applications/eligibility");
     return {
       eligible: raw.eligible ?? false,
       reasons: raw.reasons ?? [],
@@ -1367,7 +1372,7 @@ export const employeeApi = {
     };
   },
 
-  async cancelSalaryRequest(id: string): Promise<void> {
-    await request(`/salary-requests/${id}/cancel`, { method: "POST", body: JSON.stringify({}) });
+  async cancelLoanApplication(id: string): Promise<void> {
+    await request(`/loan-applications/my/${id}/cancel`, { method: "POST", body: JSON.stringify({}) });
   },
 };

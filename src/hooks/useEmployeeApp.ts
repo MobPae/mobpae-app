@@ -532,7 +532,7 @@ export function useEmployeeApp() {
   const cancelAdvanceRequest = async (id: string) => {
     setCancellingAdvance(true);
     try {
-      await employeeApi.cancelSalaryRequest(id);
+      await employeeApi.cancelLoanApplication(id);
       void loadEmployee();
       setNotice("Advance request cancelled.");
     } catch (error) {

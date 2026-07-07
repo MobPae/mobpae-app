@@ -88,6 +88,7 @@ export type SetupItem = {
 
 export type AdvanceRequest = {
   id: string;
+  applicationNumber?: string;
   requestedAmount: number;
   approvedAmount: number;
   requestDate: string;
