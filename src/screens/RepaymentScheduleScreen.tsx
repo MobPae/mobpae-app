@@ -211,7 +211,7 @@ export function RepaymentScheduleScreen({
         minHeight: "100%",
         background: DARK,
         color: TEXT,
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
         padding: "18px 22px 30px",
       }}
     >
@@ -241,7 +241,7 @@ export function RepaymentScheduleScreen({
             <div
               style={{
                 color: TEXT,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "'Inter', system-ui, sans-serif",
                 fontSize: 33,
                 fontWeight: 650,
                 letterSpacing: "-0.08em",
@@ -283,7 +283,7 @@ export function RepaymentScheduleScreen({
             <div style={{ color: MUTED, fontSize: 12, fontWeight: 650, marginBottom: 10 }}>
               Auto-deducts on
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, fontWeight: 650 }}>
+            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 16, fontWeight: 650 }}>
               {formatDate(dueDate)}
             </div>
           </div>
@@ -291,7 +291,7 @@ export function RepaymentScheduleScreen({
             <div style={{ color: MUTED, fontSize: 12, fontWeight: 650, marginBottom: 10 }}>
               Days left
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 16, fontWeight: 650 }}>
+            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 16, fontWeight: 650 }}>
               {left}
             </div>
           </div>
@@ -364,7 +364,7 @@ export function RepaymentScheduleScreen({
           padding: "22px 22px 24px",
           marginTop: 18,
           overflow: "visible",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Inter', system-ui, sans-serif",
         }}
       >
         <span
@@ -401,7 +401,7 @@ export function RepaymentScheduleScreen({
           >
             Breakdown
           </div>
-          <div style={{ color: colors.paperMuted, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, fontWeight: 600 }}>
+          <div style={{ color: colors.paperMuted, fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, fontWeight: 600 }}>
             {request.interestDays || left} days @ {request.interestRate || 36}%
           </div>
         </div>
@@ -416,7 +416,7 @@ export function RepaymentScheduleScreen({
               <strong
                 style={{
                   color: row.color,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   fontSize: 16,
                   fontWeight: 650,
                   letterSpacing: "-0.05em",
@@ -440,7 +440,7 @@ export function RepaymentScheduleScreen({
           <strong
             style={{
               color: colors.paperInk,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 23,
               fontWeight: 650,
               letterSpacing: "-0.08em",

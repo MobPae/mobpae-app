@@ -78,7 +78,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
         minHeight: "100%",
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
       {/* Header */}
@@ -141,7 +141,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                   width: "100%", boxSizing: "border-box", padding: "13px 16px",
                   fontSize: 13, color: p.INPUT_COLOR, background: p.INPUT_BG,
                   border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 12, outline: "none",
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                 }}
                 onFocus={e => { e.target.style.borderColor = p.INPUT_FOCUS; }}
                 onBlur={e  => { e.target.style.borderColor = p.INPUT_BORDER; }}
@@ -160,7 +160,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                 color: "white", borderRadius: 14, border: "none",
                 fontSize: 13, fontWeight: 700,
                 cursor: loading ? "not-allowed" : "pointer",
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'Inter', system-ui, sans-serif",
                 boxShadow: loading ? "none" : "0 4px 16px rgba(107,69,244,0.3)",
               }}
             >

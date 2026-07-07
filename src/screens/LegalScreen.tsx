@@ -107,7 +107,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
         minHeight: "100%",
         background: colors.bg,
         color: colors.text,
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
       {/* Header */}
@@ -227,7 +227,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
                       fontSize: 11,
                       fontWeight: 600,
                       marginTop: 4,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "'Inter', system-ui, sans-serif",
                     }}
                   >
                     Updated {section.lastUpdated}

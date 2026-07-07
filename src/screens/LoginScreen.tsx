@@ -150,7 +150,7 @@ function AuthField({
             outline: 0,
             color: p.TEXT,
             background: "transparent",
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'Inter', system-ui, sans-serif",
             fontSize: 15,
             fontWeight: 650,
             letterSpacing: "0.06em",
@@ -186,7 +186,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
         flexDirection: "column",
         justifyContent: "center",
         padding: "28px 24px",
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
         <div style={{ display: "grid", placeItems: "center", gap: 14, marginBottom: 34 }}>
@@ -289,7 +289,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
                   border: 0,
                   background: "transparent",
                   color: theme === "light" ? "#5B3CE3" : p.TEXT,
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   fontSize: 12,
                   fontWeight: 650,
                   cursor: "pointer",
@@ -328,7 +328,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
               borderRadius: 18,
               background: canSubmit ? p.CREAM : p.CREAM_DIS,
               color: p.CTA_TEXT,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 16,
               fontWeight: 700,
               display: "flex",

@@ -161,7 +161,7 @@ export function AppShell({
               gap: 16,
               flexShrink: 0,
               color: palette.text,
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'Inter', system-ui, sans-serif",
               position: "relative",
               zIndex: 25,
             }}

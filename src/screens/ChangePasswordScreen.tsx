@@ -139,7 +139,7 @@ export function ChangePasswordScreen({
           "radial-gradient(circle at 50% 4%, var(--cp-glow), transparent 40%), var(--cp-surface)",
         color: TEXT,
         padding: "max(24px, env(safe-area-inset-top, 0px)) 22px 30px",
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
       <header
@@ -382,7 +382,7 @@ export function ChangePasswordScreen({
             color: canSubmit
               ? theme === "light" ? "#FFFFFF" : SURFACE
               : MUTED,
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'Inter', system-ui, sans-serif",
             fontSize: 16,
             fontWeight: 700,
             display: "flex",
@@ -490,7 +490,7 @@ function PasswordField({
             outline: 0,
             color: TEXT,
             background: "transparent",
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'Inter', system-ui, sans-serif",
             fontSize: 15,
             fontWeight: 650,
             letterSpacing: "0.08em",

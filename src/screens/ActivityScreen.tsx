@@ -303,7 +303,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
         minHeight: "100%",
         background: colors.bg,
         color: colors.text,
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
         padding: "18px 22px 34px",
       }}
     >
@@ -323,7 +323,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           <div
             style={{
               color: colors.text,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 18,
               fontWeight: 650,
               letterSpacing: "-0.06em",
@@ -347,7 +347,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           <div
             style={{
               color: colors.green,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 18,
               fontWeight: 650,
               letterSpacing: "-0.06em",
@@ -373,7 +373,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                 background: active ? colors.activeBg : "transparent",
                 color: active ? colors.activeText : colors.muted,
                 padding: "0 15px",
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'Inter', system-ui, sans-serif",
                 fontSize: 13,
                 fontWeight: 750,
               }}
@@ -454,7 +454,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                         <div
                           style={{
                             color: amountColor,
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: "'Inter', system-ui, sans-serif",
                             fontSize: 15,
                             fontWeight: 650,
                             letterSpacing: "-0.05em",
@@ -464,7 +464,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                           {event.prefix ? `${event.prefix} ` : ""}
                           {formatMoney(event.amount)}
                         </div>
-                        <div style={{ color: colors.dim, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 600, marginTop: 8 }}>
+                        <div style={{ color: colors.dim, fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, fontWeight: 600, marginTop: 8 }}>
                           {event.date}
                         </div>
                       </div>

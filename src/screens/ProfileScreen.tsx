@@ -193,7 +193,7 @@ function ProfileRow({
         borderBottom: "1px solid var(--profile-rule, #29292F)",
         color: "var(--profile-text, #F2F0EA)",
         textAlign: "left",
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
         opacity: onClick ? 1 : 0.88,
       }}
       className="profile-v2-row"
@@ -548,7 +548,7 @@ export function ProfileScreen({
         minHeight: "100%",
         background: "var(--profile-bg, #0C0C0E)",
         color: "var(--profile-text, #F2F0EA)",
-        fontFamily: "'Space Grotesk', sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
         padding: "26px 22px 32px",
       }}
     >
@@ -807,7 +807,7 @@ export function ProfileScreen({
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Inter', system-ui, sans-serif",
           fontSize: 15,
           fontWeight: 700,
         }}
@@ -820,7 +820,7 @@ export function ProfileScreen({
         style={{
           textAlign: "center",
           color: "#3F3F46",
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: "'Inter', system-ui, sans-serif",
           fontSize: 12,
           fontWeight: 600,
           marginTop: 24,

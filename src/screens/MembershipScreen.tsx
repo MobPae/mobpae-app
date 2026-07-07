@@ -63,8 +63,8 @@ const CTA_SHADOW= "var(--mem-cta-shadow, 0 4px 20px rgba(242,240,234,0.12))";
 const DIS_ICON  = "var(--mem-dis-icon, #3A3A40)";
 const SEL_BG    = "var(--mem-sel-bg, rgba(242,240,234,0.04))";
 const RADIO_DOT = "var(--mem-radio-dot, #17150F)";
-const MONO      = "'IBM Plex Mono', monospace";
-const SANS      = "'Space Grotesk', sans-serif";
+const MONO      = "'Inter', system-ui, sans-serif";
+const SANS      = "'Inter', system-ui, sans-serif";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(value: number | undefined | null, dec = 0) {

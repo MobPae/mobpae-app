@@ -219,7 +219,7 @@ export function DashboardScreen({
     minHeight: "100%",
     background: DARK,
     color: TEXT,
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'Inter', system-ui, sans-serif",
     padding: "20px 22px 28px",
   };
 
@@ -324,7 +324,7 @@ export function DashboardScreen({
             <div
               style={{
                 color: TEXT,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "'Inter', system-ui, sans-serif",
                 fontSize: 28,
                 fontWeight: 650,
                 letterSpacing: "-0.07em",
@@ -400,14 +400,11 @@ export function DashboardScreen({
               <div
                 style={{
                   color: MUTED,
-                  fontSize: 10,
-                  lineHeight: 1,
+                  fontSize: 9,
+                  lineHeight: 1.2,
                   fontWeight: 700,
-                  letterSpacing: "0.12em",
+                  letterSpacing: "0.06em",
                   textTransform: "uppercase",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
                   marginBottom: 9,
                 }}
               >
@@ -415,11 +412,11 @@ export function DashboardScreen({
               </div>
               <div
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   color: metric.tone,
                   fontSize: 14,
                   fontWeight: 700,
-                  letterSpacing: "-0.06em",
+                  letterSpacing: "-0.02em",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -534,7 +531,7 @@ export function DashboardScreen({
               <span
                 style={{
                   color: recentIsDisbursed ? GREEN : TEXT,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   fontSize: 15,
                   fontWeight: 650,
                   letterSpacing: "-0.05em",
@@ -593,7 +590,7 @@ export function DashboardScreen({
                 <span
                   style={{
                     color: TEXT,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     fontSize: 15,
                     fontWeight: 650,
                     letterSpacing: "-0.05em",
@@ -732,7 +729,7 @@ export function DashboardScreen({
                   <span
                     style={{
                       color: DIM,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "'Inter', system-ui, sans-serif",
                       fontSize: 11.5,
                       fontWeight: 600,
                       whiteSpace: "nowrap",

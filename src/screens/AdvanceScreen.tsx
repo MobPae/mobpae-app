@@ -627,7 +627,7 @@ export function AdvanceScreen({
           minHeight: "100%",
           display: "flex",
           flexDirection: "column",
-          fontFamily: "'Space Grotesk', sans-serif",
+          fontFamily: "'Inter', system-ui, sans-serif",
           color: colors.text,
           position: "relative",
         }}
@@ -718,7 +718,7 @@ export function AdvanceScreen({
               </span>
               <span
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   fontSize: 30,
                   fontWeight: 600,
                   letterSpacing: "-0.04em",
@@ -812,7 +812,7 @@ export function AdvanceScreen({
               </span>
               <span
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   color: colors.muted,
                   fontSize: 13,
                   fontWeight: 600,
@@ -1015,7 +1015,7 @@ export function AdvanceScreen({
       minHeight: "100%",
       display: "flex",
       flexDirection: "column",
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: "'Inter', system-ui, sans-serif",
       position: "relative",
     }}>
 
@@ -1052,7 +1052,7 @@ export function AdvanceScreen({
               marginBottom: 5,
             }}>Eligible today</div>
             <div style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 15,
               fontWeight: 600,
               color: colors.text,
@@ -1070,7 +1070,7 @@ export function AdvanceScreen({
               marginBottom: 5,
             }}>Salary · Payday</div>
             <div style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 15,
               fontWeight: 600,
               color: colors.text,
@@ -1236,7 +1236,7 @@ export function AdvanceScreen({
                   border: `1px solid ${amount === v ? "transparent" : colors.border}`,
                   background: amount === v ? colors.ctaBg : "transparent",
                   color: amount === v ? colors.ctaText : colors.dim,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
@@ -1274,7 +1274,7 @@ export function AdvanceScreen({
                     textTransform: "uppercase",
                   }}>BREAKDOWN</span>
                   <span style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     fontSize: 12,
                     color: colors.receiptMuted,
                   }}>
@@ -1287,7 +1287,7 @@ export function AdvanceScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14, fontWeight: 500, color: colors.receiptInk }}>Credited to bank</span>
                   <span style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     fontSize: 15,
                     fontWeight: 600,
                     color: colors.receiptInk,
@@ -1315,7 +1315,7 @@ export function AdvanceScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14, fontWeight: 500, color: colors.receiptInk }}>Interest</span>
                   <span style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     fontSize: 15,
                     fontWeight: 600,
                     color: colors.warm,
@@ -1343,7 +1343,7 @@ export function AdvanceScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <div>
                     <div style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "'Inter', system-ui, sans-serif",
                       fontSize: 11,
                       color: colors.receiptMuted,
                       marginBottom: 3,
@@ -1355,7 +1355,7 @@ export function AdvanceScreen({
                     </div>
                   </div>
                   <span style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     fontSize: 20,
                     fontWeight: 600,
                     color: colors.receiptInk,
@@ -1398,7 +1398,7 @@ export function AdvanceScreen({
             }}
           >
             <span style={{
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 15,
               fontWeight: 600,
               color: canSubmit ? colors.ctaText : colors.disabledText,
@@ -1552,7 +1552,7 @@ export function AdvanceScreen({
                       </span>
                       <span
                         style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: "'Inter', system-ui, sans-serif",
                           fontSize: 12,
                           letterSpacing: "-0.03em",
                         }}
@@ -1566,7 +1566,7 @@ export function AdvanceScreen({
                       <span style={{ fontSize: 15, fontWeight: 550 }}>Credited to bank</span>
                       <strong
                         style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: "'Inter', system-ui, sans-serif",
                           fontSize: 16,
                           fontWeight: 650,
                           letterSpacing: "-0.04em",
@@ -1599,7 +1599,7 @@ export function AdvanceScreen({
                       <span style={{ fontSize: 15, fontWeight: 550 }}>Interest</span>
                       <strong
                         style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: "'Inter', system-ui, sans-serif",
                           fontSize: 16,
                           fontWeight: 650,
                           letterSpacing: "-0.04em",
@@ -1634,7 +1634,7 @@ export function AdvanceScreen({
                         <small
                           style={{
                             color: colors.receiptMuted,
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: "'Inter', system-ui, sans-serif",
                             fontSize: 12,
                             fontWeight: 500,
                             letterSpacing: "-0.03em",
@@ -1649,7 +1649,7 @@ export function AdvanceScreen({
                       <strong
                         style={{
                           color: colors.receiptInk,
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: "'Inter', system-ui, sans-serif",
                           fontSize: 22,
                           fontWeight: 650,
                           letterSpacing: "-0.05em",
@@ -1722,7 +1722,7 @@ export function AdvanceScreen({
                           fontWeight: 700,
                           padding: "5px 10px",
                           cursor: "pointer",
-                          fontFamily: "'Space Grotesk', sans-serif",
+                          fontFamily: "'Inter', system-ui, sans-serif",
                         }}
                       >
                         Change
