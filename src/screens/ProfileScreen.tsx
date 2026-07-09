@@ -73,67 +73,15 @@ function SectionLabel({ children }: { children: ReactNode }) {
       style={{
         color: "var(--profile-muted, #8A8892)",
         fontSize: 12,
-        fontWeight: 700,
+        fontWeight: 500,
         letterSpacing: "0.28em",
         textTransform: "uppercase",
-        margin: "30px 4px 14px",
+        margin: "22px 4px 12px",
       }}
       className="profile-v2-section-label"
     >
       {children}
     </div>
-  );
-}
-
-function StatusPill({
-  icon,
-  label,
-  tone = "default",
-}: {
-  icon: ReactNode;
-  label: string;
-  tone?: "default" | "green" | "warm";
-}) {
-  const isGreen = tone === "green";
-  const isWarm = tone === "warm";
-  const toneColor = isGreen
-    ? "var(--profile-green, #20A46A)"
-    : isWarm
-      ? "var(--profile-warm, #B4591F)"
-      : "var(--profile-muted, #8A8892)";
-
-  return (
-    <span
-      style={{
-        height: 34,
-        padding: "0 14px",
-        borderRadius: 999,
-        border: `1px solid ${
-          isGreen
-            ? "rgba(32,164,106,0.45)"
-            : isWarm
-              ? "rgba(180,89,31,0.45)"
-              : "var(--profile-border, #29292F)"
-        }`,
-        background: isGreen
-          ? "rgba(32,164,106,0.08)"
-          : isWarm
-            ? "rgba(180,89,31,0.1)"
-            : "var(--profile-chip-bg, rgba(20,20,24,0.86))",
-        color: toneColor,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        fontSize: 13,
-        fontWeight: 700,
-        whiteSpace: "nowrap",
-      }}
-      className={`profile-v2-status-pill profile-v2-status-pill--${tone}`}
-    >
-      {icon}
-      {label}
-    </span>
   );
 }
 
@@ -182,7 +130,7 @@ function ProfileRow({
       disabled={!onClick}
       style={{
         width: "100%",
-        minHeight: 74,
+        minHeight: 68,
         display: "grid",
         gridTemplateColumns: "44px 1fr auto",
         alignItems: "center",
@@ -193,7 +141,7 @@ function ProfileRow({
         borderBottom: "1px solid var(--profile-rule, #29292F)",
         color: "var(--profile-text, #F2F0EA)",
         textAlign: "left",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        
         opacity: onClick ? 1 : 0.88,
       }}
       className="profile-v2-row"
@@ -219,7 +167,7 @@ function ProfileRow({
             display: "block",
             color: "var(--profile-text, #F2F0EA)",
             fontSize: 15,
-            fontWeight: 700,
+            fontWeight: 500,
             letterSpacing: "-0.02em",
             lineHeight: 1.12,
           }}
@@ -232,7 +180,7 @@ function ProfileRow({
             display: "block",
             color: "var(--profile-muted, #8A8892)",
             fontSize: 13,
-            fontWeight: 600,
+            fontWeight: 400,
             lineHeight: 1.2,
             marginTop: 7,
             overflow: "hidden",
@@ -338,32 +286,31 @@ export function ProfileScreen({
     !membershipActive &&
     (membershipStatus === "PENDING" ||
       membershipStatus === "UNDER_REVIEW" ||
-      membershipStatus === "PAYMENT_PENDING" ||
-      Boolean(membershipConfig?.paymentScreenshot));
+      membershipStatus === "PAYMENT_PENDING");
   const membershipRejected = !membershipActive && membershipStatus === "REJECTED";
   const membershipNeedsUpdate =
     membershipRejected || (!membershipActive && membershipPending && Boolean(membershipConfig?.remarks?.trim()));
   const membershipPillLabel = membershipActive
     ? membershipConfig?.planName || "Member"
     : membershipNeedsUpdate
-      ? "Update Proof"
+      ? "Rejected"
       : membershipPending
         ? "In Review"
         : "Free";
   const membershipRowTitle = membershipActive
     ? "Membership Active"
     : membershipNeedsUpdate
-      ? "Update Payment Proof"
+      ? "Payment Rejected"
       : membershipPending
         ? "Membership Review"
         : "Activate Plan";
   const membershipRowSubtitle = membershipActive
     ? membershipConfig?.validityLabel || "Membership active"
     : membershipNeedsUpdate
-      ? membershipConfig?.remarks || "Upload a fresh payment screenshot"
+      ? membershipConfig?.remarks || "Tap to retry payment via Razorpay"
       : membershipPending
-        ? "Payment proof submitted for admin review"
-        : "Required after employer approval";
+        ? "Payment is under review"
+        : "Unlock instant salary advances";
   const membershipDaysText =
     typeof membershipConfig?.daysRemaining === "number"
       ? `${Math.max(0, membershipConfig.daysRemaining)} days to go`
@@ -380,6 +327,10 @@ export function ProfileScreen({
       : membershipConfig?.planType === "BIANNUAL"
         ? "6 Months"
         : "Member");
+  // Short value for the hero stat cell — first word of plan name (e.g. "Annual" not "Annual Membership")
+  const membershipStatValue = membershipActive
+    ? (membershipConfig?.planName?.split(" ")[0] || "Active")
+    : membershipPillLabel;
   const photoRef = useRef<HTMLInputElement>(null);
   const profilePhotoUrl = useSignedUrl(profile.profilePhotoUrl);
 
@@ -401,12 +352,12 @@ export function ProfileScreen({
     "--profile-text": theme === "light" ? "#17151F" : TEXT,
     "--profile-muted": theme === "light" ? "#6B6878" : MUTED,
     "--profile-dim": theme === "light" ? "#9A97A8" : DIM,
-    "--profile-icon": theme === "light" ? "#5B3CE3" : "#C9C7D0",
+    "--profile-icon": theme === "light" ? "#315eff" : "#C9C7D0",
     "--profile-green": theme === "light" ? "#1F9E67" : GREEN,
     "--profile-warm": WARM,
-    "--profile-chip-bg": theme === "light" ? "rgba(91,60,227,0.08)" : "rgba(20,20,24,0.86)",
+    "--profile-chip-bg": theme === "light" ? "rgba(49,94,255,0.08)" : "rgba(20,20,24,0.86)",
     "--profile-avatar-border": theme === "light" ? "#E2DEEE" : "#2E2E34",
-    "--profile-camera-bg": theme === "light" ? "#5B3CE3" : "#F4F1E8",
+    "--profile-camera-bg": theme === "light" ? "#315eff" : "#F4F1E8",
     "--profile-camera-text": theme === "light" ? "#FFFFFF" : "#11100D",
   } as CSSProperties;
 
@@ -492,11 +443,11 @@ export function ProfileScreen({
           <div className="pbv2-meta">
             <div>
               <span>Holder</span>
-              <strong>{bank!.accountHolderName || "—"}</strong>
+              <span>{bank!.accountHolderName || "—"}</span>
             </div>
             <div>
               <span>IFSC</span>
-              <strong>{bank!.ifscCode || "—"}</strong>
+              <span>{bank!.ifscCode || "—"}</span>
             </div>
           </div>
         </section>
@@ -510,7 +461,7 @@ export function ProfileScreen({
         <section className="pbv2-manage">
           <button type="button" onClick={onStartBankEdit}>
             <span><Plus size={20} strokeWidth={1.8} /></span>
-            <strong>Change bank account</strong>
+            <span>Change bank account</span>
             <small>Link a different account</small>
             <ChevronRight size={19} />
           </button>
@@ -524,22 +475,6 @@ export function ProfileScreen({
     );
   }
 
-  const avatarStyle: CSSProperties = {
-    width: 116,
-    height: 116,
-    borderRadius: 999,
-    border: "7px solid var(--profile-avatar-border, #2E2E34)",
-    background: "var(--profile-bg, #0C0C0E)",
-    color: "var(--profile-text, #F2F0EA)",
-    display: "grid",
-    placeItems: "center",
-    fontSize: 28,
-    fontWeight: 750,
-    letterSpacing: "-0.03em",
-    overflow: "hidden",
-    boxShadow: "0 20px 60px rgba(0,0,0,0.32)",
-  };
-
   return (
     <div
       className="prof-main-screen"
@@ -548,155 +483,209 @@ export function ProfileScreen({
         minHeight: "100%",
         background: "var(--profile-bg, #0C0C0E)",
         color: "var(--profile-text, #F2F0EA)",
-        fontFamily: "'Inter', system-ui, sans-serif",
-        padding: "26px 22px 32px",
+        
+        padding: "8px 22px 32px",
       }}
     >
-      <section style={{ textAlign: "center", padding: "18px 0 18px" }}>
-        <div style={{ position: "relative", width: 130, height: 130, margin: "0 auto 20px" }}>
-          <button
-            type="button"
-            onClick={() => photoRef.current?.click()}
-            aria-label="Change profile photo"
-            disabled={uploadingPhoto}
-            style={{
-              ...avatarStyle,
-              margin: "0 auto",
-              position: "relative",
-              cursor: uploadingPhoto ? "wait" : "pointer",
-            }}
-          >
-            {profilePhotoUrl ? (
-              <img
-                src={profilePhotoUrl}
-                alt={profile.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              getInitials(profile.name || "M")
-            )}
-            {uploadingPhoto && (
-              <span
-                aria-live="polite"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(12,12,14,0.74)",
-                  color: "#F2F0EA",
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 11,
-                  fontWeight: 750,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  backdropFilter: "blur(5px)",
-                }}
-              >
-                Uploading
-              </span>
-            )}
-          </button>
-          <span
-            style={{
-              position: "absolute",
-              right: 11,
-              bottom: 13,
-              width: 30,
-              height: 30,
-              borderRadius: 999,
-              border: "4px solid var(--profile-bg, #0C0C0E)",
-              background: "var(--profile-camera-bg, #F4F1E8)",
-              color: "var(--profile-camera-text, #11100D)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Camera size={15} strokeWidth={2.2} />
-          </span>
-          {uploadingPhoto && (
+      {/* ── Profile Hero Card ── */}
+      <div
+        className="profile-hero-card"
+        style={{
+          border: "none",
+          borderRadius: 24,
+          background: "linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%)",
+          overflow: "hidden",
+          position: "relative",
+          marginBottom: 6,
+          boxShadow: "0 12px 40px rgba(49,94,255,0.32)",
+        }}
+      >
+        {/* Subtle dot pattern */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.11) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+          pointerEvents: "none",
+        }} />
+        {/* Sheen overlay */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 120,
+          background: "radial-gradient(ellipse at 40% 0%, rgba(255,255,255,0.16) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Avatar + name + subtitle */}
+        <div style={{ textAlign: "center", padding: "22px 20px 18px", position: "relative" }}>
+          <div style={{ position: "relative", width: 82, height: 82, margin: "0 auto 14px" }}>
+            <button
+              type="button"
+              onClick={() => photoRef.current?.click()}
+              aria-label="Change profile photo"
+              disabled={uploadingPhoto}
+              style={{
+                width: 82,
+                height: 82,
+                borderRadius: 999,
+                border: "3px solid rgba(255,255,255,0.28)",
+                background: "rgba(255,255,255,0.15)",
+                color: "#FFFFFF",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 22,
+                fontWeight: 400,
+                overflow: "hidden",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.22)",
+                cursor: uploadingPhoto ? "wait" : "pointer",
+                position: "relative",
+              }}
+            >
+              {profilePhotoUrl ? (
+                <img
+                  src={profilePhotoUrl}
+                  alt={profile.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                getInitials(profile.name || "M")
+              )}
+              {uploadingPhoto && (
+                <span
+                  aria-live="polite"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "rgba(0,0,0,0.5)",
+                    color: "#FFFFFF",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    backdropFilter: "blur(5px)",
+                  }}
+                >
+                  Uploading
+                </span>
+              )}
+            </button>
             <span
               style={{
                 position: "absolute",
-                left: 22,
-                right: 22,
-                bottom: 0,
-                height: 4,
+                right: -2,
+                bottom: 2,
+                width: 26,
+                height: 26,
                 borderRadius: 999,
-                  background: "var(--profile-border, #25252B)",
-                overflow: "hidden",
-                boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
+                border: "3px solid #315eff",
+                background: "#FFFFFF",
+                color: "#315eff",
+                display: "grid",
+                placeItems: "center",
               }}
             >
-              <span
-                className="profile-photo-upload-bar"
-                style={{
-                  display: "block",
-                  width: "42%",
-                  height: "100%",
-                  borderRadius: 999,
-                  background: "#F2F0EA",
-                }}
-              />
+              <Camera size={13} strokeWidth={2.2} />
             </span>
-          )}
+            {uploadingPhoto && (
+              <span
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  right: 14,
+                  bottom: 0,
+                  height: 3,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.2)",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  className="profile-photo-upload-bar"
+                  style={{
+                    display: "block",
+                    width: "42%",
+                    height: "100%",
+                    borderRadius: 999,
+                    background: "#FFFFFF",
+                  }}
+                />
+              </span>
+            )}
+          </div>
+
+          <h1
+            style={{
+              margin: 0,
+              color: "#FFFFFF",
+              fontSize: 20,
+              fontWeight: 400,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.1,
+            }}
+          >
+            {profile.name || "Employee"}
+          </h1>
+          <div
+            style={{
+              marginTop: 6,
+              color: "rgba(255,255,255,0.65)",
+              fontSize: 12,
+              fontWeight: 400,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              padding: "0 12px",
+            }}
+          >
+            {[profile.employeeCode, profile.employer].filter(Boolean).join(" · ")}
+          </div>
         </div>
 
-        <h1
-          style={{
-            margin: 0,
-            color: "var(--profile-text, #F2F0EA)",
-            fontSize: 23,
-            fontWeight: 750,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.05,
-          }}
-        >
-          {profile.name || "Employee"}
-        </h1>
-        <div
-          style={{
-            marginTop: 14,
-            color: "var(--profile-muted, #8A8892)",
-            fontSize: 13,
-            fontWeight: 650,
-            lineHeight: 1.45,
-          }}
-        >
-          {[profile.employeeCode, profile.employer].filter(Boolean).join(" · ")}
-          {profile.email && (
-            <>
-              <br />
-              {profile.email}
-            </>
-          )}
+        {/* 3-column status stats row */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.14)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+          {([
+            {
+              icon: <Crown size={15} strokeWidth={1.8} />,
+              label: "Plan",
+              value: membershipStatValue,
+              tone: membershipActive ? "green" : membershipNeedsUpdate ? "warm" : "default",
+            },
+            {
+              icon: <ShieldCheck size={15} strokeWidth={1.8} />,
+              label: "KYC",
+              value: kycVerified ? "Done" : "Pending",
+              tone: kycVerified ? "green" : "default",
+            },
+            {
+              icon: <CreditCard size={15} strokeWidth={1.8} />,
+              label: "Bank",
+              value: bankVerified ? "Verified" : bankLinked ? "Pending" : "Add",
+              tone: bankVerified ? "green" : "default",
+            },
+          ] as const).map(({ icon, label, value, tone }, i) => {
+            const toneColor = tone === "green" ? "#5BEBA0" : tone === "warm" ? "#FFB47A" : "rgba(255,255,255,0.55)";
+            return (
+              <div
+                key={label}
+                style={{
+                  padding: "14px 8px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 5,
+                  borderRight: i < 2 ? "1px solid rgba(255,255,255,0.14)" : "none",
+                  overflow: "hidden",
+                  minWidth: 0,
+                }}
+              >
+                <span style={{ color: toneColor, flexShrink: 0 }}>{icon}</span>
+                <span style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 500, lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(100% - 4px)", display: "block" }}>{value}</span>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 400, lineHeight: 1, letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</span>
+              </div>
+            );
+          })}
         </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: 9,
-            justifyContent: "center",
-            flexWrap: "wrap",
-            marginTop: 24,
-          }}
-        >
-          <StatusPill
-            icon={<Crown size={14} strokeWidth={1.9} />}
-            label={membershipPillLabel}
-            tone={membershipActive ? "green" : membershipNeedsUpdate ? "warm" : "default"}
-          />
-          <StatusPill
-            icon={<ShieldCheck size={14} strokeWidth={1.9} />}
-            label={kycVerified ? "KYC Done" : "KYC Pending"}
-            tone={kycVerified ? "green" : "default"}
-          />
-          <StatusPill
-            icon={<CreditCard size={14} strokeWidth={1.9} />}
-            label={bankLinked ? "Bank Linked" : "No Bank"}
-            tone={bankVerified ? "green" : "default"}
-          />
-        </div>
-      </section>
+      </div>
 
       {membershipActive && (
         <section
@@ -713,7 +702,7 @@ export function ProfileScreen({
           </span>
           <div className="profile-membership-summary-main">
             <div className="profile-membership-summary-title">
-              <strong>Membership</strong>
+              <span>Membership</span>
               <span className="profile-membership-summary-status">
                 <i /> Active
               </span>
@@ -722,9 +711,7 @@ export function ProfileScreen({
               </span>
             </div>
             <p>
-              <b>{membershipDaysText.split(" ")[0]}</b>
-              {" "}
-              {membershipDaysText.split(" ").slice(1).join(" ") || "days to go"}
+              {membershipDaysText}
             </p>
           </div>
         </section>
@@ -771,7 +758,7 @@ export function ProfileScreen({
         <ProfileRow
           icon={theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
           title="Appearance"
-          subtitle={theme === "dark" ? "Dark theme" : "Light theme"}
+          subtitle={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
           onClick={() => onThemeChange?.(oppositeTheme)}
           trailing={
             <span className="profile-v2-theme-chip">
@@ -799,7 +786,7 @@ export function ProfileScreen({
           width: "100%",
           minHeight: 58,
           marginTop: 28,
-          borderRadius: 18,
+          borderRadius: 16,
           border: "1px solid var(--profile-border, #29292F)",
           background: "var(--profile-panel, rgba(20,20,24,0.62))",
           color: "var(--profile-warm, #B4591F)",
@@ -807,9 +794,9 @@ export function ProfileScreen({
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          fontFamily: "'Inter', system-ui, sans-serif",
+          
           fontSize: 15,
-          fontWeight: 700,
+          fontWeight: 500,
         }}
       >
         <LogOut size={18} strokeWidth={2.1} />
@@ -820,9 +807,9 @@ export function ProfileScreen({
         style={{
           textAlign: "center",
           color: "#3F3F46",
-          fontFamily: "'Inter', system-ui, sans-serif",
+          
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 400,
           marginTop: 24,
           paddingBottom: 8,
         }}

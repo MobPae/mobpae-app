@@ -12,7 +12,7 @@ export function Metric({ icon, label, value, tone = "default" }: MetricProps) {
     <div className={`metric ${tone}`}>
       <span>{icon}</span>
       <p>{label}</p>
-      <strong>{value}</strong>
+      <span>{value}</span>
     </div>
   );
 }

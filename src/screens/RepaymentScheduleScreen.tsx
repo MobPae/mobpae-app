@@ -34,7 +34,7 @@ function repaymentPalette(theme: Theme) {
       green: "#1F9E67",
       rule: "#F1EEF7",
       progressTrack: "#EEEBF6",
-      progressFill: "#5B3CE3",
+      progressFill: "#315eff",
       paperBg: "#F1EDFC",
       paperInk: "#1E1636",
       paperMuted: "#6E6786",
@@ -130,7 +130,7 @@ function EmptyRepayment({ colors }: { colors: ReturnType<typeof repaymentPalette
             margin: 0,
             color: colors.text,
             fontSize: 22,
-            fontWeight: 750,
+            fontWeight: 500,
             letterSpacing: "-0.04em",
           }}
         >
@@ -142,7 +142,7 @@ function EmptyRepayment({ colors }: { colors: ReturnType<typeof repaymentPalette
             maxWidth: 270,
             color: colors.muted,
             fontSize: 14,
-            fontWeight: 600,
+            fontWeight: 400,
             lineHeight: 1.55,
           }}
         >
@@ -160,7 +160,7 @@ function EmptyRepayment({ colors }: { colors: ReturnType<typeof repaymentPalette
             padding: "0 18px",
             marginTop: 30,
             fontSize: 13,
-            fontWeight: 700,
+            fontWeight: 500,
           }}
         >
           <CreditCard size={16} strokeWidth={1.9} />
@@ -211,7 +211,7 @@ export function RepaymentScheduleScreen({
         minHeight: "100%",
         background: DARK,
         color: TEXT,
-        fontFamily: "'Inter', system-ui, sans-serif",
+        
         padding: "18px 22px 30px",
       }}
     >
@@ -230,7 +230,7 @@ export function RepaymentScheduleScreen({
               style={{
                 color: MUTED,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 500,
                 letterSpacing: "0.28em",
                 textTransform: "uppercase",
                 marginBottom: 22,
@@ -241,16 +241,16 @@ export function RepaymentScheduleScreen({
             <div
               style={{
                 color: TEXT,
-                fontFamily: "'Inter', system-ui, sans-serif",
+                
                 fontSize: 33,
-                fontWeight: 650,
+                fontWeight: 450,
                 letterSpacing: "-0.08em",
                 lineHeight: 1,
               }}
             >
               {formatMoney(total)}
             </div>
-            <div style={{ color: MUTED, fontSize: 13, fontWeight: 600, marginTop: 14 }}>
+            <div style={{ color: MUTED, fontSize: 13, fontWeight: 400, marginTop: 14 }}>
               {activeRepaymentCount === 1
                 ? "1 active advance · recovers this cycle"
                 : `${activeRepaymentCount} active advances · recovers this cycle`}
@@ -268,7 +268,7 @@ export function RepaymentScheduleScreen({
               gap: 8,
               padding: "0 14px",
               fontSize: 12,
-              fontWeight: 750,
+              fontWeight: 500,
             }}
           >
             <span style={{ width: 7, height: 7, borderRadius: 99, background: WARM }} />
@@ -280,18 +280,18 @@ export function RepaymentScheduleScreen({
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 20 }}>
           <div>
-            <div style={{ color: MUTED, fontSize: 12, fontWeight: 650, marginBottom: 10 }}>
+            <div style={{ color: MUTED, fontSize: 12, fontWeight: 450, marginBottom: 10 }}>
               Auto-deducts on
             </div>
-            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 16, fontWeight: 650 }}>
+            <div style={{  fontSize: 16, fontWeight: 450 }}>
               {formatDate(dueDate)}
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ color: MUTED, fontSize: 12, fontWeight: 650, marginBottom: 10 }}>
+            <div style={{ color: MUTED, fontSize: 12, fontWeight: 450, marginBottom: 10 }}>
               Days left
             </div>
-            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 16, fontWeight: 650 }}>
+            <div style={{  fontSize: 16, fontWeight: 450 }}>
               {left}
             </div>
           </div>
@@ -300,7 +300,7 @@ export function RepaymentScheduleScreen({
         <div style={{ height: 6, borderRadius: 999, background: colors.progressTrack, marginTop: 22, overflow: "hidden" }}>
           <div style={{ width: `${progress}%`, height: "100%", borderRadius: 999, background: colors.progressFill }} />
         </div>
-        <div style={{ color: DIM, fontSize: 12, fontWeight: 600, marginTop: 12 }}>
+        <div style={{ color: DIM, fontSize: 12, fontWeight: 400, marginTop: 12 }}>
           Salary cycle · resets on payday
         </div>
       </section>
@@ -327,22 +327,22 @@ export function RepaymentScheduleScreen({
             border: `1px solid ${BORDER}`,
             display: "grid",
             placeItems: "center",
-            color: theme === "light" ? "#5B3CE3" : "#C9C7D0",
+            color: theme === "light" ? "#315eff" : "#C9C7D0",
             background: theme === "light" ? "#F5F3FB" : "transparent",
           }}
         >
           <CreditCard size={18} strokeWidth={1.9} />
         </span>
         <span style={{ minWidth: 0 }}>
-          <strong style={{ display: "block", color: TEXT, fontSize: 15, fontWeight: 750 }}>
+          <span style={{ display: "block", color: TEXT, fontSize: 15, fontWeight: 500 }}>
             Auto-deduct from salary
-          </strong>
+          </span>
           <small
             style={{
               display: "block",
               color: MUTED,
               fontSize: 12,
-              fontWeight: 600,
+              fontWeight: 400,
               marginTop: 6,
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -352,7 +352,7 @@ export function RepaymentScheduleScreen({
             {maskBank(bankAccount)}
           </small>
         </span>
-        <span style={{ color: GREEN, fontSize: 12, fontWeight: 750 }}>On</span>
+        <span style={{ color: GREEN, fontSize: 12, fontWeight: 500 }}>On</span>
       </section>
 
       <section
@@ -364,7 +364,7 @@ export function RepaymentScheduleScreen({
           padding: "22px 22px 24px",
           marginTop: 18,
           overflow: "visible",
-          fontFamily: "'Inter', system-ui, sans-serif",
+          
         }}
       >
         <span
@@ -394,14 +394,14 @@ export function RepaymentScheduleScreen({
             style={{
               color: colors.paperMuted,
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 500,
               letterSpacing: "0.28em",
               textTransform: "uppercase",
             }}
           >
             Breakdown
           </div>
-          <div style={{ color: colors.paperMuted, fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, fontWeight: 600 }}>
+          <div style={{ color: colors.paperMuted,  fontSize: 12, fontWeight: 400 }}>
             {request.interestDays || left} days @ {request.interestRate || 36}%
           </div>
         </div>
@@ -412,18 +412,18 @@ export function RepaymentScheduleScreen({
         ].map((row, index) => (
           <div key={row.label}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-              <span style={{ color: colors.paperMuted, fontSize: 14, fontWeight: 650 }}>{row.label}</span>
-              <strong
+              <span style={{ color: colors.paperMuted, fontSize: 14, fontWeight: 450 }}>{row.label}</span>
+              <span
                 style={{
                   color: row.color,
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                   fontSize: 16,
-                  fontWeight: 650,
+                  fontWeight: 450,
                   letterSpacing: "-0.05em",
                 }}
               >
                 {row.value}
-              </strong>
+              </span>
             </div>
             {index === 0 && <div style={{ borderTop: `1px dashed ${colors.paperRule}`, margin: "20px 0" }} />}
           </div>
@@ -432,26 +432,26 @@ export function RepaymentScheduleScreen({
         <div style={{ borderTop: `1px dashed ${colors.paperRule}`, margin: "20px 0 18px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end" }}>
           <span>
-            <small style={{ display: "block", color: colors.paperMuted, fontSize: 12, fontWeight: 650, marginBottom: 7 }}>
+            <small style={{ display: "block", color: colors.paperMuted, fontSize: 12, fontWeight: 450, marginBottom: 7 }}>
               Due {formatDate(dueDate)}
             </small>
-            <strong style={{ color: colors.paperMuted, fontSize: 15, fontWeight: 750 }}>Total repayment</strong>
+            <span style={{ color: colors.paperMuted, fontSize: 15, fontWeight: 500 }}>Total repayment</span>
           </span>
-          <strong
+          <span
             style={{
               color: colors.paperInk,
-              fontFamily: "'Inter', system-ui, sans-serif",
+              
               fontSize: 23,
-              fontWeight: 650,
+              fontWeight: 450,
               letterSpacing: "-0.08em",
             }}
           >
             {formatMoney(total)}
-          </strong>
+          </span>
         </div>
       </section>
 
-      <div style={{ display: "flex", alignItems: "start", gap: 10, color: MUTED, fontSize: 12, fontWeight: 600, lineHeight: 1.35, marginTop: 20 }}>
+      <div style={{ display: "flex", alignItems: "start", gap: 10, color: MUTED, fontSize: 12, fontWeight: 400, lineHeight: 1.35, marginTop: 20 }}>
         <ShieldCheck size={14} strokeWidth={1.8} color={DIM} />
         Auto-recovered from salary on payday · no action needed
       </div>

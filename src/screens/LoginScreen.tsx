@@ -15,23 +15,23 @@ function loginPalette(theme: Theme) {
   if (theme === "light") {
     return {
       SURFACE:    "#FFFFFF",
-      PANEL:      "#F5F3FB",
+      PANEL:      "#F8F8FA",
       PANEL_SOFT: "#FAFAFA",
       BORDER:     "#E9E6F1",
       BORDER_FOC: "#C4BBE8",
       TEXT:       "#17151F",
       MUTED:      "#6B6878",
       DIM:        "#9A97A8",
-      CREAM:      "#5B3CE3",
-      CREAM_DIS:  "rgba(91,60,227,0.32)",
+      CREAM:      "#315eff",
+      CREAM_DIS:  "rgba(49,94,255,0.32)",
       CTA_TEXT:   "#FFFFFF",
       CTA_ICON_BG:"#FFFFFF",
-      CTA_ICON_C: "#5B3CE3",
+      CTA_ICON_C: "#315eff",
       GREEN:      "#1F9E67",
       WARM:       "#B4591F",
-      GLOW:       "radial-gradient(circle at 50% 4%, rgba(91,60,227,0.06), transparent 38%), #FFFFFF",
-      CARD_BG:    "linear-gradient(180deg, rgba(91,60,227,0.04), rgba(91,60,227,0.015))",
-      CARD_BORDER:"rgba(91,60,227,0.1)",
+      GLOW:       "radial-gradient(circle at 50% 4%, rgba(49,94,255,0.08), transparent 42%), #F6F4FF",
+      CARD_BG:    "linear-gradient(180deg, rgba(49,94,255,0.04), rgba(49,94,255,0.015))",
+      CARD_BORDER:"rgba(49,94,255,0.1)",
       DIVIDER:    "linear-gradient(90deg, transparent, #DDD9F0, transparent)",
     };
   }
@@ -111,7 +111,7 @@ function AuthField({
           marginBottom: 10,
           color: p.MUTED,
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 500,
           letterSpacing: "0.28em",
           textTransform: "uppercase",
         }}
@@ -150,9 +150,8 @@ function AuthField({
             outline: 0,
             color: p.TEXT,
             background: "transparent",
-            fontFamily: "'Inter', system-ui, sans-serif",
             fontSize: 15,
-            fontWeight: 650,
+            fontWeight: 450,
             letterSpacing: "0.06em",
           }}
         />
@@ -186,22 +185,21 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
         flexDirection: "column",
         justifyContent: "center",
         padding: "28px 24px",
-        fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
         <div style={{ display: "grid", placeItems: "center", gap: 14, marginBottom: 34 }}>
           <LogoMark
-            bg={theme === "light" ? "#FFFFFF" : p.CREAM}
+            bg={theme === "light" ? "#EEF1FF" : p.CREAM}
             shadow={theme === "light"
-              ? "0 8px 28px rgba(91,60,227,0.18), 0 0 0 1.5px rgba(91,60,227,0.12)"
+              ? "0 8px 28px rgba(49,94,255,0.18), 0 0 0 1.5px rgba(49,94,255,0.12)"
               : "0 14px 40px rgba(242,240,234,0.12)"}
           />
           <div
             style={{
               color: p.TEXT,
               fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.34em",
+              fontWeight: 500,
+              letterSpacing: "0.20em",
               textTransform: "uppercase",
             }}
           >
@@ -217,7 +215,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
                 color: p.TEXT,
                 fontSize: 28,
                 lineHeight: 1.08,
-                fontWeight: 700,
+                fontWeight: 500,
                 letterSpacing: "-0.04em",
               }}
             >
@@ -247,58 +245,55 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
             p={p}
           />
 
-          <div style={{ position: "relative" }}>
-            <AuthField
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={setPassword}
-              autoComplete="current-password"
-              placeholder="Password"
-              icon={<Lock size={17} strokeWidth={1.9} />}
-              p={p}
-              rightSlot={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    border: 0,
-                    borderRadius: "50%",
-                    background: "transparent",
-                    color: p.MUTED,
-                    display: "grid",
-                    placeItems: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              }
-            />
-            {onForgotPassword && (
+          <AuthField
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            placeholder="Password"
+            icon={<Lock size={17} strokeWidth={1.9} />}
+            p={p}
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: 0,
+                  borderRadius: "50%",
+                  background: "transparent",
+                  color: p.MUTED,
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            }
+          />
+          {onForgotPassword && (
+            <div style={{ textAlign: "right", marginTop: -14, marginBottom: 20 }}>
               <button
                 type="button"
                 onClick={onForgotPassword}
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
                   border: 0,
                   background: "transparent",
-                  color: theme === "light" ? "#5B3CE3" : p.TEXT,
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  color: theme === "light" ? "#315eff" : p.MUTED,
                   fontSize: 12,
-                  fontWeight: 650,
+                  fontWeight: 500,
                   cursor: "pointer",
+                  padding: "4px 0",
                 }}
               >
-                Forgot?
+                Forgot password?
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {error && (
             <div
@@ -311,7 +306,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
                 padding: "12px 14px",
                 fontSize: 13,
                 lineHeight: 1.35,
-                fontWeight: 600,
+                fontWeight: 400,
               }}
             >
               {error}
@@ -325,20 +320,19 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
               width: "100%",
               height: 64,
               border: 0,
-              borderRadius: 18,
+              borderRadius: 16,
               background: canSubmit ? p.CREAM : p.CREAM_DIS,
               color: p.CTA_TEXT,
-              fontFamily: "'Inter', system-ui, sans-serif",
               fontSize: 16,
-              fontWeight: 700,
+              fontWeight: 500,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               padding: "0 8px 0 26px",
-              cursor: canSubmit ? "pointer" : "not-allowed",
+              cursor: canSubmit ? "pointer" : "default",
               boxShadow: canSubmit
                 ? (theme === "light"
-                  ? "0 16px 42px rgba(91,60,227,0.22)"
+                  ? "0 16px 42px rgba(49,94,255,0.22)"
                   : "0 16px 42px rgba(242,240,234,0.12)")
                 : "none",
             }}
@@ -348,7 +342,7 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
               style={{
                 width: 50,
                 height: 50,
-                borderRadius: 14,
+                borderRadius: 10,
                 background: p.CTA_ICON_BG,
                 color: p.CTA_ICON_C,
                 display: "grid",
@@ -358,6 +352,11 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
               {loading ? <span className="cta-spinner" /> : <ArrowRight size={24} strokeWidth={2.2} />}
             </span>
           </button>
+          {!canSubmit && !loading && !error && (
+            <p style={{ margin: "10px 0 0", color: p.DIM, fontSize: 12, textAlign: "center", fontWeight: 400 }}>
+              Enter your email and password to continue
+            </p>
+          )}
 
           <div
             style={{

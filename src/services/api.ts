@@ -167,14 +167,13 @@ type BackendMembershipNested = {
   planType?: string;
   planName?: string;
   amount?: string | number;
+  amountPaid?: string | number;
   startDate?: string;
   endDate?: string;
   status?: string;
   couponCode?: string;
   discountAmount?: string | number;
-  paymentReference?: string | null;
-  paymentScreenshot?: string | null;
-  submittedAt?: string | null;
+  paymentOrderId?: string | null;
   remarks?: string | null;
 };
 
@@ -228,6 +227,9 @@ type BackendMembershipConfig = {
   freeBenefits?: string[];
   membershipBenefits?: string[];
   payment?: {
+    provider?: string;
+    keyId?: string;
+    // Legacy UPI fields (kept for graceful degradation, no longer populated)
     upiId?: string;
     qrUrl?: string;
     beneficiaryName?: string;
@@ -1040,9 +1042,6 @@ export const employeeApi = {
                 membershipConfigData?.payment?.qrUrl ||
                 "uploads/payment/googlepay-membership-qr.png",
             },
-            paymentReference: nested?.paymentReference ?? undefined,
-            paymentScreenshot: nested?.paymentScreenshot ?? undefined,
-            submittedAt: nested?.submittedAt ?? undefined,
             remarks: nested?.remarks ?? undefined,
           };
         })(),
@@ -1158,49 +1157,45 @@ export const employeeApi = {
     });
   },
 
-  async uploadMembershipScreenshot(file: File): Promise<string> {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    let uploadRes: Response;
-    try {
-      uploadRes = await fetchWithAuth("/files/upload", {
-        method: "POST",
-        body: formData,
-      });
-    } catch {
-      throw new ApiError("Could not reach the server. Please check your connection and try again.");
-    }
-
-    if (!uploadRes.ok) {
-      let msg = `Screenshot upload failed (${uploadRes.status}).`;
-      try {
-        const body = (await uploadRes.json()) as { message?: string | string[] };
-        if (Array.isArray(body.message)) msg = body.message.join(" ");
-        else if (body.message) msg = body.message;
-      } catch { /* ignore */ }
-      if (uploadRes.status === 413) msg = "File is too large. Please upload a screenshot under 5 MB.";
-      if (uploadRes.status === 415) msg = "Unsupported file type. Please upload a JPG, PNG, or WebP image.";
-      if (uploadRes.status === 401) {
-        notifySessionExpired();
-        msg = "Your session has expired. Please log in again.";
-      }
-      throw new ApiError(msg, uploadRes.status);
-    }
-
-    const uploaded = (await uploadRes.json()) as { filePath?: string; path?: string; url?: string };
-    const filePath = uploaded.filePath ?? uploaded.path ?? uploaded.url;
-    if (!filePath) throw new ApiError("Upload succeeded but server did not return a file path.");
-    return filePath;
+  /**
+   * Step 1: Create a Razorpay order on the backend.
+   * Returns the order details needed to open the Razorpay checkout modal.
+   */
+  async initiatePayment(payload: {
+    planKey: string;
+    couponCode?: string;
+  }) {
+    return request<{
+      orderId: string;
+      paymentOrderId: string;
+      amount: number; // in paise
+      currency: string;
+      keyId: string;
+      planName: string;
+      description: string;
+      employeeName: string;
+      employeeEmail: string;
+      employeePhone: string;
+    }>("/membership/initiate-payment", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
-  async activateMembership(payload: {
-    planType: 'MONTHLY' | 'BIANNUAL';
-    couponCode?: string;
-    paymentReference?: string;
-    paymentScreenshot?: string;
+  /**
+   * Step 2: Verify the Razorpay payment signature.
+   * Called after the Razorpay checkout handler fires successfully.
+   * Activates the membership immediately on success.
+   */
+  async verifyPayment(payload: {
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
   }) {
-    return request<BackendMembershipRequestResult>("/membership/request", {
+    return request<BackendMembershipRequestResult & {
+      success: boolean;
+      alreadyActivated?: boolean;
+    }>("/membership/verify-payment", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -1352,7 +1347,7 @@ export const employeeApi = {
       nextAction?: string;
       nextActionLabel?: string;
       setup?: Array<{ key: string; label: string; status: string; completed: boolean }>;
-      limits?: { salaryInHand: number; approvedLimit: number; usedLimit: number; availableAdvance: number };
+      limits?: { salaryInHand: number; approvedLimit: number; usedLimit: number; availableAdvance: number; interestFreeThreshold?: number };
       payroll?: { payrollDate: number | null; payrollCutoffDate: number | null };
       membershipRequiredAfterEmployerApproval?: boolean;
       outstandingRepayment?: { id: string; status: string; dueDate: string; totalAmount: number } | null;
@@ -1364,7 +1359,13 @@ export const employeeApi = {
       nextAction: raw.nextAction ?? "REQUEST_ADVANCE",
       nextActionLabel: raw.nextActionLabel ?? "",
       setup: (raw.setup ?? []) as EligibilityResult["setup"],
-      limits: raw.limits ?? { salaryInHand: 0, approvedLimit: 0, usedLimit: 0, availableAdvance: 0 },
+      limits: {
+        salaryInHand: raw.limits?.salaryInHand ?? 0,
+        approvedLimit: raw.limits?.approvedLimit ?? 0,
+        usedLimit: raw.limits?.usedLimit ?? 0,
+        availableAdvance: raw.limits?.availableAdvance ?? 0,
+        interestFreeThreshold: raw.limits?.interestFreeThreshold ?? 0,
+      },
       payroll: raw.payroll ?? { payrollDate: null, payrollCutoffDate: null },
       membershipRequiredAfterEmployerApproval: raw.membershipRequiredAfterEmployerApproval ?? false,
       outstandingRepayment: raw.outstandingRepayment ?? null,

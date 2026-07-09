@@ -155,13 +155,12 @@ export function AppShell({
           <div
             style={{
               background: palette.bg,
-              padding: "max(54px, calc(env(safe-area-inset-top, 0px) + 22px)) 22px 18px",
+              padding: "max(14px, calc(env(safe-area-inset-top, 0px) + 14px)) 20px 12px",
               display: "flex",
               alignItems: "center",
               gap: 16,
               flexShrink: 0,
               color: palette.text,
-              fontFamily: "'Inter', system-ui, sans-serif",
               position: "relative",
               zIndex: 25,
             }}
@@ -169,7 +168,7 @@ export function AppShell({
             {isHome ? (
               <button
                 type="button"
-                onClick={() => onNavigate("profile")}
+                onClick={openSheet}
                 aria-label="Open profile"
                 style={{
                   ...themedIconButton,
@@ -188,7 +187,7 @@ export function AppShell({
                     style={{
                       color: palette.text,
                       fontSize: 13,
-                      fontWeight: 750,
+                      fontWeight: 500,
                       letterSpacing: "-0.03em",
                     }}
                   >
@@ -213,17 +212,16 @@ export function AppShell({
                   <div
                     style={{
                       color: palette.text,
-                      fontSize: 13,
+                      fontSize: 17,
                       lineHeight: 1,
                       fontWeight: 600,
-                      letterSpacing: "0.22em",
-                      textTransform: "uppercase",
+                      letterSpacing: "-0.01em",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {profile.employeeCode || "Employee"}
+                    {`Hi, ${profile.name?.trim().split(" ")[0] || "there"}`}
                   </div>
                   <div
                     style={{
@@ -246,7 +244,7 @@ export function AppShell({
                     color: palette.muted,
                     fontSize: 13,
                     lineHeight: 1,
-                    fontWeight: 700,
+                    fontWeight: 500,
                     letterSpacing: "0.32em",
                     textTransform: "uppercase",
                     whiteSpace: "nowrap",

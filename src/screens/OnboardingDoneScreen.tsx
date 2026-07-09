@@ -55,7 +55,7 @@ export function OnboardingDoneScreen({
 
       {/* Status card */}
       <div style={{ background: "#F9F8FF", borderRadius: 16, padding: "16px", width: "100%", marginBottom: 20, border: "1px solid #E8E5FF" }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#0F0A3C", marginBottom: 10 }}>Setup Status</div>
+        <div style={{ fontSize: 13, fontWeight: 500, color: "#0F0A3C", marginBottom: 10 }}>Setup Status</div>
         {statusRows.map((item, i) => (
           <div
             key={item.label}
@@ -75,7 +75,7 @@ export function OnboardingDoneScreen({
             </span>
             <span style={{
               fontSize: 11,
-              fontWeight: 700,
+              fontWeight: 500,
               color: item.tone === "done" ? "#16A34A" : item.tone === "submitted" ? "#D97706" : "#9CA3AF",
             }}>
               {item.status}

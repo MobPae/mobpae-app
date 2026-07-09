@@ -256,8 +256,7 @@ export function useEmployeeApp() {
 
   const membershipSubmitted =
     appState.membershipActive ||
-    appState.membershipConfig.status === "PENDING" ||
-    Boolean(appState.membershipConfig.paymentScreenshot);
+    appState.membershipConfig.status === "ACTIVE";
 
   // Prefer eligibility.activeRequest (richest, from presentSalaryRequest) over local state
   const activeRequest = eligibility?.activeRequest ?? appState.requests.find(
@@ -462,58 +461,42 @@ export function useEmployeeApp() {
     setCouponError("");
   };
 
-  const activateMembership = async (
-    paymentScreenshot?: File,
-    paymentReference?: string,
-    planType: 'MONTHLY' | 'BIANNUAL' = 'BIANNUAL',
-  ) => {
-    const uploadIssue = paymentScreenshot ? validateUpload(paymentScreenshot, false) : null;
-    if (uploadIssue) {
-      setNotice(uploadIssue);
-      throw new Error(uploadIssue);
-    }
-
-    setActivatingMembership(true);
-    try {
-      const screenshotPath = paymentScreenshot
-        ? await employeeApi.uploadMembershipScreenshot(paymentScreenshot)
-        : undefined;
-      const result = await employeeApi.activateMembership({
-        planType,
-        couponCode: couponValidation?.couponCode,
-        paymentReference: paymentReference?.trim() || undefined,
-        paymentScreenshot: screenshotPath,
-      });
-      const membership = result.membership;
-      setAppState((current) => ({
-        ...current,
-        membershipActive: membership?.status === "ACTIVE",
-        membershipConfig: {
-          ...current.membershipConfig,
-          status: membership?.status ?? "PENDING",
-          planType: membership?.planType as 'MONTHLY' | 'BIANNUAL' ?? planType,
-          membershipId: membership?.id ?? current.membershipConfig.membershipId,
-          planName: membership?.planName ?? current.membershipConfig.planName,
-          amountPayable: membership?.amount
+  /**
+   * Razorpay membership flow — two steps:
+   *
+   * 1. initiatePayment(planKey) → opens Razorpay checkout modal
+   * 2. verifyPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature) → activates membership
+   *
+   * MembershipScreen.tsx drives the flow directly using the employeeApi helpers.
+   * This hook exposes a thin wrapper used after verify succeeds to update app state.
+   */
+  const onPaymentVerified = (membership: { id?: string; planType?: string; planName?: string; status?: string; amount?: string | number; amountPaid?: string | number }) => {
+    setAppState((current) => ({
+      ...current,
+      membershipActive: membership?.status === "ACTIVE",
+      membershipConfig: {
+        ...current.membershipConfig,
+        status: membership?.status ?? "ACTIVE",
+        planType: (membership?.planType as 'MONTHLY' | 'BIANNUAL') ?? current.membershipConfig.planType,
+        membershipId: membership?.id ?? current.membershipConfig.membershipId,
+        planName: membership?.planName ?? current.membershipConfig.planName,
+        amountPayable: membership?.amountPaid
+          ? Number(membership.amountPaid)
+          : membership?.amount
             ? Number(membership.amount)
             : current.membershipConfig.amountPayable,
-          paymentReference: membership?.paymentReference ?? current.membershipConfig.paymentReference,
-          paymentScreenshot: membership?.paymentScreenshot ?? current.membershipConfig.paymentScreenshot,
-          submittedAt: new Date().toISOString(),
-          remarks: membership?.remarks ?? current.membershipConfig.remarks,
-        }
-      }));
-      setCouponValidation(null);
-      setCouponError("");
-      setNotice(result.message ?? "Membership payment submitted for verification.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to submit membership payment.";
-      setNotice(message);
-      throw new Error(message);
-    } finally {
-      setActivatingMembership(false);
-    }
+      },
+    }));
+    setCouponValidation(null);
+    setCouponError("");
   };
+
+  // Legacy alias kept so any callers in non-membership flows don't break
+  const activateMembership = onPaymentVerified as unknown as (
+    paymentScreenshot?: File,
+    paymentReference?: string,
+    planType?: 'MONTHLY' | 'BIANNUAL',
+  ) => Promise<void>;
 
   const submitSalaryAdvance = async () => {
     setSubmittingAdvance(true);
@@ -620,6 +603,7 @@ export function useEmployeeApp() {
     validateCoupon,
     validatingCoupon,
     activateMembership,
+    onPaymentVerified,
     changePassword,
     changingPassword,
     changePasswordError,

@@ -12,13 +12,13 @@ const palette = {
   dark: {
     bg: "#0C0C0E",
     topLine: "#1E1E22",
-    active: "#7C6AF5",
+    active: "#315eff",
     inactive: "#FFFFFF",
   },
   light: {
     bg: "#FFFFFF",
     topLine: "#E8E6F0",
-    active: "#5B3CE3",
+    active: "#315eff",
     inactive: "#111111",
   },
 } satisfies Record<Theme, Record<string, string>>;
@@ -46,9 +46,6 @@ export function TabBar({ activeView, onChange, theme = "dark" }: TabBarProps) {
       style={{
         flexShrink: 0,
         width: "100%",
-        height: 54,
-        minHeight: 54,
-        maxHeight: 54,
         display: "flex",
         flexDirection: "row",
         alignItems: "stretch",
@@ -56,7 +53,7 @@ export function TabBar({ activeView, onChange, theme = "dark" }: TabBarProps) {
         borderTop: `1px solid ${colors.topLine}`,
         zIndex: 60,
         margin: 0,
-        padding: 0,
+        padding: `0 0 env(safe-area-inset-bottom, 0px)`,
         borderRadius: 0,
         boxShadow: "none",
       }}
@@ -73,27 +70,41 @@ export function TabBar({ activeView, onChange, theme = "dark" }: TabBarProps) {
             aria-current={active ? "page" : undefined}
             style={{
               flex: 1,
-              height: "100%",
+              height: 62,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 3,
+              gap: 4,
               border: "none",
               background: "transparent",
               color,
-              fontFamily: "'Inter', system-ui, sans-serif",
               cursor: "pointer",
               padding: 0,
               margin: 0,
             }}
           >
-            <Icon size={22} strokeWidth={active ? 2.2 : 1.7} />
+            {/* Icon with active pill */}
+            <span
+              className="tabbar-icon-pill"
+              style={{
+                width: 40,
+                height: 26,
+                borderRadius: 99,
+                background: active ? `${colors.active}18` : "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background 0.2s ease",
+              }}
+            >
+              <Icon size={20} strokeWidth={active ? 2.1 : 1.7} />
+            </span>
             <span
               style={{
                 fontSize: 10,
                 lineHeight: 1,
-                fontWeight: active ? 600 : 400,
+                fontWeight: active ? 500 : 400,
               }}
             >
               {label}

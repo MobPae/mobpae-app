@@ -107,7 +107,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
         minHeight: "100%",
         background: colors.bg,
         color: colors.text,
-        fontFamily: "'Inter', system-ui, sans-serif",
+        
       }}
     >
       {/* Header */}
@@ -116,7 +116,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
           display: "flex",
           alignItems: "center",
           gap: 14,
-          padding: "max(54px, calc(env(safe-area-inset-top, 0px) + 22px)) 22px 18px",
+          padding: "max(14px, calc(env(safe-area-inset-top, 0px) + 14px)) 20px 12px",
           background: colors.headerBg,
           borderBottom: `1px solid ${colors.border}`,
         }}
@@ -144,7 +144,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
             style={{
               color: colors.muted,
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 500,
               letterSpacing: "0.28em",
               textTransform: "uppercase",
             }}
@@ -164,7 +164,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
           background: colors.panel,
           color: colors.muted,
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 400,
           lineHeight: 1.55,
         }}
       >
@@ -215,7 +215,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
                     style={{
                       color: colors.text,
                       fontSize: 15,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       letterSpacing: "-0.02em",
                     }}
                   >
@@ -225,9 +225,9 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
                     style={{
                       color: colors.dim,
                       fontSize: 11,
-                      fontWeight: 600,
+                      fontWeight: 400,
                       marginTop: 4,
-                      fontFamily: "'Inter', system-ui, sans-serif",
+                      
                     }}
                   >
                     Updated {section.lastUpdated}
@@ -262,7 +262,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
             textAlign: "center",
             color: colors.dim,
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 400,
             lineHeight: 1.6,
           }}
         >

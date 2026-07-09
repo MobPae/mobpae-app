@@ -71,17 +71,17 @@ function dashboardPalette(theme: Theme) {
       dim: "#9A97A8",
       warm: "#B4591F",
       green: "#1F9E67",
-      ring: "#5B3CE3",
+      ring: "#315eff",
       ringTrack: "#EEEBF6",
       divider: "#F1EEF7",
       emptyBorder: "#E2DEEE",
       emptyBg: "#FFFFFF",
-      ctaBg: "#5B3CE3",
+      ctaBg: "#315eff",
       ctaText: "#FFFFFF",
       ctaIconBg: "#FFFFFF",
-      ctaIconText: "#5B3CE3",
+      ctaIconText: "#315eff",
       iconTile: "#F5F3FB",
-      shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
+      shadow: "0 8px 32px -8px rgba(30,22,54,0.12), 0 1px 0 rgba(30,22,54,0.04)",
     };
   }
 
@@ -105,7 +105,7 @@ function dashboardPalette(theme: Theme) {
     ctaIconBg: "#0F0E0C",
     ctaIconText: "#F4F1E8",
     iconTile: PANEL_2,
-    shadow: "0 18px 42px rgba(0,0,0,0.24)",
+    shadow: "0 4px 24px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.03)",
   };
 }
 
@@ -141,7 +141,7 @@ function SectionLabel({
         style={{
           color: colors.muted,
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 500,
           letterSpacing: "0.28em",
           textTransform: "uppercase",
         }}
@@ -158,7 +158,7 @@ function SectionLabel({
             gap: 8,
             color: colors.text,
             fontSize: 13,
-            fontWeight: 650,
+            fontWeight: 450,
             background: "transparent",
             border: 0,
           }}
@@ -219,7 +219,7 @@ export function DashboardScreen({
     minHeight: "100%",
     background: DARK,
     color: TEXT,
-    fontFamily: "'Inter', system-ui, sans-serif",
+    
     padding: "20px 22px 28px",
   };
 
@@ -235,7 +235,7 @@ export function DashboardScreen({
             background: PANEL_2,
             color: MUTED,
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 400,
           }}
         >
           {notice}
@@ -265,7 +265,7 @@ export function DashboardScreen({
               width: 78,
               height: 78,
               borderRadius: 999,
-              background: `conic-gradient(${colors.ring} ${usedPercent * 3.6}deg, ${colors.ringTrack} 0deg)`,
+              background: `conic-gradient(${colors.ring} ${usedPercent > 0 ? Math.max(14, usedPercent * 3.6) : 0}deg, ${colors.ringTrack} 0deg)`,
               padding: 6,
               display: "grid",
               placeItems: "center",
@@ -287,7 +287,7 @@ export function DashboardScreen({
                 style={{
                   color: TEXT,
                   fontSize: 15,
-                  fontWeight: 750,
+                  fontWeight: 500,
                   lineHeight: 1,
                 }}
               >
@@ -297,7 +297,7 @@ export function DashboardScreen({
                 style={{
                   color: MUTED,
                   fontSize: 9,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   letterSpacing: "0.22em",
                   textTransform: "uppercase",
                   marginTop: -12,
@@ -313,20 +313,20 @@ export function DashboardScreen({
               style={{
                 color: MUTED,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 500,
                 letterSpacing: "0.26em",
                 textTransform: "uppercase",
                 marginBottom: 8,
               }}
             >
-              Take-home Salary
+              Salary on File
             </div>
             <div
               style={{
                 color: TEXT,
-                fontFamily: "'Inter', system-ui, sans-serif",
+                
                 fontSize: 28,
-                fontWeight: 650,
+                fontWeight: 450,
                 letterSpacing: "-0.07em",
                 lineHeight: 1,
               }}
@@ -340,7 +340,7 @@ export function DashboardScreen({
                 gap: 8,
                 color: MUTED,
                 fontSize: 13,
-                fontWeight: 600,
+                fontWeight: 400,
                 marginTop: 14,
               }}
             >
@@ -369,7 +369,7 @@ export function DashboardScreen({
           style={{
             color: MUTED,
             fontSize: 11,
-            fontWeight: 700,
+            fontWeight: 500,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
             marginBottom: 10,
@@ -394,16 +394,16 @@ export function DashboardScreen({
                 padding: "12px 10px",
                 borderRadius: 16,
                 border: `1px solid ${theme === "light" ? colors.divider : "rgba(242,240,234,0.045)"}`,
-                background: theme === "light" ? "#FBFAFF" : "rgba(12,12,14,0.26)",
+                background: theme === "light" ? "#F3F1FB" : "rgba(255,255,255,0.03)",
               }}
             >
               <div
                 style={{
                   color: MUTED,
-                  fontSize: 9,
+                  fontSize: 11,
                   lineHeight: 1.2,
-                  fontWeight: 700,
-                  letterSpacing: "0.06em",
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   marginBottom: 9,
                 }}
@@ -412,10 +412,10 @@ export function DashboardScreen({
               </div>
               <div
                 style={{
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                   color: metric.tone,
                   fontSize: 14,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   letterSpacing: "-0.02em",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
@@ -435,7 +435,7 @@ export function DashboardScreen({
             style={{
               width: "100%",
               height: 50,
-              borderRadius: 18,
+              borderRadius: 14,
               background: colors.ctaBg,
               color: colors.ctaText,
               padding: "0 8px 0 18px",
@@ -444,7 +444,7 @@ export function DashboardScreen({
               justifyContent: "space-between",
               gap: 14,
               fontSize: 15,
-              fontWeight: 750,
+              fontWeight: 500,
               whiteSpace: "nowrap",
               boxShadow: theme === "light" ? "0 12px 32px -8px rgba(30,22,54,0.14)" : "0 14px 32px rgba(0,0,0,0.26)",
             }}
@@ -509,15 +509,15 @@ export function DashboardScreen({
                 {recentIsDisbursed ? <ArrowDownToLine size={18} /> : <CalendarDays size={18} />}
               </span>
               <span style={{ minWidth: 0 }}>
-                <strong style={{ display: "block", fontSize: 15, fontWeight: 700 }}>
+                <span style={{ display: "block", fontSize: 15, fontWeight: 500 }}>
                   {recentIsDisbursed ? "Advance credited" : "Advance requested"}
-                </strong>
+                </span>
                 <small
                   style={{
                     display: "block",
                     color: MUTED,
                     fontSize: 12,
-                    fontWeight: 600,
+                    fontWeight: 400,
                     marginTop: 5,
                     whiteSpace: "nowrap",
                     overflow: "hidden",
@@ -531,9 +531,9 @@ export function DashboardScreen({
               <span
                 style={{
                   color: recentIsDisbursed ? GREEN : TEXT,
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                   fontSize: 15,
-                  fontWeight: 650,
+                  fontWeight: 450,
                   letterSpacing: "-0.05em",
                 }}
               >
@@ -572,15 +572,15 @@ export function DashboardScreen({
                   <CalendarDays size={18} />
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <strong style={{ display: "block", fontSize: 15, fontWeight: 700 }}>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 500 }}>
                     Repayment scheduled
-                  </strong>
+                  </span>
                   <small
                     style={{
                       display: "block",
                       color: MUTED,
                       fontSize: 12,
-                      fontWeight: 600,
+                      fontWeight: 400,
                       marginTop: 5,
                     }}
                   >
@@ -590,9 +590,9 @@ export function DashboardScreen({
                 <span
                   style={{
                     color: TEXT,
-                    fontFamily: "'Inter', system-ui, sans-serif",
+                    
                     fontSize: 15,
-                    fontWeight: 650,
+                    fontWeight: 450,
                     letterSpacing: "-0.05em",
                   }}
                 >
@@ -628,7 +628,7 @@ export function DashboardScreen({
               >
                 <Archive size={17} />
               </span>
-              <div style={{ fontSize: 13, fontWeight: 650 }}>
+              <div style={{ fontSize: 13, fontWeight: 450 }}>
                 Your first advance will show up here.
               </div>
             </div>
@@ -651,7 +651,7 @@ export function DashboardScreen({
             style={{
               color: MUTED,
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 500,
               letterSpacing: "0.28em",
               textTransform: "uppercase",
             }}
@@ -677,7 +677,7 @@ export function DashboardScreen({
                         display: "grid",
                         placeItems: "center",
                         fontSize: 10,
-                        fontWeight: 700,
+                        fontWeight: 500,
                       }}
                     >
                       {initial}
@@ -685,7 +685,7 @@ export function DashboardScreen({
                   );
                 })}
               </div>
-              <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>
+              <span style={{ color: TEXT, fontSize: 13, fontWeight: 500 }}>
                 {peerCount} on Advance
               </span>
             </div>
@@ -717,21 +717,21 @@ export function DashboardScreen({
                       display: "grid",
                       placeItems: "center",
                       fontSize: 15,
-                      fontWeight: 750,
+                      fontWeight: 500,
                     }}
                   >
                     {name[0]?.toUpperCase() ?? "M"}
                   </span>
-                  <span style={{ minWidth: 0, color: MUTED, fontSize: 13.5, fontWeight: 600 }}>
-                    <strong style={{ color: TEXT, fontWeight: 750 }}>{name}</strong>{" "}
+                  <span style={{ minWidth: 0, color: MUTED, fontSize: 13.5, fontWeight: 400 }}>
+                    <span style={{ color: TEXT, fontWeight: 500 }}>{name}</span>{" "}
                     {item.action}
                   </span>
                   <span
                     style={{
                       color: DIM,
-                      fontFamily: "'Inter', system-ui, sans-serif",
+                      
                       fontSize: 11.5,
-                      fontWeight: 600,
+                      fontWeight: 400,
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -742,8 +742,16 @@ export function DashboardScreen({
             })}
           </div>
         ) : (
-          <div style={{ color: DIM, fontSize: 13, fontWeight: 600 }}>
-            Colleague activity will appear here.
+          <div
+            style={{
+              padding: "20px 0 4px",
+              color: DIM,
+              fontSize: 13,
+              fontWeight: 400,
+              textAlign: "center",
+            }}
+          >
+            Colleague activity will appear here once others join.
           </div>
         )}
       </section>

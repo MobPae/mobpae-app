@@ -201,11 +201,10 @@ export function EmployeeApp() {
       {app.activeView === "profile-membership" && (
         <MembershipScreen
           appState={app.appState}
-          activatingMembership={app.activatingMembership}
           couponValidation={app.couponValidation}
           couponError={app.couponError}
           validatingCoupon={app.validatingCoupon}
-          onActivateMembership={app.activateMembership}
+          onPaymentVerified={app.onPaymentVerified}
           onValidateCoupon={app.validateCoupon}
           onClearCoupon={app.clearCoupon}
           onNavigate={navigate}
@@ -234,6 +233,7 @@ export function EmployeeApp() {
           membershipConfig={app.appState.membershipConfig}
           membershipActive={app.appState.membershipActive}
           membershipRequiredAfterEmployerApproval={app.eligibility?.membershipRequiredAfterEmployerApproval}
+          interestFreeThreshold={app.eligibility?.limits.interestFreeThreshold}
           bankAccount={app.appState.bankAccount}
           kycDocumentCount={app.appState.documents.filter((document) => document.status !== "Not Uploaded").length}
           onAmountChange={app.setAdvanceAmount}

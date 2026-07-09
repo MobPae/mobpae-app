@@ -1,6 +1,6 @@
 /* ============================================================
    MobPae Employee App — Design System v5
-   Primary: #5B3CE3  |  Background: #FFFFFF  |  Font: Inter
+   Primary: #315eff  |  Background: #FFFFFF  |  Font: Inter
    ============================================================ */
 
 /* ── Reset ─────────────────────────────────────────────────── */
@@ -11,15 +11,27 @@
   margin: 0;
   padding: 0;
 }
+
+/* ── Kill autofill yellow ───────────────────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 9999px #ffffff inset !important;
+  box-shadow: 0 0 0 9999px #ffffff inset !important;
+  -webkit-text-fill-color: inherit !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
 html,
 body {
   background: #0C0C0E;
 }
 body {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   color: #0f0a3c;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 button {
   cursor: pointer;
@@ -40,13 +52,13 @@ a {
 
 /* ── CSS Variables ─────────────────────────────────────────── */
 :root {
-  --P: #5b3ce3;
-  --P-dark: #4429c4;
-  --P-light: #eceaff;
-  --P-mid: #7b5ff5;
-  --bg: #f4f3ff;
+  --P: #315eff;
+  --P-dark: #2048EE;
+  --P-light: #EEF2FF;
+  --P-mid: #5E7FFF;
+  --bg: #F0F2FF;
   --surface: #ffffff;
-  --border: #e8e5ff;
+  --border: #E0E7FF;
   --t1: #0f0a3c;
   --t2: #6b7280;
   --t3: #9ca3af;
@@ -60,7 +72,7 @@ a {
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 20px;
-  --shadow: 0 2px 12px rgba(91, 60, 227, 0.08);
+  --shadow: 0 2px 12px rgba(49, 94, 255, 0.08);
   --shadow-sm: 0 1px 6px rgba(0, 0, 0, 0.06);
 
   /* Fixed MobPae mobile typography rulebook. Do not change per page. */
@@ -108,7 +120,7 @@ a {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 60px rgba(91, 60, 227, 0.25);
+  box-shadow: 0 0 60px rgba(49, 94, 255, 0.25);
 }
 @media (max-width: 480px) {
   .app-root {
@@ -140,12 +152,18 @@ a {
   -webkit-overflow-scrolling: touch;
   padding-bottom: 8px;
   background: #fafaf8;
+  animation: screenFadeIn 0.18s ease;
 }
 .screen-body-onboarding {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background: #fafaf8;
+  animation: screenFadeIn 0.18s ease;
+}
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
 button:focus-visible {
   outline: 2px solid var(--P);
@@ -196,7 +214,7 @@ button:focus-visible {
 .bottom-nav {
   display: flex;
   background: white;
-  box-shadow: 0 -1px 0 #f0eeff, 0 -6px 20px rgba(91, 60, 227, 0.07);
+  box-shadow: 0 -1px 0 #f0eeff, 0 -6px 20px rgba(49, 94, 255, 0.07);
   padding: 6px 4px max(14px, env(safe-area-inset-bottom)) 4px;
   flex-shrink: 0;
 }
@@ -221,17 +239,17 @@ button:focus-visible {
   transition: background 0.18s;
 }
 .nav-tab.active .nav-tab-icon {
-  background: #eceaff;
+  background: #EEF2FF;
 }
 .nav-tab-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: #9ca3af;
   letter-spacing: 0.1px;
 }
 .nav-tab.active .nav-tab-label {
   color: var(--P);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* ── Page-level topbar (MobPae logo bar) ─────────────────── */
@@ -251,7 +269,7 @@ button:focus-visible {
 }
 .mp-topbar-logo-text {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 .mp-topbar-back {
@@ -260,7 +278,7 @@ button:focus-visible {
   gap: 6px;
   color: var(--P);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   background: none;
   border: none;
   cursor: pointer;
@@ -302,7 +320,7 @@ button:focus-visible {
   padding: 3px 9px;
   border-radius: 99px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .chip-green {
   background: var(--green-bg);
@@ -339,12 +357,12 @@ button:focus-visible {
   gap: 8px;
   width: 100%;
   padding: 15px;
-  border-radius: var(--r-lg);
+  border-radius: 8px;
   background: var(--P);
   color: white;
   border: none;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
   transition: opacity 0.15s;
@@ -360,12 +378,12 @@ button:focus-visible {
   gap: 8px;
   width: 100%;
   padding: 14px;
-  border-radius: var(--r-lg);
+  border-radius: 8px;
   background: var(--P-light);
   color: var(--P);
   border: none;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
 }
@@ -376,12 +394,12 @@ button:focus-visible {
   gap: 8px;
   width: 100%;
   padding: 13px;
-  border-radius: var(--r-lg);
+  border-radius: 8px;
   background: white;
   color: var(--P);
   border: 1.5px solid var(--P);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
 }
@@ -390,7 +408,7 @@ button:focus-visible {
   border: none;
   color: var(--P);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
   display: inline-flex;
@@ -424,7 +442,7 @@ button:focus-visible {
 .mp-label {
   display: block;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 6px;
 }
@@ -472,7 +490,7 @@ button:focus-visible {
   padding: 10px 20px;
   border-radius: 99px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   z-index: 999;
   white-space: nowrap;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -506,7 +524,7 @@ button:focus-visible {
   color: #171715;
   font-size: 15px;
   line-height: 1.05;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.05em;
   white-space: nowrap;
   overflow: hidden;
@@ -559,7 +577,7 @@ button:focus-visible {
   color: #ffffff;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   flex: 0 0 auto;
 }
@@ -601,7 +619,7 @@ button:focus-visible {
   background: #fff2d9;
   color: #c74610;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .home-greeting-v2 {
@@ -630,7 +648,7 @@ button:focus-visible {
 }
 .home-greeting-v2 strong {
   color: #171715;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .home-salary-v2 {
@@ -699,7 +717,7 @@ button:focus-visible {
 .home-usage-ring-v2 strong {
   display: block;
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
   color: #fffdf7;
 }
@@ -726,14 +744,14 @@ button:focus-visible {
   color: #8c877f;
   font-size: 11px;
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.09em;
 }
 .home-salary-amount-v2 {
   margin-top: 8px;
   font-size: 32px;
   line-height: 0.98;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: -0.07em;
   color: #fffdf7;
 }
@@ -784,7 +802,7 @@ button:focus-visible {
   color: #fffdf7;
   font-size: 16px;
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.07em;
 }
 .home-salary-bottom-v2 button {
@@ -797,7 +815,7 @@ button:focus-visible {
   justify-content: center;
   gap: 10px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
   box-shadow: 0 10px 22px rgba(107, 69, 244, 0.2);
 }
@@ -833,7 +851,7 @@ button:focus-visible {
   color: #171715;
   font-size: 14px;
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 .home-repayment-amount-wrap-v2 {
@@ -872,7 +890,7 @@ button:focus-visible {
   gap: 4px;
   font-size: 12px;
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.05em;
 }
 
@@ -916,7 +934,7 @@ button:focus-visible {
   display: block;
   color: #171715;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: -0.02em;
 }
@@ -933,7 +951,7 @@ button:focus-visible {
   color: #1f9a5f;
   font-size: 15px;
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 .home-empty-v2 {
@@ -968,7 +986,7 @@ button:focus-visible {
   color: #171715;
   font-size: 12px;
   line-height: 1.08;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.06em;
 }
 .home-member-stack-v2 {
@@ -987,7 +1005,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 .home-member-stack-v2 span:nth-child(2) {
@@ -1021,7 +1039,7 @@ button:focus-visible {
   display: block;
   margin-top: 3px;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -1047,7 +1065,7 @@ button:focus-visible {
 .home-repay-strip-text-v2 span {
   display: block;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: #b45309;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -1057,7 +1075,7 @@ button:focus-visible {
   display: block;
   margin-top: 3px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: #92400e;
   letter-spacing: -0.02em;
 }
@@ -1088,7 +1106,7 @@ button:focus-visible {
   text-transform: uppercase;
   color: #8c877f;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.09em;
 }
 .home-peers-right-v2 {
@@ -1109,13 +1127,13 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 500;
   color: #ffffff;
   flex-shrink: 0;
 }
 .home-peers-count-v2 {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   color: #6b45f4;
   letter-spacing: -0.03em;
 }
@@ -1135,7 +1153,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: #ffffff;
   flex-shrink: 0;
 }
@@ -1152,7 +1170,7 @@ button:focus-visible {
   white-space: nowrap;
 }
 .home-peer-text-v2 strong {
-  font-weight: 600;
+  font-weight: 400;
   color: #171715;
 }
 .home-peer-time-v2 {
@@ -1266,7 +1284,7 @@ button:focus-visible {
   display: block;
   color: #1f1e1c;
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.05em;
   margin-bottom: 9px;
@@ -1304,7 +1322,7 @@ button:focus-visible {
 .adv-active-stats strong.purple {
   color: #6b45f4;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
 }
 .adv-on-payday {
   width: fit-content;
@@ -1369,7 +1387,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
 }
 .adv-calc-icon--warm {
   background: #fbe7dd;
@@ -1419,7 +1437,7 @@ button:focus-visible {
 .adv-calc-total b {
   color: #6b45f4;
   font-size: 20px !important;
-  /* font-weight: 600; */
+  /* font-weight: 400; */
 }
 
 /* Refer card on advance screen */
@@ -1509,7 +1527,7 @@ button:focus-visible {
 }
 .adv-salary-amount {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-salary-updated {
@@ -1529,7 +1547,7 @@ button:focus-visible {
 }
 .adv-avail-amount {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--P);
   margin-bottom: 6px;
 }
@@ -1544,7 +1562,7 @@ button:focus-visible {
 }
 .adv-slider-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 2px;
 }
@@ -1555,7 +1573,7 @@ button:focus-visible {
 }
 .adv-slider-amount {
   font-size: 34px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--P);
   text-align: center;
   margin-bottom: 12px;
@@ -1578,7 +1596,7 @@ button:focus-visible {
   border-radius: 50%;
   background: var(--P);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(91, 60, 227, 0.35);
+  box-shadow: 0 2px 8px rgba(49, 94, 255, 0.35);
 }
 .adv-range-labels {
   display: flex;
@@ -1606,7 +1624,7 @@ button:focus-visible {
 }
 .adv-detail-hdr-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-detail-grid {
@@ -1630,7 +1648,7 @@ button:focus-visible {
 }
 .adv-detail-item-val {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-detail-item-val.purple {
@@ -1665,7 +1683,7 @@ button:focus-visible {
   background: #f9f8ff;
   color: var(--P);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.45;
 }
 .adv-cycle-note svg {
@@ -1683,7 +1701,7 @@ button:focus-visible {
 }
 .adv-hiw-label {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--P);
   margin-bottom: 10px;
 }
@@ -1699,7 +1717,7 @@ button:focus-visible {
 .adv-hiw-when {
   font-size: 10px;
   color: var(--P);
-  font-weight: 600;
+  font-weight: 400;
   margin-bottom: 2px;
 }
 .adv-hiw-action {
@@ -1709,7 +1727,7 @@ button:focus-visible {
 }
 .adv-hiw-amt {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--P);
 }
 .adv-hiw-arrow {
@@ -1738,7 +1756,7 @@ button:focus-visible {
 }
 .adv-feature-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-feature-sub {
@@ -1752,12 +1770,12 @@ button:focus-visible {
 .adv-setup-float-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #4A2FCC 0%, #7B64FF 60%, #9B82FF 100%);
+  background: linear-gradient(135deg, #4A2FCC 0%, #5E7FFF 60%, #9B82FF 100%);
   border-radius: 24px;
   margin: 16px 16px 20px;
   padding: 22px 22px 20px;
   color: white;
-  box-shadow: 0 12px 40px rgba(108,76,255,0.35), 0 2px 8px rgba(108,76,255,0.2);
+  box-shadow: 0 12px 40px rgba(49,94,255,0.35), 0 2px 8px rgba(49,94,255,0.2);
 }
 /* decorative blobs inside the card */
 .adv-setup-blob {
@@ -1806,7 +1824,7 @@ button:focus-visible {
   padding: 4px 11px;
   border-radius: 99px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.03em;
 }
 /* blurred amount preview */
@@ -1818,7 +1836,7 @@ button:focus-visible {
 .adv-setup-amount-blur {
   display: block;
   font-size: 36px;
-  font-weight: 900;
+  font-weight: 500;
   letter-spacing: -0.04em;
   color: white;
   filter: blur(6px);
@@ -1844,7 +1862,7 @@ button:focus-visible {
 }
 .adv-setup-progress-text {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: rgba(255,255,255,0.75);
   white-space: nowrap;
   flex-shrink: 0;
@@ -1884,14 +1902,14 @@ button:focus-visible {
   gap: 14px;
   width: 100%;
   background: white;
-  border: 1.5px solid #ECEAFF;
+  border: 1.5px solid #EEF2FF;
   border-radius: 18px;
   padding: 15px 16px;
   text-align: left;
   font-family: inherit;
   cursor: pointer;
   transition: box-shadow 0.15s, transform 0.1s;
-  box-shadow: 0 2px 8px rgba(108,76,255,0.06);
+  box-shadow: 0 2px 8px rgba(49,94,255,0.06);
 }
 .adv-setup-step:active {
   transform: scale(0.985);
@@ -1913,7 +1931,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   flex-shrink: 0;
   background: #EDE9FF;
   color: var(--P);
@@ -1935,7 +1953,7 @@ button:focus-visible {
 }
 .adv-setup-step-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: #0F0A3C;
   margin-bottom: 3px;
 }
@@ -1946,11 +1964,11 @@ button:focus-visible {
 }
 .adv-setup-step-status.done {
   color: #16A34A;
-  font-weight: 600;
+  font-weight: 400;
 }
 .adv-setup-step-status.review {
   color: #D97706;
-  font-weight: 600;
+  font-weight: 400;
 }
 .adv-setup-step-status.todo {
   color: #9CA3AF;
@@ -1959,7 +1977,7 @@ button:focus-visible {
   width: 30px;
   height: 30px;
   border-radius: 10px;
-  background: #F3F0FF;
+  background: #EEF2FF;
   color: var(--P);
   display: flex;
   align-items: center;
@@ -1968,7 +1986,7 @@ button:focus-visible {
 }
 .adv-setup-step-review-tag {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
   color: #D97706;
   background: #FEF3C7;
   border-radius: 99px;
@@ -1998,12 +2016,12 @@ button:focus-visible {
   padding: 4px 12px;
   border-radius: 99px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   margin-bottom: 10px;
 }
 .adv-blocked-title {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 8px;
 }
@@ -2039,7 +2057,7 @@ button:focus-visible {
   color: #7c2d12;
   font-size: 13px;
   line-height: 1.15;
-  font-weight: 700;
+  font-weight: 500;
 }
 .adv-review-wait-card span {
   display: block;
@@ -2059,7 +2077,7 @@ button:focus-visible {
 .adv-step-hdr {
   padding: 12px 16px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   border-bottom: 1px solid #f3f1ff;
 }
@@ -2092,7 +2110,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   flex-shrink: 0;
 }
 .adv-step-num.done {
@@ -2114,7 +2132,7 @@ button:focus-visible {
 }
 .adv-step-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-step-sub {
@@ -2124,11 +2142,11 @@ button:focus-visible {
 }
 .adv-step-sub.done {
   color: var(--green);
-  font-weight: 700;
+  font-weight: 500;
 }
 .adv-step-sub.review {
   color: #d97706;
-  font-weight: 700;
+  font-weight: 500;
 }
 .adv-step-sub.todo {
   color: var(--t2);
@@ -2166,7 +2184,7 @@ button:focus-visible {
 }
 .adv-summary-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-review-row {
@@ -2185,7 +2203,7 @@ button:focus-visible {
 }
 .adv-review-val {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-summary-card .adv-cycle-note {
@@ -2207,12 +2225,12 @@ button:focus-visible {
 }
 .adv-review-total-lbl {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-review-total-val {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--P);
 }
 .adv-important-note {
@@ -2229,7 +2247,7 @@ button:focus-visible {
 }
 .adv-important-note-title {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--green);
 }
 .adv-flow-row {
@@ -2243,7 +2261,7 @@ button:focus-visible {
 .adv-flow-when {
   font-size: 10px;
   color: var(--green);
-  font-weight: 600;
+  font-weight: 400;
 }
 .adv-flow-action {
   font-size: 11px;
@@ -2251,7 +2269,7 @@ button:focus-visible {
 }
 .adv-flow-amt {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--green);
 }
 .adv-flow-arrow {
@@ -2284,11 +2302,11 @@ button:focus-visible {
 }
 .adv-rc-val {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-rc-val.green { color: #16a34a; }
-.adv-rc-val.bold { font-size: 16px; color: var(--P); font-weight: 800; }
+.adv-rc-val.bold { font-size: 16px; color: var(--P); font-weight: 500; }
 
 /* ── Advance timeline (replaces "How this works") ── */
 .adv-rc-timeline {
@@ -2299,7 +2317,7 @@ button:focus-visible {
 }
 .adv-rc-timeline-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: #16a34a;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2312,7 +2330,7 @@ button:focus-visible {
 }
 .adv-agree-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 10px;
 }
@@ -2329,7 +2347,7 @@ button:focus-visible {
 }
 .adv-agree-text a {
   color: var(--P);
-  font-weight: 600;
+  font-weight: 400;
 }
 .adv-sticky-btn {
   position: sticky;
@@ -2364,7 +2382,7 @@ button:focus-visible {
 .adv-success-topbar-left {
   color: var(--P);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2372,7 +2390,7 @@ button:focus-visible {
 .adv-success-topbar-right {
   color: var(--P);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -2396,7 +2414,7 @@ button:focus-visible {
 }
 .adv-success-title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   text-align: center;
   margin-bottom: 6px;
@@ -2418,12 +2436,12 @@ button:focus-visible {
 .adv-success-amount-label {
   font-size: 12px;
   color: var(--green);
-  font-weight: 600;
+  font-weight: 400;
   margin-bottom: 4px;
 }
 .adv-success-amount-val {
   font-size: 32px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--green);
   margin-bottom: 8px;
   letter-spacing: -0.02em;
@@ -2450,7 +2468,7 @@ button:focus-visible {
 }
 .adv-success-bank-val {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .adv-repayment-list {
@@ -2463,7 +2481,7 @@ button:focus-visible {
 .adv-repayment-list-hdr {
   padding: 12px 16px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   border-bottom: 1px solid #f3f1ff;
 }
@@ -2486,7 +2504,7 @@ button:focus-visible {
 }
 .adv-repayment-list-title {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
 }
 .adv-repayment-list-sub {
@@ -2554,7 +2572,7 @@ button:focus-visible {
   border-radius: 30px;
   border: none;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t2);
   background: none;
   cursor: pointer;
@@ -2565,7 +2583,7 @@ button:focus-visible {
 .hist-tab.active {
   background: var(--P-light);
   color: var(--P);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* Filter bar */
@@ -2585,7 +2603,7 @@ button:focus-visible {
   border: 1px solid #e5e7eb;
   background: white;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t2);
   cursor: pointer;
   font-family: inherit;
@@ -2600,7 +2618,7 @@ button:focus-visible {
   background: none;
   border: none;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--P);
   cursor: pointer;
   font-family: inherit;
@@ -2616,7 +2634,7 @@ button:focus-visible {
 /* Month group label */
 .hist-month-label {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   padding: 12px 0 8px;
 }
@@ -2641,7 +2659,7 @@ button:focus-visible {
 }
 .hist-tx-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .hist-tx-sub {
@@ -2660,7 +2678,7 @@ button:focus-visible {
 }
 .hist-tx-amount {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   white-space: nowrap;
 }
@@ -2680,7 +2698,7 @@ button:focus-visible {
   border-radius: 999px;
   color: var(--P);
   font-size: 10.5px;
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.1;
   text-align: center;
   white-space: nowrap;
@@ -2707,7 +2725,7 @@ button:focus-visible {
 }
 .hist-security-note a {
   color: var(--P);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* Refer & Earn card */
@@ -2748,7 +2766,7 @@ button:focus-visible {
   border-radius: 15px;
 }
 .sub-page-back:active {
-  background: rgba(91, 60, 227, 0.08);
+  background: rgba(49, 94, 255, 0.08);
 }
 .sub-page-title {
   font-size: var(--text-page);
@@ -2769,7 +2787,7 @@ button:focus-visible {
   flex-direction: column;
 }
 .change-password-hero {
-  background: linear-gradient(135deg, #5b3ce3 0%, #7b5cf0 100%);
+  background: linear-gradient(135deg, #315eff 0%, #7b5cf0 100%);
   padding: 20px 20px 28px;
   display: flex;
   align-items: center;
@@ -2789,14 +2807,14 @@ button:focus-visible {
 }
 .change-password-hero span {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 .change-password-hero h2 {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 500;
   color: white;
   margin: 4px 0 6px;
 }
@@ -2811,7 +2829,7 @@ button:focus-visible {
   border-radius: 16px;
   margin: 16px 16px 0;
   border: 1px solid #f0eeff;
-  box-shadow: 0 2px 12px rgba(91, 60, 227, 0.07);
+  box-shadow: 0 2px 12px rgba(49, 94, 255, 0.07);
   padding: 18px 16px;
   display: flex;
   flex-direction: column;
@@ -2824,7 +2842,7 @@ button:focus-visible {
 }
 .change-password-field label {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: #374151;
 }
 .change-password-field > div {
@@ -2839,7 +2857,7 @@ button:focus-visible {
   transition: border-color 0.15s;
 }
 .change-password-field > div:focus-within {
-  border-color: #5b3ce3;
+  border-color: #315eff;
 }
 .change-password-field > div svg {
   color: #9ca3af;
@@ -2895,7 +2913,7 @@ button:focus-visible {
   gap: 8px;
   font-size: 12px;
   color: #ef4444;
-  font-weight: 600;
+  font-weight: 400;
 }
 .password-match-note.passed {
   color: #16a34a;
@@ -2907,7 +2925,7 @@ button:focus-visible {
   padding: 10px 12px;
   font-size: 12px;
   color: #dc2626;
-  font-weight: 600;
+  font-weight: 400;
 }
 .change-password-submit {
   width: 100%;
@@ -2918,7 +2936,7 @@ button:focus-visible {
   background: var(--P);
   color: white;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   font-family: inherit;
   display: flex;
   align-items: center;
@@ -2971,7 +2989,7 @@ button:focus-visible {
 }
 .help-contact-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 2px;
 }
@@ -2988,7 +3006,7 @@ button:focus-visible {
   border-radius: var(--r-md);
   border: none;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
   display: flex;
@@ -3017,7 +3035,7 @@ button:focus-visible {
 }
 .help-topic-title {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 3px;
 }
@@ -3057,7 +3075,7 @@ button:focus-visible {
 .help-faq-q-text {
   flex: 1;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
 }
 .help-faq-arrow {
@@ -3082,7 +3100,7 @@ button:focus-visible {
 }
 .help-security-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: #14532d;
   margin-bottom: 2px;
 }
@@ -3102,7 +3120,7 @@ button:focus-visible {
 }
 .notif-date-label {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t2);
   padding: 10px 0 4px;
 }
@@ -3140,7 +3158,7 @@ button:focus-visible {
 }
 .notif-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 2px;
 }
@@ -3188,7 +3206,7 @@ button:focus-visible {
 }
 .mem-hero-title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: white;
   margin-bottom: 6px;
 }
@@ -3218,18 +3236,18 @@ button:focus-visible {
   padding: 3px 14px;
   border-radius: 99px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
 }
 .mem-plan-name {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t2);
   margin-bottom: 4px;
 }
 .mem-plan-price {
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 4px;
 }
@@ -3245,7 +3263,7 @@ button:focus-visible {
   padding: 3px 10px;
   border-radius: 99px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   margin-bottom: 12px;
 }
 .mem-benefit-row {
@@ -3284,7 +3302,7 @@ button:focus-visible {
   color: var(--P);
   border: none;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
 }
@@ -3316,7 +3334,7 @@ button:focus-visible {
   border-top: 1px solid #f3f1ff;
   margin-top: 4px;
   padding-top: 12px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 .mem-price-total strong {
@@ -3340,7 +3358,7 @@ button:focus-visible {
 .mem-payment-head span {
   display: block;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--t3);
@@ -3353,7 +3371,7 @@ button:focus-visible {
 }
 .mem-payment-amount {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--P);
   white-space: nowrap;
 }
@@ -3370,8 +3388,8 @@ button:focus-visible {
   gap: 8px;
   font-family: inherit;
   font-size: 14px;
-  font-weight: 800;
-  box-shadow: 0 8px 18px rgba(108, 76, 255, 0.18);
+  font-weight: 500;
+  box-shadow: 0 8px 18px rgba(49, 94, 255, 0.18);
 }
 .mem-qr-box {
   min-height: 112px;
@@ -3403,7 +3421,7 @@ button:focus-visible {
   gap: 6px;
   color: var(--P);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
 }
 .mem-payment-instruction {
@@ -3414,7 +3432,7 @@ button:focus-visible {
   padding: 10px 12px;
   font-size: 12px;
   line-height: 1.4;
-  font-weight: 600;
+  font-weight: 400;
 }
 .mem-proof-upload {
   margin-top: 12px;
@@ -3430,7 +3448,7 @@ button:focus-visible {
   gap: 8px;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   padding: 10px 12px;
 }
 .mem-proof-upload span {
@@ -3460,7 +3478,7 @@ button:focus-visible {
 }
 .mem-review-title {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 6px;
 }
@@ -3500,7 +3518,7 @@ button:focus-visible {
   background: #f0fdf4;
   color: #166534;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
 }
 .mem-rejected-card {
@@ -3522,7 +3540,7 @@ button:focus-visible {
   line-height: 1.4;
 }
 .mem-active-card {
-  background: linear-gradient(135deg, #5b3ce3, #7b64ff);
+  background: linear-gradient(135deg, #315eff, #5E7FFF);
   border-radius: var(--r-xl);
   padding: 20px;
   margin-bottom: 12px;
@@ -3561,13 +3579,13 @@ button:focus-visible {
 }
 .mem-active-card-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.78);
   margin-bottom: 3px;
 }
 .mem-active-badge {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 500;
   color: white;
 }
 .mem-active-details {
@@ -3587,7 +3605,7 @@ button:focus-visible {
 }
 .mem-active-stat-val {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 500;
   color: white;
 }
 .mem-benefits-card {
@@ -3599,7 +3617,7 @@ button:focus-visible {
 }
 .mem-benefits-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 12px;
 }
@@ -3627,7 +3645,7 @@ button:focus-visible {
 }
 .mem-benefit-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .mem-benefit-check-right {
@@ -3683,7 +3701,7 @@ button:focus-visible {
 }
 .onb-hero-title {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   color: #ffffff;
   line-height: 1.2;
   margin-bottom: 8px;
@@ -3740,7 +3758,7 @@ button:focus-visible {
 }
 .onb-doc-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .onb-doc-sub {
@@ -3765,7 +3783,7 @@ button:focus-visible {
   color: #16a34a;
   font-size: 10px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 500;
 }
 .onb-status-line .chip {
   margin: 0;
@@ -3820,7 +3838,7 @@ button:focus-visible {
   justify-content: center;
   gap: 8px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
 }
 .onb-tips-card {
   background: #f7f3ff;
@@ -3834,7 +3852,7 @@ button:focus-visible {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--P);
   margin-bottom: 10px;
 }
@@ -3891,7 +3909,7 @@ button:focus-visible {
 }
 .onb-done-title {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 8px;
 }
@@ -3903,7 +3921,7 @@ button:focus-visible {
 }
 .onb-done-benefits {
   background: white;
-  border-radius: var(--r-lg);
+  border-radius: 8px;
   border: 1px solid #f0eeff;
   padding: 14px 16px;
   width: 100%;
@@ -3912,7 +3930,7 @@ button:focus-visible {
 }
 .onb-done-benefits-title {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   margin-bottom: 12px;
 }
@@ -3935,7 +3953,7 @@ button:focus-visible {
 }
 .onb-done-benefit-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .onb-done-benefit-sub {
@@ -3965,7 +3983,7 @@ button:focus-visible {
    ============================================================ */
 .page-topbar-title {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
 }
 
@@ -4181,7 +4199,7 @@ button,
 
 .phone-shell .global-header-code {
   font-size: var(--text-card) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.05 !important;
   letter-spacing: -0.04em !important;
 }
@@ -4257,7 +4275,7 @@ button,
 
 .phone-shell .home-usage-ring-v2 strong {
   font-size: var(--text-section) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
 }
 
@@ -4276,7 +4294,7 @@ button,
 .phone-shell .adv-calc-total small,
 .phone-shell .mem-price-row {
   font-size: var(--text-label) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.2 !important;
   letter-spacing: 0.05em !important;
 }
@@ -4287,7 +4305,7 @@ button,
 .phone-shell .adv-success-amount-val,
 .phone-shell .mem-plan-price {
   font-size: var(--text-display) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
   letter-spacing: -0.06em !important;
 }
@@ -4327,7 +4345,7 @@ button,
 .phone-shell .hist-export-btn,
 .phone-shell .help-contact-btn {
   font-size: var(--text-button) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
   letter-spacing: -0.03em !important;
 }
@@ -4373,7 +4391,7 @@ button,
 .phone-shell .adv-calc-row b,
 .phone-shell .mem-price-total strong {
   font-size: var(--text-card) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.1 !important;
   letter-spacing: -0.04em !important;
 }
@@ -4418,7 +4436,7 @@ button,
 .phone-shell .help-faq-q-text,
 .phone-shell .notif-title {
   font-size: var(--text-card) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.18 !important;
   letter-spacing: -0.04em !important;
 }
@@ -4568,7 +4586,7 @@ button,
 .phone-shell .adv-calc-row strong,
 .phone-shell .adv-calc-total strong {
   font-size: var(--text-card) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.12 !important;
   letter-spacing: -0.035em !important;
 }
@@ -4584,13 +4602,13 @@ button,
 
 .phone-shell .adv-calc-row b {
   font-size: var(--text-body) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.1 !important;
 }
 
 .phone-shell .adv-calc-total b {
   /* font-size: var(--text-display) !important; */
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
 }
 
@@ -4655,7 +4673,7 @@ button,
   background: transparent !important;
   color: #179a58 !important;
   font-size: var(--text-caption) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1 !important;
   white-space: nowrap !important;
 }
@@ -4695,7 +4713,7 @@ button,
 
 .phone-shell .rep-empty-title {
   font-size: var(--text-section);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.15;
   color: #171715;
   letter-spacing: -0.04em;
@@ -4727,7 +4745,7 @@ button,
   color: #A39C93;
   font-size: var(--text-label);
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -4737,7 +4755,7 @@ button,
   color: #171715;
   font-size: var(--text-display);
   line-height: .95;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.07em;
 }
 
@@ -4785,7 +4803,7 @@ button,
   color: #A39C93;
   font-size: var(--text-label);
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -4796,7 +4814,7 @@ button,
   color: #171715;
   font-size: var(--text-card);
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 
@@ -4882,7 +4900,7 @@ button,
   color: #171715;
   font-size: var(--text-card);
   line-height: 1.1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 
@@ -4944,7 +4962,7 @@ button,
   padding-top: 1px;
   font-size: var(--text-card);
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.03em;
   white-space: nowrap;
 }
@@ -4989,7 +5007,7 @@ button,
   color: #171715;
   font-size: var(--text-card);
   line-height: 1.15;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 
@@ -5084,7 +5102,7 @@ button,
   color: #171715;
   font-size: var(--text-card);
   line-height: 1.1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 
@@ -5102,7 +5120,7 @@ button,
   color: #171715;
   font-size: var(--text-card);
   line-height: 1.1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.03em;
   text-align: right;
   white-space: nowrap;
@@ -5164,7 +5182,7 @@ button,
 
 .phone-shell .nav-tab.active .nav-tab-label {
   color: #171715 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .nav-tab.active::after {
@@ -5307,7 +5325,7 @@ button,
 .phone-shell .hist-tab.active {
   background: #E9E1FF !important;
   color: #6B45F4 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .hist-filter-bar {
@@ -5349,7 +5367,7 @@ button,
   color: #A39C93 !important;
   font-size: var(--text-label) !important;
   line-height: 1 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: .08em !important;
   text-transform: uppercase !important;
 }
@@ -5385,7 +5403,7 @@ button,
   color: #171715 !important;
   font-size: var(--text-card) !important;
   line-height: 1.1 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: -0.04em !important;
 }
 
@@ -5415,7 +5433,7 @@ button,
   color: #171715 !important;
   font-size: var(--text-card) !important;
   line-height: 1 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: -0.03em !important;
 }
 
@@ -5435,7 +5453,7 @@ button,
   border-radius: 0 !important;
   background: transparent !important;
   font-size: var(--text-meta) !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   line-height: 1.1 !important;
   overflow: visible !important;
   text-overflow: clip !important;
@@ -5451,7 +5469,7 @@ button,
 }
 
 .phone-shell .hist-tx-status.chip-purple {
-  color: #5B3CE3 !important;
+  color: #315eff !important;
 }
 
 .phone-shell .hist-security-note {
@@ -5537,7 +5555,7 @@ button,
   align-items: center;
   justify-content: center;
   font-size: var(--text-section);
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 
@@ -5626,7 +5644,7 @@ button,
   color: #A39C93;
   font-size: var(--text-label);
   line-height: 1;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -5709,7 +5727,7 @@ button,
   color: #171715;
   font-size: var(--text-card);
   line-height: 1.12;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5754,7 +5772,7 @@ button,
 
 .phone-shell .prof-info-content strong {
   color: #171715;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* Reuse the Profile dark hero treatment for Repayments main card. */
@@ -5843,7 +5861,7 @@ button,
   display: block;
   color: #7c2d12;
   font-size: var(--text-body);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -5881,7 +5899,7 @@ button,
   display: block;
   color: rgba(255,255,255,.62);
   font-size: var(--text-label);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -5890,7 +5908,7 @@ button,
   margin-top: 8px;
   color: #ffffff;
   font-size: var(--text-display);
-  font-weight: 700;
+  font-weight: 500;
   line-height: .95;
   letter-spacing: -0.06em;
 }
@@ -5911,7 +5929,7 @@ button,
   padding: 0 11px;
   border-radius: 999px;
   font-size: var(--text-meta);
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -5939,7 +5957,7 @@ button,
   margin-top: 5px;
   color: #ffffff;
   font-size: var(--text-body);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.03em;
 }
@@ -5980,7 +5998,7 @@ button,
   display: block;
   color: #8a847b;
   font-size: var(--text-label);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -5989,7 +6007,7 @@ button,
   margin-top: 4px;
   color: #171715;
   font-size: var(--text-display);
-  font-weight: 700;
+  font-weight: 500;
   line-height: .95;
   letter-spacing: -0.06em;
 }
@@ -6000,7 +6018,7 @@ button,
   border-radius: 999px;
   padding: 6px 10px;
   font-size: var(--text-caption);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
@@ -6021,7 +6039,7 @@ button,
   color: #6b45f4;
   font-family: inherit;
   font-size: var(--text-meta);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .phone-shell .adv-new-quick-row button.active {
@@ -6062,7 +6080,7 @@ button,
   display: block;
   color: #9b948b;
   font-size: var(--text-caption);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.15;
 }
 
@@ -6071,7 +6089,7 @@ button,
   margin-top: 6px;
   color: #171715;
   font-size: var(--text-body);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.1;
 }
 
@@ -6096,7 +6114,7 @@ button,
   display: block;
   color: #77706a;
   font-size: var(--text-caption);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .phone-shell .adv-new-due-row strong {
@@ -6104,7 +6122,7 @@ button,
   margin-top: 3px;
   color: #dc2626;
   font-size: var(--text-body);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .phone-shell .adv-new-cycle-note {
@@ -6114,7 +6132,7 @@ button,
   background: #fdf6eb;
   color: #b45309;
   font-size: var(--text-meta);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.35;
 }
 
@@ -6158,14 +6176,14 @@ button,
   justify-content: center;
   font-style: normal;
   font-size: var(--text-caption);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .phone-shell .adv-new-flow-row span {
   display: block;
   color: #8a847b;
   font-size: var(--text-caption);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .phone-shell .adv-new-flow-row strong {
@@ -6173,7 +6191,7 @@ button,
   margin-top: 5px;
   color: #171715;
   font-size: var(--text-meta);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.1;
 }
 
@@ -6194,7 +6212,7 @@ button,
   background: #e9f6f6;
   color: #16736f;
   font-size: var(--text-caption);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .phone-shell .adv-fixed-action {
@@ -6263,7 +6281,7 @@ button,
 
 .phone-shell .adv-c-hero-amt {
   font-size: var(--text-display);
-  font-weight: 600;
+  font-weight: 400;
   color: #fff;
   letter-spacing: -0.03em;
   line-height: 1;
@@ -6276,7 +6294,7 @@ button,
   padding: 5px 10px;
   border-radius: 999px;
   font-size: var(--text-label);
-  font-weight: 600;
+  font-weight: 400;
   white-space: nowrap;
   margin-top: 2px;
 }
@@ -6389,7 +6407,7 @@ button,
 
 .phone-shell .adv-c-amount {
   font-size: var(--text-display);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
   letter-spacing: -0.045em;
   line-height: 1;
@@ -6432,7 +6450,7 @@ button,
   background: var(--P);
   border-color: var(--P);
   color: #fff;
-  box-shadow: 0 3px 10px rgba(91,60,227,.25);
+  box-shadow: 0 3px 10px rgba(49,94,255,.25);
 }
 
 /* ── Divider ── */
@@ -6456,7 +6474,7 @@ button,
 .phone-shell .adv-c-repay-val {
   display: block;
   font-size: var(--text-section);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
   letter-spacing: -0.03em;
   margin-top: 3px;
@@ -6498,7 +6516,7 @@ button,
 
 .phone-shell .adv-sheet-title {
   font-size: var(--text-section);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
   margin-bottom: 14px;
 }
@@ -6543,7 +6561,7 @@ button,
 
 .phone-shell .adv-sheet-total-val {
   font-size: var(--text-page);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
   letter-spacing: -0.04em;
 }
@@ -6590,7 +6608,7 @@ button,
 
 .phone-shell .adv-amount-lbl {
   font-size: var(--text-label);
-  font-weight: 600;
+  font-weight: 400;
   color: #8a847b;
   text-transform: uppercase;
   letter-spacing: .04em;
@@ -6598,7 +6616,7 @@ button,
 
 .phone-shell .adv-amount-limit-chip {
   font-size: var(--text-caption);
-  font-weight: 700;
+  font-weight: 500;
   color: #6b45f4;
   background: #f0ecff;
   border-radius: 999px;
@@ -6608,7 +6626,7 @@ button,
 
 .phone-shell .adv-amount-big {
   font-size: 46px;
-  font-weight: 800;
+  font-weight: 500;
   color: #171715;
   letter-spacing: -0.055em;
   line-height: 1;
@@ -6629,19 +6647,19 @@ button,
   border-radius: 999px;
   border: 1.5px solid #e0daff;
   background: #f5f3ff;
-  color: #5b3ce3;
+  color: #315eff;
   font-family: inherit;
   font-size: var(--text-body);
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   transition: background .12s, color .12s, border-color .12s, box-shadow .12s;
 }
 
 .phone-shell .adv-pill--active {
-  background: #5b3ce3;
-  border-color: #5b3ce3;
+  background: #315eff;
+  border-color: #315eff;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(91, 60, 227, .28);
+  box-shadow: 0 4px 14px rgba(49, 94, 255, .28);
 }
 
 .phone-shell .adv-pill:disabled {
@@ -6664,7 +6682,7 @@ button,
   gap: 6px;
   margin-bottom: 14px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
   color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -6685,7 +6703,7 @@ button,
 .phone-shell .adv-repay-item span {
   display: block;
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 500;
   color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: .04em;
@@ -6695,7 +6713,7 @@ button,
 .phone-shell .adv-repay-item strong {
   display: block;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: #171715;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -6706,13 +6724,13 @@ button,
 }
 
 .phone-shell .adv-repay-item--total strong {
-  color: #5b3ce3;
+  color: #315eff;
   font-size: 16px;
 }
 
 .phone-shell .adv-repay-op {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 500;
   color: #c9c2ff;
   flex-shrink: 0;
   padding-bottom: 1px;
@@ -6739,7 +6757,7 @@ button,
 }
 
 .phone-shell .adv-payday-pill strong {
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .phone-shell .adv-tenure-note {
@@ -6863,7 +6881,7 @@ button,
 .phone-shell .mem-price-row strong,
 .phone-shell .mem-review-title {
   font-size: var(--text-section) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: -0.04em !important;
 }
 
@@ -6875,7 +6893,7 @@ button,
   min-height: 48px !important;
   border-radius: 18px !important;
   font-size: var(--text-button) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .mem-show-qr-btn,
@@ -6893,7 +6911,7 @@ button,
   color: #6b45f4 !important;
   background: transparent !important;
   font-size: var(--text-meta) !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
 }
 
 .phone-shell .notif-row {
@@ -6911,7 +6929,7 @@ button,
 
 .phone-shell .notif-title {
   font-size: var(--text-body) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .notif-sub,
@@ -6976,7 +6994,7 @@ button,
 
 .phone-shell .mem-active-badge {
   font-size: var(--text-card) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .mem-active-card-title,
@@ -6987,7 +7005,7 @@ button,
 
 .phone-shell .mem-active-stat-val {
   font-size: var(--text-meta) !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
 }
 
 .phone-shell .mem-benefit-item {
@@ -7002,7 +7020,7 @@ button,
 .phone-shell .mem-benefits-title {
   margin-bottom: 6px !important;
   font-size: var(--text-body) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .profile-subpage-body {
@@ -7050,7 +7068,7 @@ button,
 .phone-shell .profile-bank-info-row span:last-child {
   color: #171715 !important;
   font-size: var(--text-meta) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .profile-bank-name {
@@ -7065,7 +7083,7 @@ button,
   margin-bottom: 12px;
   color: #ffffff;
   font-size: var(--text-card);
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .10em;
 }
 
@@ -7080,7 +7098,7 @@ button,
 .phone-shell .profile-bank-mini-value {
   color: #ffffff;
   font-size: var(--text-meta);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .phone-shell .profile-bank-upi-inline {
@@ -7092,7 +7110,7 @@ button,
   margin-bottom: 8px;
   color: #171715;
   font-size: var(--text-body);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .phone-shell .profile-bank-upi-inline .mp-field {
@@ -7168,7 +7186,7 @@ button,
 
 .phone-shell .prof-row-title {
   font-size: var(--text-body) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 
 .phone-shell .prof-row-sub {
@@ -7317,7 +7335,7 @@ button,
   flex: 0 0 42px !important;
   border-radius: 15px !important;
   background: #f2efff !important;
-  color: #5b3ce3 !important;
+  color: #315eff !important;
 }
 
 .phone-shell .global-header-actions {
@@ -7330,7 +7348,7 @@ button,
   height: 32px !important;
   flex: 0 0 32px !important;
   background: transparent !important;
-  color: #5b3ce3 !important;
+  color: #315eff !important;
   box-shadow: none !important;
 }
 
@@ -7338,8 +7356,8 @@ button,
 .phone-shell .sub-page-header .mp-topbar-icon-btn svg {
   width: 18px !important;
   height: 18px !important;
-  color: #5b3ce3 !important;
-  stroke: #5b3ce3 !important;
+  color: #315eff !important;
+  stroke: #315eff !important;
 }
 
 .phone-shell .mp-notif-dot {
@@ -7352,7 +7370,7 @@ button,
 .phone-shell :is(.global-header-title, .sub-page-title, .auth-card h1) {
   font-size: var(--text-page) !important;
   line-height: 1.12 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: 0 !important;
 }
 
@@ -7370,7 +7388,7 @@ button,
   color: #171715 !important;
   font-size: var(--text-section) !important;
   line-height: 1.18 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
 }
@@ -7397,7 +7415,7 @@ button,
   color: #171715 !important;
   font-size: var(--text-card) !important;
   line-height: 1.18 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: 0 !important;
 }
 
@@ -7416,7 +7434,7 @@ button,
 ) {
   font-size: var(--text-body) !important;
   line-height: 1.18 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: 0 !important;
 }
 
@@ -7467,7 +7485,7 @@ button,
   min-height: 44px !important;
   font-size: var(--text-button) !important;
   line-height: 1 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: 0 !important;
 }
 
@@ -7480,7 +7498,7 @@ button,
 ) {
   font-size: var(--text-display) !important;
   line-height: 1 !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   letter-spacing: 0 !important;
 }
 
@@ -7552,7 +7570,7 @@ button,
   color: #171715 !important;
   font-size: var(--text-caption) !important;
   line-height: 1 !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   letter-spacing: 0 !important;
   text-align: center !important;
   white-space: nowrap !important;
@@ -7573,7 +7591,7 @@ button,
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #5b3ce3;
+  background: #315eff;
 }
 
 .phone-shell .adv-active-stats {
@@ -7592,7 +7610,7 @@ button,
 }
 
 .phone-shell .adv-active-stats strong.purple {
-  color: #5b3ce3 !important;
+  color: #315eff !important;
   font-size: var(--text-body) !important;
 }
 
@@ -7633,7 +7651,7 @@ button,
   display: block;
   color: #8a847b;
   font-size: var(--text-caption);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.1;
 }
 
@@ -7642,7 +7660,7 @@ button,
   margin-top: 5px;
   color: #171715;
   font-size: var(--text-meta);
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -7693,7 +7711,7 @@ button,
 .hist-summary-cell span {
   display: block;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: #8c877f;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -7702,7 +7720,7 @@ button,
 .hist-summary-cell strong {
   display: block;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.04em;
 }
@@ -7790,7 +7808,7 @@ button,
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #704cf4, #5b3ce3);
+  background: linear-gradient(135deg, #704cf4, #315eff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7800,7 +7818,7 @@ button,
 }
 .mem-active-hero-title {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.03em;
 }
@@ -7810,7 +7828,7 @@ button,
   gap: 5px;
   margin-top: 3px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   color: #61d79c;
   letter-spacing: 0.04em;
 }
@@ -7847,7 +7865,7 @@ button,
 .mem-active-hero-stats strong {
   display: block;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.03em;
 }
@@ -7879,9 +7897,9 @@ button,
   margin: 10px 0 8px;
   padding: 4px 12px;
   background: #EEE9FF;
-  color: #5B3CE3;
+  color: #315eff;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   border-radius: 999px;
   letter-spacing: 0.04em;
 }
@@ -7897,7 +7915,7 @@ button,
   bottom: 0;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: #5B3CE3;
+  background: #315eff;
 }
 .notif-row {
   position: relative;
@@ -7931,7 +7949,7 @@ button,
 }
 .help-contact-strip-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.02em;
 }
@@ -7949,7 +7967,7 @@ button,
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
 }
@@ -7958,7 +7976,7 @@ button,
 .help-section-label {
   padding: 4px 16px 8px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: #8c877f;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -7986,7 +8004,7 @@ button,
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: #F3F0FF;
+  background: #EEF2FF;
   color: #6b45f4;
   display: flex;
   align-items: center;
@@ -7997,7 +8015,7 @@ button,
 .help-topic-icon svg { width: 16px; height: 16px; }
 .help-topic-title {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: #171715;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -8034,7 +8052,7 @@ button,
 .rep-eyebrow-v2 {
   color: #A39C93;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -8043,7 +8061,7 @@ button,
   color: #171715;
   font-size: 32px;
   line-height: .95;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.07em;
 }
 .rep-auto-line-v2 {
@@ -8085,7 +8103,7 @@ button,
   display: block;
   color: #A39C93;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -8094,7 +8112,7 @@ button,
   margin-top: 7px;
   color: #171715;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 .rep-schedule-card-v2 {
@@ -8157,7 +8175,7 @@ button,
   display: block;
   color: #171715;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 .rep-timeline-row-v2--muted .rep-timeline-body-v2 strong { color: #A39C93; }
@@ -8195,7 +8213,7 @@ button,
 .rep-money-v2 {
   padding-top: 1px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.03em;
   white-space: nowrap;
 }
@@ -8224,7 +8242,7 @@ button,
   display: block;
   color: #171715;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.04em;
 }
 .rep-auto-card-v2 div > span {
@@ -8275,7 +8293,7 @@ button,
   cursor: pointer;
   color: #6B45F4;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   font-family: inherit;
   padding: 0;
 }
@@ -8302,7 +8320,7 @@ button,
   display: block;
   color: #171715;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.03em;
 }
 .rep-paid-row-v2 small {
@@ -8314,7 +8332,7 @@ button,
 .rep-paid-row-v2 b {
   text-align: right;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: #171715;
   letter-spacing: -0.03em;
 }
@@ -8322,7 +8340,7 @@ button,
   display: block;
   color: #179A58;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   margin-top: 2px;
 }
 .rep-history-empty-v2 {
@@ -8354,7 +8372,7 @@ button,
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.03em;
   padding: 3px 8px;
   border-radius: 999px;
@@ -8416,7 +8434,7 @@ button,
 }
 .rep-dark-hero-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: #8c877f;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -8424,7 +8442,7 @@ button,
 }
 .rep-dark-hero-amount {
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.06em;
   line-height: 1;
@@ -8437,7 +8455,7 @@ button,
   border: 1px solid rgba(251,191,36,0.20);
   color: #fbbf24;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   padding: 5px 10px;
   border-radius: 999px;
   white-space: nowrap;
@@ -8471,7 +8489,7 @@ button,
 }
 .rep-dark-progress-labels strong {
   color: #fffdf7;
-  font-weight: 600;
+  font-weight: 400;
   margin-left: 4px;
 }
 
@@ -8517,7 +8535,7 @@ button,
   border: 1px solid rgba(97,215,156,0.20);
   color: #61d79c;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
   padding: 3px 8px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -8534,7 +8552,7 @@ button,
 }
 .rep-journey-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: #8c877f;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -8595,7 +8613,7 @@ button,
 .rep-journey-body strong {
   display: block;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: #171715;
   letter-spacing: -0.03em;
 }
@@ -8603,7 +8621,7 @@ button,
 .rep-journey-amount {
   padding-top: 6px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.03em;
   white-space: nowrap;
   text-align: right;
@@ -8647,7 +8665,7 @@ button,
 }
 .phone-shell .adv-active-dark-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: #8c877f;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -8655,7 +8673,7 @@ button,
 }
 .phone-shell .adv-active-dark-amount {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.06em;
   line-height: 1;
@@ -8675,7 +8693,7 @@ button,
   border: 1px solid rgba(97,215,156,0.22);
   color: #61d79c;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   padding: 4px 10px;
   border-radius: 999px;
 }
@@ -8686,7 +8704,7 @@ button,
   border: 1px solid rgba(251,191,36,0.22);
   color: #fbbf24;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   padding: 4px 10px;
   border-radius: 999px;
 }
@@ -8707,7 +8725,7 @@ button,
 .phone-shell .adv-active-dark-grid span {
   display: block;
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 400;
   color: #8c877f;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -8716,7 +8734,7 @@ button,
 .phone-shell .adv-active-dark-grid strong {
   display: block;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fffdf7;
   letter-spacing: -0.03em;
 }
@@ -8770,7 +8788,7 @@ button,
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.04em;
 }
 .phone-shell .prof-avatar-center img {
@@ -8799,7 +8817,7 @@ button,
   position: relative;
   z-index: 1;
   font-size: 21px;
-  font-weight: 700;
+  font-weight: 500;
   color: #FFFDF7;
   letter-spacing: -0.05em;
   line-height: 1;
@@ -8809,7 +8827,7 @@ button,
   position: relative;
   z-index: 1;
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 400;
   color: rgba(255, 253, 247, .35);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -8833,7 +8851,7 @@ button,
   padding: 5px 11px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 .phone-shell .prof-v3-pill--green {
@@ -8895,7 +8913,7 @@ button,
 /* ── ActivityScreen — flat transaction rows (no card) ─────── */
 .phone-shell .hist-tx-divider {
   height: 1px;
-  background: rgba(91, 60, 227, .1);
+  background: rgba(49, 94, 255, .1);
   margin: 0 14px;
 }
 /* Ensure rows have consistent padding without the card container */
@@ -8912,7 +8930,7 @@ button,
 .phone-shell .hist-summary-bar {
   background: #FFFFFF !important;
   border: 1px solid var(--border) !important;
-  box-shadow: 0 1px 8px rgba(91, 60, 227, .07) !important;
+  box-shadow: 0 1px 8px rgba(49, 94, 255, .07) !important;
 }
 .phone-shell .hist-summary-cell span {
   color: var(--t2) !important;
@@ -8936,7 +8954,7 @@ button,
 .phone-shell .adv-active-dark-card {
   background: #FFFFFF !important;
   border: 1px solid var(--border) !important;
-  box-shadow: 0 2px 12px rgba(91, 60, 227, .08) !important;
+  box-shadow: 0 2px 12px rgba(49, 94, 255, .08) !important;
 }
 .phone-shell .adv-active-dark-ink { display: none !important; }
 .phone-shell .adv-active-dark-label {
@@ -8976,7 +8994,7 @@ button,
 .phone-shell .rep-dark-hero {
   background: #FFFFFF !important;
   border: 1px solid var(--border) !important;
-  box-shadow: 0 2px 12px rgba(91, 60, 227, .08) !important;
+  box-shadow: 0 2px 12px rgba(49, 94, 255, .08) !important;
 }
 .phone-shell .rep-dark-hero-ink { display: none !important; }
 .phone-shell .rep-dark-hero-label {
@@ -8988,7 +9006,7 @@ button,
 .phone-shell .rep-dark-countdown {
   background: var(--P-light) !important;
   color: var(--P) !important;
-  border: 1px solid rgba(91, 60, 227, .15) !important;
+  border: 1px solid rgba(49, 94, 255, .15) !important;
 }
 .phone-shell .rep-dark-progress-track {
   background: var(--border) !important;
@@ -9006,7 +9024,7 @@ button,
   padding: 8px 12px !important;
 }
 .phone-shell .rep-dark-bank-icon {
-  background: rgba(91, 60, 227, .12) !important;
+  background: rgba(49, 94, 255, .12) !important;
   color: var(--P) !important;
 }
 .phone-shell .rep-dark-bank-row span {
@@ -9023,7 +9041,7 @@ button,
 .phone-shell .mem-active-hero {
   background: #FFFFFF !important;
   border: 1px solid var(--border) !important;
-  box-shadow: 0 2px 12px rgba(91, 60, 227, .08) !important;
+  box-shadow: 0 2px 12px rgba(49, 94, 255, .08) !important;
 }
 .phone-shell .mem-active-hero-ink { display: none !important; }
 .phone-shell .mem-active-hero-icon {
@@ -9096,7 +9114,7 @@ button,
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.04em;
 }
 .phone-shell .prof-avatar-v4 img {
@@ -9125,7 +9143,7 @@ button,
   position: relative;
   z-index: 1;
   font-size: 21px;
-  font-weight: 700;
+  font-weight: 500;
   color: #FFFDF7;
   letter-spacing: -0.05em;
   line-height: 1;
@@ -9167,14 +9185,14 @@ button,
 .phone-shell .prof-status-cell--blue svg   { color: #60A5FA; }
 .phone-shell .prof-status-cell-label {
   font-size: 9.5px;
-  font-weight: 600;
+  font-weight: 400;
   color: rgba(255, 253, 247, .32);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .phone-shell .prof-status-cell-val {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   color: rgba(255, 253, 247, .60);
   letter-spacing: -0.01em;
 }
@@ -9187,7 +9205,7 @@ button,
   background: #FFFFFF;
   border-radius: 18px;
   border: 1px solid var(--border);
-  box-shadow: 0 1px 8px rgba(91, 60, 227, .06);
+  box-shadow: 0 1px 8px rgba(49, 94, 255, .06);
   margin-bottom: 20px;
   overflow: hidden;
 }
@@ -9214,7 +9232,7 @@ button,
 }
 .phone-shell .prof-info-v4-label {
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t2);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -9222,7 +9240,7 @@ button,
 }
 .phone-shell .prof-info-v4-val {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
   letter-spacing: -0.02em;
 }
@@ -9250,7 +9268,7 @@ button,
 .phone-shell .hist-si-cell span {
   display: block;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t3);
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -9258,7 +9276,7 @@ button,
 }
 .phone-shell .hist-si-cell strong {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.04em;
 }
@@ -9284,14 +9302,14 @@ button,
 }
 .phone-shell .adv-inline-eyebrow {
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t3);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 .phone-shell .adv-inline-amount {
   font-size: 40px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.06em;
   line-height: 1;
@@ -9302,7 +9320,7 @@ button,
   align-items: center;
   gap: 3px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--P);
   background: none;
   border: none;
@@ -9328,7 +9346,7 @@ button,
 .phone-shell .adv-inline-stat span {
   display: block;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -9336,7 +9354,7 @@ button,
 }
 .phone-shell .adv-inline-stat strong {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.02em;
 }
@@ -9350,7 +9368,7 @@ button,
 }
 .phone-shell .rep-inline-eyebrow {
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t3);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -9364,7 +9382,7 @@ button,
 }
 .phone-shell .rep-inline-amount {
   font-size: 38px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.06em;
   line-height: 1;
@@ -9378,7 +9396,7 @@ button,
   background: var(--amber-bg);
   color: var(--amber);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   margin-bottom: 4px;
 }
 .phone-shell .rep-inline-meta {
@@ -9390,7 +9408,7 @@ button,
   align-items: center;
   gap: 6px;
 }
-.phone-shell .rep-inline-meta strong { color: var(--t1); font-weight: 700; }
+.phone-shell .rep-inline-meta strong { color: var(--t1); font-weight: 500; }
 .phone-shell .rep-inline-track {
   height: 4px;
   border-radius: 999px;
@@ -9421,7 +9439,7 @@ button,
   padding: 3px 8px;
   border-radius: 999px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* Repay screen — match bg to other screens */
@@ -9524,7 +9542,7 @@ button,
   border: 1.5px solid rgba(107, 69, 244, .45);
   color: #C7B4FF;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.04em;
   display: flex;
   align-items: center;
@@ -9536,7 +9554,7 @@ button,
 }
 .phone-shell .prof-hero-v4-name {
   font-size: 17px !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   color: #FFFDF7 !important;
   letter-spacing: -0.04em !important;
   line-height: 1.1 !important;
@@ -9649,10 +9667,10 @@ button,
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7B64FF, #5B3CE3);
+  background: linear-gradient(135deg, #5E7FFF, #315eff);
   color: #FFF;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.04em;
 }
 .phone-shell .psheet-avatar img {
@@ -9660,7 +9678,7 @@ button,
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2.5px solid #7B64FF;
+  border: 2.5px solid #5E7FFF;
 }
 .phone-shell .psheet-avatar-cam {
   position: absolute;
@@ -9686,7 +9704,7 @@ button,
 /* Name + meta */
 .phone-shell .psheet-name {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 500;
   color: #0F0A3C;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -9742,7 +9760,7 @@ button,
 .phone-shell .psheet-action-label {
   flex: 1;
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 400;
   color: #0F0A3C;
 }
 .phone-shell .psheet-action-chevron {
@@ -9757,7 +9775,7 @@ button,
   background: #F3F4F6;
   border: none;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: #6B7280;
   cursor: pointer;
 }
@@ -9807,14 +9825,14 @@ button,
 }
 .phone-shell .home-repay-card-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: rgba(255, 220, 180, .70);
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
 .phone-shell .home-repay-card-amount {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: #FFFAF5;
   letter-spacing: -0.05em;
   line-height: 1;
@@ -9906,7 +9924,7 @@ button,
 .phone-shell .adv-review-back-btn:active { opacity: 0.7; }
 .phone-shell .adv-review-topbar-title {
   font-size: var(--text-section);
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.01em;
 }
@@ -9930,7 +9948,7 @@ button,
 
 .phone-shell .adv-preview-title {
   font-size: var(--text-label);
-  font-weight: 600;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: .05em;
   color: var(--t3);
@@ -9938,7 +9956,7 @@ button,
 
 .phone-shell .adv-preview-live {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   color: #16a34a;
   background: #f0fdf4;
   border-radius: 999px;
@@ -9967,7 +9985,7 @@ button,
 }
 .phone-shell .adv-preview-tamt {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.04em;
   line-height: 1;
@@ -10014,7 +10032,7 @@ button,
 }
 .phone-shell .adv-preview-rval {
   font-size: var(--text-body);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
 }
 .phone-shell .adv-preview-rval.orange { color: #d97706; }
@@ -10025,7 +10043,7 @@ button,
   align-items: center;
   justify-content: space-between;
   padding: 11px 14px;
-  background: linear-gradient(135deg, #f3f0ff 0%, #ede9ff 100%);
+  background: linear-gradient(135deg, #EEF2FF 0%, #ede9ff 100%);
   border-top: 1px solid #ede9ff;
 }
 .phone-shell .adv-preview-foot-lbl {
@@ -10036,7 +10054,7 @@ button,
 }
 .phone-shell .adv-preview-foot-val {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--P);
   letter-spacing: -0.04em;
 }
@@ -10134,7 +10152,7 @@ button,
   width: 76px !important;
   height: 76px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #7B64FF 0%, #4E35C4 100%) !important;
+  background: linear-gradient(135deg, #5E7FFF 0%, #4E35C4 100%) !important;
   border: 3px solid rgba(255,255,255,.18) !important;
   box-shadow: 0 4px 24px rgba(0,0,0,.35) !important;
   display: flex !important;
@@ -10142,7 +10160,7 @@ button,
   justify-content: center !important;
   color: #FFFFFF !important;
   font-size: 24px !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   letter-spacing: -0.04em !important;
   margin-bottom: 14px !important;
   overflow: hidden !important;
@@ -10157,7 +10175,7 @@ button,
 /* Name */
 .phone-shell .prof-v5-name {
   font-size: 20px !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   color: #FFFFFF !important;
   letter-spacing: -0.04em !important;
   margin-bottom: 4px !important;
@@ -10383,7 +10401,7 @@ button,
 }
 .phone-shell .adv-memgate-headline {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: #fffdf7;
   margin-bottom: 8px;
   letter-spacing: -0.4px;
@@ -10423,7 +10441,7 @@ button,
 }
 .phone-shell .adv-memgate-card-title {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: .1em;
   color: var(--t3);
@@ -10478,7 +10496,7 @@ button,
 }
 .phone-shell .adv-memgate-amount-val {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .phone-shell .adv-memgate-amount-val.fee {
@@ -10545,7 +10563,7 @@ button,
 .phone-shell .adv-submitted-title {
   text-align: center;
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.4px;
   animation: sub-slide 0.4s 0.15s both;
@@ -10586,7 +10604,7 @@ button,
 }
 .phone-shell .adv-submitted-slip-amt {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.3px;
 }
@@ -10608,7 +10626,7 @@ button,
 }
 .phone-shell .adv-submitted-slip-col-val {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .phone-shell .adv-submitted-slip-col-val.green {
@@ -10630,7 +10648,7 @@ button,
 }
 .phone-shell .adv-submitted-timeline-title {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--t3);
@@ -10673,7 +10691,7 @@ button,
 }
 .phone-shell .adv-submitted-tl-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--t1);
 }
 .phone-shell .adv-submitted-tl-sub {
@@ -10707,7 +10725,7 @@ button,
   padding: 36px 8px 28px;
 }
 .phone-shell .adv-ob-title {
-  font-size: 22px; font-weight: 800;
+  font-size: 22px; font-weight: 500;
   color: var(--t1); letter-spacing: -0.3px;
   margin-bottom: 6px;
 }
@@ -10735,7 +10753,7 @@ button,
 .phone-shell .adv-ob-num {
   width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; flex-shrink: 0;
+  font-size: 13px; font-weight: 500; flex-shrink: 0;
   background: #ede9ff; color: var(--P);
 }
 .phone-shell .adv-ob-num.done { background: #16a34a; color: #fff; }
@@ -10743,11 +10761,11 @@ button,
 .phone-shell .adv-ob-num.locked { background: #f3f4f6; color: #9ca3af; }
 .phone-shell .adv-ob-info { flex: 1; }
 .phone-shell .adv-ob-label {
-  font-size: 14px; font-weight: 700; color: var(--t1); margin-bottom: 2px;
+  font-size: 14px; font-weight: 500; color: var(--t1); margin-bottom: 2px;
 }
 .phone-shell .adv-ob-status { font-size: 12px; }
-.phone-shell .adv-ob-status.todo { color: var(--P); font-weight: 600; }
-.phone-shell .adv-ob-status.done { color: #16a34a; font-weight: 600; }
+.phone-shell .adv-ob-status.todo { color: var(--P); font-weight: 400; }
+.phone-shell .adv-ob-status.done { color: #16a34a; font-weight: 400; }
 .phone-shell .adv-ob-status.review { color: #92400e; }
 .phone-shell .adv-ob-status.locked { color: var(--t3); }
 .phone-shell .adv-ob-arrow { color: var(--P); flex-shrink: 0; }
@@ -10778,7 +10796,7 @@ button,
   margin-bottom: 20px;
 }
 .phone-shell .adv-ip-headline {
-  font-size: 20px; font-weight: 800;
+  font-size: 20px; font-weight: 500;
   color: var(--t1);
   margin-bottom: 6px;
   letter-spacing: -0.3px;
@@ -10805,7 +10823,7 @@ button,
 }
 .phone-shell .adv-ip-row:last-child { border-bottom: none; }
 .phone-shell .adv-ip-row span:first-child { color: var(--t2); }
-.phone-shell .adv-ip-row strong { color: var(--t1); font-weight: 700; }
+.phone-shell .adv-ip-row strong { color: var(--t1); font-weight: 500; }
 .phone-shell .adv-ip-row--status { background: #fafafe; }
 .phone-shell .adv-ip-hint {
   display: flex; align-items: center; gap: 6px;
@@ -10836,7 +10854,7 @@ button,
 }
 .phone-shell .adv-osa-headline {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.4px;
   margin-bottom: 8px;
@@ -10869,7 +10887,7 @@ button,
 }
 .phone-shell .adv-osa-card-val {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .phone-shell .adv-osa-card-val.fee {
@@ -10980,13 +10998,13 @@ button,
   margin-bottom: 14px;
 }
 .phone-shell .adv-mg-title {
-  font-size: 20px; font-weight: 800;
+  font-size: 20px; font-weight: 500;
   color: var(--t1);
   margin-bottom: 6px;
   letter-spacing: -0.3px;
 }
 .phone-shell .adv-mg-amount {
-  font-size: 32px; font-weight: 800;
+  font-size: 32px; font-weight: 500;
   color: var(--P);
   letter-spacing: -1px;
   margin-bottom: 4px;
@@ -11009,7 +11027,7 @@ button,
   overflow-y: auto;
 }
 .phone-shell .adv-mg-unlock-label {
-  font-size: 11px; font-weight: 700;
+  font-size: 11px; font-weight: 500;
   text-transform: uppercase; letter-spacing: .08em;
   color: var(--t3);
   margin-bottom: 14px;
@@ -11026,7 +11044,7 @@ button,
   font-size: 18px; line-height: 1; flex-shrink: 0;
 }
 .phone-shell .adv-mg-feature-text {
-  font-size: 14px; font-weight: 600;
+  font-size: 14px; font-weight: 400;
   color: var(--t1);
 }
 
@@ -11051,7 +11069,7 @@ button,
 }
 .phone-shell .adv-rc-amount-val {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.5px;
 }
@@ -11074,7 +11092,7 @@ button,
   color: var(--t2);
 }
 .phone-shell .adv-rc-meta-row span:last-child {
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
 }
 .phone-shell .adv-rc-payable-row {
@@ -11083,11 +11101,11 @@ button,
 .phone-shell .adv-rc-purple {
   color: var(--P) !important;
   font-size: 16px !important;
-  font-weight: 800 !important;
+  font-weight: 500 !important;
 }
 .phone-shell .adv-rc-green {
   color: #16a34a !important;
-  font-weight: 700;
+  font-weight: 500;
 }
 .phone-shell .adv-rc-cycle {
   display: flex;
@@ -11165,7 +11183,7 @@ button,
 /* Sheet title bar */
 .phone-shell .adv-sheet-hdr {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--t1);
   letter-spacing: -0.2px;
   padding: 2px 18px 10px;
@@ -11224,7 +11242,7 @@ button,
 }
 .phone-shell .adv-memgate-headline--sm {
   font-size: 15px !important;
-  font-weight: 700;
+  font-weight: 500;
   margin-bottom: 2px !important;
 }
 .phone-shell .adv-memgate-sub--sm {
@@ -11243,7 +11261,7 @@ button,
 /* "What you unlock" label */
 .phone-shell .adv-memgate-pill-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--t3);
@@ -11265,7 +11283,7 @@ button,
   border-radius: 99px;
   padding: 8px 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   color: #15803d;
   white-space: nowrap;
 }
@@ -11330,7 +11348,7 @@ button,
   padding: 8px 22px 0;
   color: #8A8892;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
 }
@@ -11340,7 +11358,7 @@ button,
   border-bottom: 0;
   color: #F2F0EA;
   font-size: 19px;
-  font-weight: 650;
+  font-weight: 450;
   letter-spacing: -0.03em;
 }
 
@@ -11385,13 +11403,13 @@ button,
 .phone-shell.phone-shell--dark .adv-rc-receipt-head {
   margin-bottom: 22px;
   color: #8A8676;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 12px;
 }
 
 .phone-shell.phone-shell--dark .adv-rc-receipt-head span:first-child {
-  font-family: "Inter", system-ui, sans-serif;
-  font-weight: 700;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
 }
@@ -11403,8 +11421,8 @@ button,
 
 .phone-shell.phone-shell--dark .adv-rc-line strong,
 .phone-shell.phone-shell--dark .adv-rc-total strong {
-  font-family: "Inter", system-ui, sans-serif;
-  font-weight: 650;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-weight: 450;
   letter-spacing: -0.04em;
 }
 
@@ -11430,12 +11448,12 @@ button,
   gap: 4px;
   color: #4A473C;
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .phone-shell.phone-shell--dark .adv-rc-total small {
   color: #8A8676;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.03em;
@@ -11463,7 +11481,7 @@ button,
   border-bottom: 1px solid #29292F;
   color: #F2F0EA;
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 450;
   line-height: 1.28;
 }
 
@@ -11476,7 +11494,7 @@ button,
   margin-bottom: 4px;
   color: #7C7C85;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -11513,7 +11531,7 @@ button,
   gap: 12px;
   color: #A0A0A8;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.55;
 }
 
@@ -11549,7 +11567,7 @@ button,
   justify-content: space-between;
   padding: 0 10px 0 24px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .phone-shell.phone-shell--dark .adv-rc-confirm:disabled {
@@ -11635,7 +11653,7 @@ button,
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.045), transparent 34%),
     var(--mem-bg);
   color: var(--mem-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
 }
 
 .memv2-header {
@@ -11661,7 +11679,7 @@ button,
 .memv2-header-title {
   color: var(--mem-muted);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.36em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -11701,7 +11719,7 @@ button,
   gap: 8px;
   color: var(--mem-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
 }
@@ -11709,15 +11727,15 @@ button,
 .memv2-plan-price {
   margin-top: 18px;
   color: var(--mem-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.06em;
 }
 
 .memv2-plan-price span {
   color: var(--mem-muted);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 15px;
   font-weight: 500;
   letter-spacing: 0;
@@ -11745,7 +11763,7 @@ button,
   border-bottom: 1px solid #202024;
   color: var(--mem-text);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .memv2-benefit-row:last-child {
@@ -11784,7 +11802,7 @@ button,
   gap: 16px;
   padding: 8px 8px 8px 22px;
   font-size: 15px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.01em;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
 }
@@ -11824,15 +11842,15 @@ button,
   margin-top: 22px;
   color: var(--mem-muted);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .memv2-payable {
   margin-top: 6px;
   color: var(--mem-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.06em;
 }
 
@@ -11862,14 +11880,14 @@ button,
 
 .memv2-qr-card strong {
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .memv2-qr-card span {
   margin-top: 6px;
   color: #777267;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .memv2-copy-card {
@@ -11902,7 +11920,7 @@ button,
 
 .memv2-copy-card strong {
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .memv2-copy-card small {
@@ -11921,7 +11939,7 @@ button,
 .memv2-help-text {
   color: var(--mem-dim);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
   line-height: 1.45;
 }
 
@@ -11967,13 +11985,13 @@ button,
 
 .memv2-upload-box strong {
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .memv2-upload-box small {
   color: var(--mem-dim);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .memv2-file-row {
@@ -12008,7 +12026,7 @@ button,
   max-width: 210px;
   color: var(--mem-text);
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -12018,7 +12036,7 @@ button,
   margin-top: 3px;
   color: var(--mem-muted);
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .memv2-file-row button {
@@ -12033,9 +12051,9 @@ button,
   background: #111114;
   color: var(--mem-text);
   padding: 0 16px;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 17px;
-  font-weight: 650;
+  font-weight: 450;
   letter-spacing: 0.05em;
 }
 
@@ -12052,7 +12070,7 @@ button,
   color: #D88A55;
   padding: 12px 14px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -12066,7 +12084,7 @@ button,
   margin: 24px 0 10px;
   color: var(--mem-text);
   font-size: 22px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.03em;
 }
 
@@ -12075,7 +12093,7 @@ button,
   margin: 0 auto 28px;
   color: var(--mem-muted);
   font-size: 14px;
-  font-weight: 620;
+  font-weight: 400;
   line-height: 1.55;
 }
 
@@ -12124,7 +12142,7 @@ button,
   border-bottom: 1px solid #202024;
   color: var(--mem-muted);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .memv2-status-row:last-child {
@@ -12134,7 +12152,7 @@ button,
 .memv2-status-row strong {
   color: var(--mem-text);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 500;
   text-align: right;
 }
 
@@ -12159,7 +12177,7 @@ button,
   justify-content: center;
   gap: 10px;
   font-size: 14px;
-  font-weight: 740;
+  font-weight: 500;
 }
 
 .memv2-active-content {
@@ -12173,7 +12191,7 @@ button,
   margin: 22px 2px 14px;
   color: var(--mem-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
@@ -12201,7 +12219,7 @@ button,
   align-items: center;
   gap: 10px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   min-width: 0;
@@ -12217,7 +12235,7 @@ button,
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -12231,17 +12249,17 @@ button,
 .memv2-current-price {
   margin-top: 28px;
   color: var(--mem-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.07em;
 }
 
 .memv2-current-price span {
   color: var(--mem-muted);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 450;
   letter-spacing: 0;
 }
 
@@ -12266,7 +12284,7 @@ button,
   display: block;
   color: var(--mem-muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .memv2-current-dates strong,
@@ -12274,9 +12292,9 @@ button,
   display: block;
   margin-top: 9px;
   color: var(--mem-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.02em;
 }
 
@@ -12346,7 +12364,7 @@ button,
 .memv2-active-benefit strong {
   color: var(--mem-text);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
@@ -12369,7 +12387,7 @@ button,
   justify-content: center;
   gap: 10px;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .memv2-current-actions button:disabled {
@@ -12407,7 +12425,7 @@ button,
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04), transparent 34%),
     var(--pbv-bg);
   color: var(--pbv-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   padding: 22px 20px 112px;
 }
 
@@ -12437,7 +12455,7 @@ button,
 .pbv2-header-title {
   color: var(--pbv-muted, #8A8892);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.36em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -12476,7 +12494,7 @@ button,
   margin: 0;
   color: var(--pbv-text);
   font-size: 17px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.025em;
 }
 
@@ -12490,7 +12508,7 @@ button,
   background: rgba(138, 136, 146, 0.12);
   color: var(--pbv-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -12514,9 +12532,9 @@ button,
 .pbv2-number {
   margin-top: 28px;
   color: #D8D5DD;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 18px;
-  font-weight: 650;
+  font-weight: 450;
   letter-spacing: 0.26em;
 }
 
@@ -12540,16 +12558,16 @@ button,
   display: block;
   color: var(--pbv-muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .pbv2-meta strong {
   display: block;
   margin-top: 8px;
   color: var(--pbv-text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .pbv2-note,
@@ -12565,7 +12583,7 @@ button,
   gap: 12px;
   padding: 14px 18px;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 450;
   line-height: 1.42;
 }
 
@@ -12617,14 +12635,14 @@ button,
 .pbv2-manage button strong {
   color: var(--pbv-text);
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .pbv2-manage button small {
   margin-top: 5px;
   color: var(--pbv-muted);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .pbv2-manage button > svg {
@@ -12670,7 +12688,7 @@ button,
     radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.035), transparent 32%),
     #0C0C0E;
   color: #F2F0EA;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   padding: 14px 20px 116px;
 }
 
@@ -12688,7 +12706,7 @@ button,
 .kycv2-kicker {
   color: #8A8892;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
@@ -12697,7 +12715,7 @@ button,
   margin: 20px 72px 12px 0;
   color: #F2F0EA;
   font-size: 22px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.035em;
   line-height: 1.05;
 }
@@ -12707,7 +12725,7 @@ button,
   margin: 0;
   color: #A2A0AA;
   font-size: 14px;
-  font-weight: 610;
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -12749,9 +12767,9 @@ button,
   right: 24px;
   bottom: 18px;
   color: #A2A0AA;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.04em;
 }
 
@@ -12813,7 +12831,7 @@ button,
   margin: 0;
   color: #F2F0EA;
   font-size: 15px;
-  font-weight: 750;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 
@@ -12821,7 +12839,7 @@ button,
   margin: 5px 0 10px;
   color: #8A8892;
   font-size: 12px;
-  font-weight: 620;
+  font-weight: 400;
   line-height: 1.25;
 }
 
@@ -12836,7 +12854,7 @@ button,
   gap: 7px;
   padding: 0 10px;
   font-size: 11px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: 0.04em;
 }
 
@@ -12878,7 +12896,7 @@ button,
   gap: 8px;
   padding: 0 14px;
   font-size: 13px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .kycv2-doc-action--ghost {
@@ -12906,7 +12924,7 @@ button,
   align-items: center;
   gap: 10px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.3em;
   text-transform: uppercase;
 }
@@ -12927,7 +12945,7 @@ button,
   align-items: center;
   padding: 0 12px;
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .kycv2-footer {
@@ -12952,7 +12970,7 @@ button,
   gap: 14px;
   padding: 8px 8px 8px 22px;
   font-size: 15px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.01em;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
 }
@@ -12987,7 +13005,7 @@ button,
   justify-content: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 @media (max-width: 360px) {
@@ -13008,7 +13026,7 @@ button,
     radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.035), transparent 32%),
     #0C0C0E;
   color: #F2F0EA;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   padding: 14px 20px 116px;
 }
 
@@ -13026,7 +13044,7 @@ button,
 .bankv2-kicker {
   color: #8A8892;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
@@ -13035,7 +13053,7 @@ button,
   margin: 20px 72px 12px 0;
   color: #F2F0EA;
   font-size: 22px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.035em;
   line-height: 1.05;
 }
@@ -13045,7 +13063,7 @@ button,
   margin: 0;
   color: #A2A0AA;
   font-size: 14px;
-  font-weight: 610;
+  font-weight: 400;
   line-height: 1.48;
 }
 
@@ -13077,7 +13095,7 @@ button,
 .bankv2-field > span {
   color: #8A8892;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
@@ -13104,9 +13122,9 @@ button,
   outline: 0;
   background: transparent;
   color: #F2F0EA;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.08em;
 }
 
@@ -13132,7 +13150,7 @@ button,
   gap: 10px;
   padding: 0 16px;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .bankv2-account-card {
@@ -13154,7 +13172,7 @@ button,
 .bankv2-account-top > span:first-child {
   color: #8A8892;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
@@ -13167,7 +13185,7 @@ button,
   gap: 8px;
   padding: 0 14px;
   font-size: 12px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .bankv2-status span {
@@ -13198,15 +13216,15 @@ button,
   margin: 30px 0 18px;
   color: #F2F0EA;
   font-size: 21px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.025em;
 }
 
 .bankv2-card-number {
   color: #D8D5CC;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 19px;
-  font-weight: 650;
+  font-weight: 450;
   letter-spacing: 0.18em;
 }
 
@@ -13232,14 +13250,14 @@ button,
   margin-bottom: 8px;
   color: #8A8892;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 .bankv2-card-meta strong {
   color: #F2F0EA;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .bankv2-success {
@@ -13263,7 +13281,7 @@ button,
   margin: 0 0 12px;
   color: #F2F0EA;
   font-size: 20px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
 
@@ -13272,7 +13290,7 @@ button,
   margin: 0 auto;
   color: #8A8892;
   font-size: 14px;
-  font-weight: 620;
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -13302,7 +13320,7 @@ button,
   gap: 14px;
   padding: 8px 8px 8px 22px;
   font-size: 15px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.01em;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
 }
@@ -13337,7 +13355,7 @@ button,
   justify-content: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
 }
 
 @media (max-width: 360px) {
@@ -13366,7 +13384,7 @@ button,
     radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.035), transparent 32%),
     #0C0C0E;
   color: #F2F0EA;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   padding: 30px 22px 116px;
 }
 
@@ -13410,7 +13428,7 @@ button,
   margin: 0 0 14px;
   color: #F2F0EA;
   font-size: 22px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.035em;
   line-height: 1.05;
 }
@@ -13420,7 +13438,7 @@ button,
   margin: 0;
   color: #A2A0AA;
   font-size: 14px;
-  font-weight: 620;
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -13436,7 +13454,7 @@ button,
   gap: 9px;
   padding: 0 16px;
   font-size: 12px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .adv-verify-hero.is-warm .adv-verify-pill {
@@ -13515,7 +13533,7 @@ button,
   display: block;
   color: #F2F0EA;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
@@ -13528,7 +13546,7 @@ button,
   margin-top: 7px;
   color: #8A8892;
   font-size: 12px;
-  font-weight: 620;
+  font-weight: 400;
   line-height: 1.32;
 }
 
@@ -13537,7 +13555,7 @@ button,
   color: #5C5C64;
   font-style: normal;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .adv-verify-step.is-done em {
@@ -13573,7 +13591,7 @@ button,
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 760;
+  font-weight: 500;
 }
 
 .adv-verify-summary span svg {
@@ -13583,7 +13601,7 @@ button,
 .adv-verify-summary strong {
   color: #8A8892;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 450;
   line-height: 1.25;
 }
 
@@ -13607,7 +13625,7 @@ button,
   gap: 14px;
   padding: 8px 8px 8px 22px;
   font-size: 15px;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.01em;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
 }
@@ -13673,7 +13691,7 @@ button,
   justify-content: center;
   padding: 0 12px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.04em;
 }
 
@@ -13766,6 +13784,26 @@ html[data-theme="light"] body {
   color: #6B6878 !important;
 }
 
+.phone-shell--light .profile-hero-card {
+  border: none !important;
+  background: linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%) !important;
+  box-shadow: 0 12px 40px rgba(49, 94, 255, 0.32) !important;
+}
+
+/* The dot pattern and sheen are rendered as child divs so no override needed */
+
+.phone-shell--light .profile-hero-card h1 {
+  color: #FFFFFF !important;
+}
+
+.phone-shell--light .profile-hero-card [style*="borderTop"] {
+  border-top-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.phone-shell--light .profile-hero-card [style*="borderRight"] {
+  border-right-color: rgba(255, 255, 255, 0.14) !important;
+}
+
 .phone-shell--light .profile-v2-row-group,
 .phone-shell--light .pbv2-card,
 .phone-shell--light .pbv2-note,
@@ -13797,7 +13835,7 @@ html[data-theme="light"] body {
 .phone-shell--light .bankv2-hero-icon {
   border-color: #ECE9F5 !important;
   background: #F5F3FB !important;
-  color: #5B3CE3 !important;
+  color: #315eff !important;
 }
 
 .phone-shell--light .profile-v2-status-pill,
@@ -13806,9 +13844,9 @@ html[data-theme="light"] body {
 .phone-shell--light .bankv2-status,
 .phone-shell--light .pbv2-status,
 .phone-shell--light .adv-verify-pill {
-  border-color: rgba(91, 60, 227, 0.18) !important;
-  background: rgba(91, 60, 227, 0.08) !important;
-  color: #5B3CE3 !important;
+  border-color: rgba(49, 94, 255, 0.18) !important;
+  background: rgba(49, 94, 255, 0.08) !important;
+  color: #315eff !important;
 }
 
 .phone-shell--light .profile-v2-status-pill--green,
@@ -13839,7 +13877,7 @@ html[data-theme="light"] body {
   justify-content: center;
   padding: 0 12px;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.04em;
 }
 
@@ -13876,7 +13914,7 @@ html[data-theme="light"] body {
 }
 
 .phone-shell--light .kycv2-progress span {
-  background: #5B3CE3 !important;
+  background: #315eff !important;
 }
 
 .phone-shell--light .kycv2-doc-card.is-uploaded {
@@ -13896,7 +13934,7 @@ html[data-theme="light"] body {
 .phone-shell--light .kycv2-primary,
 .phone-shell--light .bankv2-primary,
 .phone-shell--light .adv-verify-cta {
-  background: #5B3CE3 !important;
+  background: #315eff !important;
   color: #FFFFFF !important;
   box-shadow: 0 12px 32px -8px rgba(30, 22, 54, 0.14) !important;
 }
@@ -13918,7 +13956,7 @@ html[data-theme="light"] body {
 .phone-shell--light .bankv2-primary-icon,
 .phone-shell--light .adv-verify-cta span:last-child {
   background: #FFFFFF !important;
-  color: #5B3CE3 !important;
+  color: #315eff !important;
 }
 
 .phone-shell--light .bankv2-input-wrap input {
@@ -13935,8 +13973,8 @@ html[data-theme="light"] body {
 .phone-shell--light .adv-verify-hero.is-neutral .adv-verify-orb {
   background: #F5F3FB !important;
   border-color: #E9E6F1 !important;
-  color: #5B3CE3 !important;
-  box-shadow: 0 0 0 11px rgba(91, 60, 227, 0.05) !important;
+  color: #315eff !important;
+  box-shadow: 0 0 0 11px rgba(49, 94, 255, 0.05) !important;
 }
 
 .phone-shell--light .adv-verify-hero.is-warm .adv-verify-orb,
@@ -14068,8 +14106,8 @@ html[data-theme="light"] body {
   background: rgba(180, 89, 31, 0.08) !important;
 }
 .phone-shell--light .help-topic-card--active {
-  border-color: #5B3CE3 !important;
-  background: rgba(91, 60, 227, 0.06) !important;
+  border-color: #315eff !important;
+  background: rgba(49, 94, 255, 0.06) !important;
 }
 .phone-shell--dark .help-topic-icon {
   background: rgba(107, 69, 244, 0.15) !important;
@@ -14115,11 +14153,11 @@ html[data-theme="light"] body {
   color: #6B6878 !important;
 }
 .phone-shell--light .help-contact-strip-icon {
-  background: rgba(91, 60, 227, 0.12) !important;
+  background: rgba(49, 94, 255, 0.12) !important;
 }
 .phone-shell--light .help-contact-strip-btn {
-  background: #5B3CE3 !important;
-  box-shadow: 0 4px 14px rgba(91, 60, 227, 0.28) !important;
+  background: #315eff !important;
+  box-shadow: 0 4px 14px rgba(49, 94, 255, 0.28) !important;
 }
 
 /* ============================================================
@@ -14128,7 +14166,7 @@ html[data-theme="light"] body {
    ============================================================ */
 .phone-shell--light .help-topic-icon {
   background: #EDE9FF !important;
-  color: #5B3CE3 !important;
+  color: #315eff !important;
 }
 .phone-shell--light .help-topic-card {
   border-color: #E9E6F1 !important;
@@ -14190,7 +14228,7 @@ html[data-theme="light"] body {
   --notif-amber: #E08A38;
   --notif-amber-bg: rgba(180, 89, 31, 0.14);
   --notif-purple: #7E5CFF;
-  --notif-purple-bg: rgba(91, 60, 227, 0.13);
+  --notif-purple-bg: rgba(49, 94, 255, 0.13);
   --notif-neutral-bg: rgba(242, 240, 234, 0.10);
   --notif-shadow: none;
   flex: 1 1 auto;
@@ -14201,7 +14239,7 @@ html[data-theme="light"] body {
     radial-gradient(circle at 50% 0%, rgba(242, 240, 234, 0.025), transparent 36%),
     var(--notif-bg) !important;
   color: var(--notif-text) !important;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
 }
 
 .phone-shell--light .notif-screen {
@@ -14213,13 +14251,13 @@ html[data-theme="light"] body {
   --notif-text: #17151F;
   --notif-muted: #6B6878;
   --notif-dim: #9A97A8;
-  --notif-cream: #5B3CE3;
+  --notif-cream: #315eff;
   --notif-green: #1F9E67;
   --notif-green-bg: rgba(31, 158, 103, 0.10);
   --notif-amber: #B4591F;
   --notif-amber-bg: rgba(180, 89, 31, 0.10);
-  --notif-purple: #5B3CE3;
-  --notif-purple-bg: rgba(91, 60, 227, 0.09);
+  --notif-purple: #315eff;
+  --notif-purple-bg: rgba(49, 94, 255, 0.09);
   --notif-neutral-bg: #F5F3FB;
   --notif-shadow: 0 24px 60px -36px rgba(30, 22, 54, 0.22);
   background: var(--notif-bg) !important;
@@ -14258,7 +14296,7 @@ html[data-theme="light"] body {
   color: var(--notif-muted);
   font-size: 13px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -14280,7 +14318,7 @@ html[data-theme="light"] body {
   background: var(--notif-cream);
   color: var(--notif-bg);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0;
   box-shadow: var(--notif-shadow);
 }
@@ -14296,7 +14334,7 @@ html[data-theme="light"] body {
   font-family: inherit;
   font-size: 13px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -14325,7 +14363,7 @@ html[data-theme="light"] body {
   color: var(--notif-muted) !important;
   font-size: 12px !important;
   line-height: 1 !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   letter-spacing: 0.32em !important;
   text-transform: uppercase !important;
   border-radius: 0 !important;
@@ -14437,7 +14475,7 @@ html[data-theme="light"] body {
   color: var(--notif-text) !important;
   font-size: 15px !important;
   line-height: 1.18 !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   letter-spacing: -0.03em !important;
   margin: 0 0 6px !important;
 }
@@ -14451,7 +14489,7 @@ html[data-theme="light"] body {
 }
 
 .phone-shell--light .notif-title i {
-  background: #5B3CE3;
+  background: #315eff;
 }
 
 .phone-shell .notif-sub {
@@ -14467,7 +14505,7 @@ html[data-theme="light"] body {
   color: var(--notif-dim) !important;
   font-size: 12px !important;
   line-height: 1 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: 0.04em !important;
 }
 
@@ -14496,7 +14534,7 @@ html[data-theme="light"] body {
 
 .phone-shell--light .notif-empty-orb {
   background: #F7F5FC;
-  color: #5B3CE3;
+  color: #315eff;
 }
 
 .phone-shell .notif-empty h2 {
@@ -14504,7 +14542,7 @@ html[data-theme="light"] body {
   color: var(--notif-text);
   font-size: 20px;
   line-height: 1.12;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.04em;
 }
 
@@ -14514,7 +14552,7 @@ html[data-theme="light"] body {
   color: var(--notif-muted);
   font-size: 14px;
   line-height: 1.45;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 
@@ -14527,7 +14565,7 @@ html[data-theme="light"] body {
   color: var(--notif-dim);
   font-size: 12px;
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.02em;
 }
 
@@ -14566,10 +14604,10 @@ html[data-theme="light"] body {
   --osa-text: #17151F;
   --osa-muted: #6B6878;
   --osa-dim: #9A97A8;
-  --osa-cream: #5B3CE3;
+  --osa-cream: #315eff;
   --osa-cream-ink: #FFFFFF;
-  --osa-purple: #5B3CE3;
-  --osa-purple-soft: rgba(91, 60, 227, 0.10);
+  --osa-purple: #315eff;
+  --osa-purple-soft: rgba(49, 94, 255, 0.10);
   background: var(--osa-bg) !important;
 }
 
@@ -14588,7 +14626,7 @@ html[data-theme="light"] body {
   color: var(--osa-muted);
   font-size: 12px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
 }
@@ -14629,7 +14667,7 @@ html[data-theme="light"] body {
   color: var(--osa-text) !important;
   font-size: 24px !important;
   line-height: 1.05 !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   letter-spacing: -0.03em !important;
 }
 
@@ -14639,13 +14677,13 @@ html[data-theme="light"] body {
   color: var(--osa-muted) !important;
   font-size: 15px !important;
   line-height: 1.55 !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: -0.02em !important;
 }
 
 .phone-shell .adv-osa-sub strong {
   color: var(--osa-text);
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .phone-shell .adv-osa-card {
@@ -14678,13 +14716,13 @@ html[data-theme="light"] body {
 .phone-shell .adv-osa-card-lbl {
   color: var(--osa-muted) !important;
   font-size: 14px !important;
-  font-weight: 650 !important;
+  font-weight: 450 !important;
 }
 
 .phone-shell .adv-osa-card-val {
   color: var(--osa-text) !important;
   font-size: 14px !important;
-  font-weight: 800 !important;
+  font-weight: 500 !important;
   letter-spacing: -0.03em !important;
   text-align: right;
 }
@@ -14703,7 +14741,7 @@ html[data-theme="light"] body {
   color: var(--osa-muted);
   font-size: 12px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
 }
@@ -14715,7 +14753,7 @@ html[data-theme="light"] body {
   color: var(--osa-text) !important;
   font-size: 15px !important;
   line-height: 1.25;
-  font-weight: 650 !important;
+  font-weight: 450 !important;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -14750,7 +14788,7 @@ html[data-theme="light"] body {
   justify-items: start;
   gap: 10px;
   font-size: 15px !important;
-  font-weight: 800 !important;
+  font-weight: 500 !important;
   letter-spacing: -0.03em !important;
 }
 
@@ -14767,7 +14805,7 @@ html[data-theme="light"] body {
 .phone-shell .adv-osa-screen .adv-secure-note {
   color: var(--osa-dim) !important;
   font-size: 12px !important;
-  font-weight: 650 !important;
+  font-weight: 450 !important;
 }
 
 /* ============================================================
@@ -14812,7 +14850,7 @@ html[data-theme="light"] body {
   color: var(--profile-text, #F2F0EA);
   font-size: 18px;
   line-height: 1.05;
-  font-weight: 760;
+  font-weight: 500;
   letter-spacing: -0.03em;
 }
 
@@ -14824,10 +14862,10 @@ html[data-theme="light"] body {
   align-items: center;
   gap: 7px;
   padding: 0 12px;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 11px;
   line-height: 1;
-  font-weight: 800;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -14855,15 +14893,15 @@ html[data-theme="light"] body {
   color: var(--profile-muted, #8A8892);
   font-size: 17px;
   line-height: 1.15;
-  font-weight: 650;
+  font-weight: 450;
   letter-spacing: -0.03em;
 }
 
 .phone-shell .profile-membership-summary p b {
   color: var(--profile-text, #F2F0EA);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .phone-shell--light .profile-membership-summary {
@@ -14874,11 +14912,11 @@ html[data-theme="light"] body {
 .phone-shell--light .profile-membership-summary-icon {
   background: #F5F3FB !important;
   border-color: #ECE9F5 !important;
-  color: #5B3CE3 !important;
+  color: #315eff !important;
 }
 
 .phone-shell--light .profile-membership-summary-term {
-  border-color: rgba(91, 60, 227, 0.20) !important;
+  border-color: rgba(49, 94, 255, 0.20) !important;
   color: #6B6878 !important;
 }
 
@@ -14940,7 +14978,7 @@ html[data-theme="light"] body {
 
 .phone-shell--light .kycv2-doc-action--ghost {
   border-color: #E9E6F1 !important;
-  color: #5B3CE3 !important;
+  color: #315eff !important;
   background: #FFFFFF !important;
 }
 
@@ -14970,9 +15008,9 @@ html[data-theme="light"] body {
 }
 
 .phone-shell .bankv2-field > span {
-  font-family: "Inter", system-ui, sans-serif !important;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif !important;
   font-size: 11px !important;
-  font-weight: 760 !important;
+  font-weight: 500 !important;
   line-height: 1 !important;
   letter-spacing: 0.22em !important;
   text-transform: uppercase !important;
@@ -14986,21 +15024,21 @@ html[data-theme="light"] body {
 
 .phone-shell .bankv2-input-wrap input {
   height: 54px !important;
-  font-family: "Inter", system-ui, sans-serif !important;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif !important;
   font-size: 16px !important;
-  font-weight: 680 !important;
+  font-weight: 450 !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
   font-variant-numeric: tabular-nums;
   -webkit-appearance: none;
   appearance: none;
-  caret-color: #5B3CE3;
+  caret-color: #315eff;
 }
 
 .phone-shell .bankv2-input-wrap input::placeholder {
-  font-family: "Inter", system-ui, sans-serif !important;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif !important;
   font-size: 15px !important;
-  font-weight: 620 !important;
+  font-weight: 400 !important;
   letter-spacing: 0 !important;
 }
 
@@ -15089,7 +15127,7 @@ html[data-theme="light"] body {
   min-height: 34px !important;
   border-radius: 13px !important;
   font-size: 11px !important;
-  font-weight: 720 !important;
+  font-weight: 500 !important;
 }
 
 .phone-shell .kycv2-primary,
@@ -15106,8 +15144,8 @@ html[data-theme="light"] body {
 }
 
 .phone-shell--light .bankv2-input-wrap:focus-within {
-  border-color: rgba(91, 60, 227, 0.52) !important;
-  box-shadow: 0 0 0 4px rgba(91, 60, 227, 0.08) !important;
+  border-color: rgba(49, 94, 255, 0.52) !important;
+  box-shadow: 0 0 0 4px rgba(49, 94, 255, 0.08) !important;
 }
 
 .phone-shell--light .bankv2-input-wrap input {
@@ -15142,7 +15180,7 @@ html[data-theme="light"] body {
 
 .phone-shell--light .bankv2-input-wrap input::selection,
 .phone-shell--light .kycv2-doc-card ::selection {
-  background: rgba(91, 60, 227, 0.16);
+  background: rgba(49, 94, 255, 0.16);
 }
 
 /* Final mobile tab bar positioning.
@@ -15151,9 +15189,9 @@ html[data-theme="light"] body {
 .phone-shell .app-tabbar {
   flex-shrink: 0 !important;
   width: 100% !important;
-  height: 54px !important;
-  min-height: 54px !important;
-  max-height: 54px !important;
+  height: 62px !important;
+  min-height: 62px !important;
+  max-height: 62px !important;
   padding: 0 !important;
   margin: 0 !important;
   display: flex !important;
@@ -15188,6 +15226,15 @@ html[data-theme="light"] body {
   line-height: 1 !important;
   margin: 0 !important;
   font-size: 10px !important;
+}
+
+/* Icon pill wrapper — must override the generic span rule above */
+.phone-shell .app-tabbar button .tabbar-icon-pill {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: inherit !important;
+  line-height: normal !important;
 }
 
 @media (max-width: 380px) {

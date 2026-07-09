@@ -43,6 +43,7 @@ type AdvanceScreenProps = {
   membershipConfig?: MembershipConfig;
   membershipActive?: boolean;
   membershipRequiredAfterEmployerApproval?: boolean;
+  interestFreeThreshold?: number;
   bankAccount?: BankAccount | null;
   kycDocumentCount?: number;
   onAmountChange: (amount: number) => void;
@@ -96,11 +97,11 @@ function advancePalette(theme: Theme) {
       receiptSubtle: "#8B849F",
       receiptDash: "#DCD5F2",
       receiptNotch: "#FFFFFF",
-      ctaBg: "#5B3CE3",
+      ctaBg: "#315eff",
       ctaText: "#FFFFFF",
       ctaIconBg: "#FFFFFF",
-      ctaIconText: "#5B3CE3",
-      glow: "rgba(91,60,227,0.06)",
+      ctaIconText: "#315eff",
+      glow: "rgba(49,94,255,0.06)",
       disabledBg: "#EEEBF6",
       disabledText: "#B6B3C2",
       warm: "#B4591F",
@@ -227,7 +228,7 @@ function VerificationLifecycleScreen({
               {index < timeline.length - 1 && <i />}
             </div>
             <div className="adv-verify-step-copy">
-              <strong>{item.label}</strong>
+              <span>{item.label}</span>
               <small>{item.detail}</small>
             </div>
             <em>{item.status}</em>
@@ -238,11 +239,11 @@ function VerificationLifecycleScreen({
       <section className="adv-verify-summary">
         <div>
           <span><IdCard size={13} strokeWidth={1.9} /> KYC</span>
-          <strong>{kycDocumentCount ? `${kycDocumentCount} documents` : "Documents submitted"}</strong>
+          <span>{kycDocumentCount ? `${kycDocumentCount} documents` : "Documents submitted"}</span>
         </div>
         <div>
           <span><Landmark size={13} strokeWidth={1.9} /> Bank</span>
-          <strong>{compactBankLabel(bankAccount)}</strong>
+          <span>{compactBankLabel(bankAccount)}</span>
         </div>
       </section>
 
@@ -278,6 +279,7 @@ export function AdvanceScreen({
   membershipConfig,
   membershipActive,
   membershipRequiredAfterEmployerApproval,
+  interestFreeThreshold,
   bankAccount,
   kycDocumentCount,
   onAmountChange,
@@ -467,11 +469,11 @@ export function AdvanceScreen({
             <div className="adv-ip-card">
               <div className="adv-ip-row">
                 <span>Amount requested</span>
-                <strong>{formatMoney(currentRequest.requestedAmount)}</strong>
+                <span>{formatMoney(currentRequest.requestedAmount)}</span>
               </div>
               <div className="adv-ip-row">
                 <span>Submitted on</span>
-                <strong>{formatReadableDate(currentRequest.requestDate)}</strong>
+                <span>{formatReadableDate(currentRequest.requestDate)}</span>
               </div>
             </div>
           </div>
@@ -499,7 +501,7 @@ export function AdvanceScreen({
         <div className="adv-screen">
           <div className="screen-body adv-active-body adv-inprogress-body">
             <div className="adv-ip-icon-wrap">
-              <Clock size={32} color="#7B64FF" strokeWidth={1.5} />
+              <Clock size={32} color="#5E7FFF" strokeWidth={1.5} />
             </div>
             <div className="adv-ip-headline">Request in Progress</div>
             <div className="adv-ip-sub">Please wait while we process your advance.</div>
@@ -507,7 +509,7 @@ export function AdvanceScreen({
             <div className="adv-ip-card">
               <div className="adv-ip-row">
                 <span>Amount requested</span>
-                <strong>{formatMoney(currentRequest.requestedAmount)}</strong>
+                <span>{formatMoney(currentRequest.requestedAmount)}</span>
               </div>
               <div className="adv-ip-row adv-ip-row--status">
                 <span>Status</span>
@@ -515,12 +517,12 @@ export function AdvanceScreen({
               </div>
               <div className="adv-ip-row">
                 <span>Submitted on</span>
-                <strong>{formatReadableDate(currentRequest.requestDate)}</strong>
+                <span>{formatReadableDate(currentRequest.requestDate)}</span>
               </div>
             </div>
 
             <div className="adv-ip-hint">
-              <Clock size={13} color="#7B64FF" />
+              <Clock size={13} color="#5E7FFF" />
               <span>{hint}</span>
             </div>
           </div>
@@ -564,15 +566,15 @@ export function AdvanceScreen({
             <div className="adv-inline-stats">
               <div className="adv-inline-stat">
                 <span>Requested</span>
-                <strong>{formatReadableDate(currentRequest.requestDate)}</strong>
+                <span>{formatReadableDate(currentRequest.requestDate)}</span>
               </div>
               <div className="adv-inline-stat">
                 <span>Due by</span>
-                <strong>{scheduleDate}</strong>
+                <span>{scheduleDate}</span>
               </div>
               <div className="adv-inline-stat">
                 <span>Total payable</span>
-                <strong className="amber">{formatBackendMoney(totalRepayment)}</strong>
+                <span className="amber">{formatBackendMoney(totalRepayment)}</span>
               </div>
             </div>
           </div>
@@ -585,26 +587,26 @@ export function AdvanceScreen({
             <div className="adv-calc-row">
               <span className="adv-calc-icon">1</span>
               <div>
-                <strong>Advance amount</strong>
+                <span>Advance amount</span>
                 <small>Principal you receive</small>
               </div>
-              <b>{formatBackendMoney(principal)}</b>
+              <span>{formatBackendMoney(principal)}</span>
             </div>
             <div className="adv-calc-row">
               <span className="adv-calc-icon adv-calc-icon--warm">+</span>
               <div>
-                <strong>Interest</strong>
+                <span>Interest</span>
                 <small>{formatBackendMoney(principal)} × {interestRate ? `${interestRate}% p.a.` : "rate"} × {interestDays || "—"} days</small>
               </div>
-              <b className="orange">{formatBackendMoney(interest)}</b>
+              <span className="orange">{formatBackendMoney(interest)}</span>
             </div>
             <div className="adv-calc-total">
               <span className="adv-calc-check">✓</span>
               <div>
-                <strong>Total repayable</strong>
+                <span>Total repayable</span>
                 <small>Auto-deducted on payday</small>
               </div>
-              <b>{formatBackendMoney(totalRepayment)}</b>
+              <span>{formatBackendMoney(totalRepayment)}</span>
             </div>
           </div>
         </div>
@@ -627,7 +629,7 @@ export function AdvanceScreen({
           minHeight: "100%",
           display: "flex",
           flexDirection: "column",
-          fontFamily: "'Inter', system-ui, sans-serif",
+          
           color: colors.text,
           position: "relative",
         }}
@@ -663,14 +665,14 @@ export function AdvanceScreen({
           >
             <AlertTriangle size={20} color="#C66C2B" strokeWidth={1.9} />
             <div>
-              <div style={{ fontSize: 15, fontWeight: 650, lineHeight: 1.1 }}>
+              <div style={{ fontSize: 15, fontWeight: 450, lineHeight: 1.1 }}>
                 Verification required
               </div>
               <div
                 style={{
                   marginTop: 5,
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   color: "#B68C72",
                   letterSpacing: "0.03em",
                 }}
@@ -684,7 +686,7 @@ export function AdvanceScreen({
             <div
               style={{
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 500,
                 letterSpacing: "0.32em",
                 color: colors.faint,
                 textTransform: "uppercase",
@@ -718,9 +720,9 @@ export function AdvanceScreen({
               </span>
               <span
                 style={{
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                   fontSize: 30,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   letterSpacing: "-0.04em",
                   color: colors.text,
                   minWidth: 120,
@@ -772,7 +774,7 @@ export function AdvanceScreen({
                 gap: 10,
                 color: colors.text,
                 fontSize: 13,
-                fontWeight: 650,
+                fontWeight: 450,
                 letterSpacing: "0.03em",
               }}
             >
@@ -803,7 +805,7 @@ export function AdvanceScreen({
                 style={{
                   color: colors.muted,
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 500,
                   letterSpacing: "0.28em",
                   textTransform: "uppercase",
                 }}
@@ -812,10 +814,10 @@ export function AdvanceScreen({
               </span>
               <span
                 style={{
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                   color: colors.muted,
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 400,
                 }}
               >
                 {completedSetup} / {setupSteps.length}
@@ -877,7 +879,7 @@ export function AdvanceScreen({
                         display: "block",
                         fontSize: 15,
                         lineHeight: 1.1,
-                        fontWeight: 650,
+                        fontWeight: 450,
                         color: s.tone === "todo" ? colors.text : colors.dim,
                       }}
                     >
@@ -889,7 +891,7 @@ export function AdvanceScreen({
                         marginTop: 6,
                         fontSize: 12,
                         lineHeight: 1.25,
-                        fontWeight: 600,
+                        fontWeight: 400,
                         color: colors.dim,
                       }}
                     >
@@ -913,7 +915,7 @@ export function AdvanceScreen({
                       display: "grid",
                       placeItems: "center",
                       fontSize: 13,
-                      fontWeight: 700,
+                      fontWeight: 500,
                     }}
                   >
                     {action}
@@ -928,7 +930,7 @@ export function AdvanceScreen({
               textAlign: "center",
               color: colors.dim,
               fontSize: 12,
-              fontWeight: 600,
+              fontWeight: 400,
               marginBottom: 26,
             }}
           >
@@ -941,7 +943,7 @@ export function AdvanceScreen({
             style={{
               width: "100%",
               height: 58,
-              borderRadius: 18,
+              borderRadius: 8,
               border: `1px solid ${colors.border}`,
               background: colors.panel,
               color: colors.faint,
@@ -950,7 +952,7 @@ export function AdvanceScreen({
               justifyContent: "center",
               gap: 11,
               fontSize: 15,
-              fontWeight: 650,
+              fontWeight: 450,
               marginBottom: 14,
             }}
           >
@@ -966,7 +968,7 @@ export function AdvanceScreen({
               gap: 7,
               color: colors.faint,
               fontSize: 11.5,
-              fontWeight: 600,
+              fontWeight: 400,
             }}
           >
             <ShieldCheck size={12} color={colors.faint} strokeWidth={1.9} />
@@ -1015,7 +1017,7 @@ export function AdvanceScreen({
       minHeight: "100%",
       display: "flex",
       flexDirection: "column",
-      fontFamily: "'Inter', system-ui, sans-serif",
+      
       position: "relative",
     }}>
 
@@ -1045,16 +1047,16 @@ export function AdvanceScreen({
           <div>
             <div style={{
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 400,
               letterSpacing: "0.22em",
               color: colors.dim,
               textTransform: "uppercase",
               marginBottom: 5,
             }}>Eligible today</div>
             <div style={{
-              fontFamily: "'Inter', system-ui, sans-serif",
+              
               fontSize: 15,
-              fontWeight: 600,
+              fontWeight: 400,
               color: colors.text,
             }}>
               {formatMoney(MIN_AMOUNT)} – {formatMoney(limit)}
@@ -1063,16 +1065,16 @@ export function AdvanceScreen({
           <div style={{ textAlign: "right" }}>
             <div style={{
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 400,
               letterSpacing: "0.22em",
               color: colors.dim,
               textTransform: "uppercase",
               marginBottom: 5,
             }}>Salary · Payday</div>
             <div style={{
-              fontFamily: "'Inter', system-ui, sans-serif",
+              
               fontSize: 15,
-              fontWeight: 600,
+              fontWeight: 400,
               color: colors.text,
             }}>
               {salary > 0 ? formatMoney(salary) : "—"} · {formatPayday(nextPayday)}
@@ -1084,7 +1086,7 @@ export function AdvanceScreen({
         <div style={{ padding: "24px 22px 0", textAlign: "center" }}>
           <div style={{
             fontSize: 11,
-            fontWeight: 600,
+            fontWeight: 400,
             letterSpacing: "0.32em",
             color: colors.faint,
             textTransform: "uppercase",
@@ -1123,7 +1125,7 @@ export function AdvanceScreen({
 
             <div style={{
               fontSize: 30,
-              fontWeight: 600,
+              fontWeight: 400,
               letterSpacing: "-0.03em",
               color: colors.text,
               minWidth: 120,
@@ -1217,6 +1219,22 @@ export function AdvanceScreen({
             </div>
           )}
 
+          {/* Interest-free badge */}
+          {interestFreeThreshold && interestFreeThreshold > 0 && (
+            <div style={{
+              textAlign: "center",
+              fontSize: 11,
+              fontWeight: 500,
+              color: amount <= interestFreeThreshold ? "#4ade80" : colors.dim,
+              marginBottom: 12,
+              letterSpacing: "0.02em",
+            }}>
+              {amount <= interestFreeThreshold
+                ? `✓ This amount is interest-free`
+                : `First ${formatMoney(interestFreeThreshold)} is interest-free`}
+            </div>
+          )}
+
           {/* Quick-select chips */}
           <div style={{
             display: "flex",
@@ -1236,9 +1254,9 @@ export function AdvanceScreen({
                   border: `1px solid ${amount === v ? "transparent" : colors.border}`,
                   background: amount === v ? colors.ctaBg : "transparent",
                   color: amount === v ? colors.ctaText : colors.dim,
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   cursor: "pointer",
                   flexShrink: 0,
                 }}
@@ -1268,13 +1286,13 @@ export function AdvanceScreen({
                 }}>
                   <span style={{
                     fontSize: 11,
-                    fontWeight: 600,
+                    fontWeight: 400,
                     letterSpacing: "0.22em",
                     color: colors.receiptMuted,
                     textTransform: "uppercase",
                   }}>BREAKDOWN</span>
                   <span style={{
-                    fontFamily: "'Inter', system-ui, sans-serif",
+                    
                     fontSize: 12,
                     color: colors.receiptMuted,
                   }}>
@@ -1287,9 +1305,9 @@ export function AdvanceScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14, fontWeight: 500, color: colors.receiptInk }}>Credited to bank</span>
                   <span style={{
-                    fontFamily: "'Inter', system-ui, sans-serif",
+                    
                     fontSize: 15,
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: colors.receiptInk,
                   }}>
                     {formatMoney(preview.youReceive)}
@@ -1315,9 +1333,9 @@ export function AdvanceScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14, fontWeight: 500, color: colors.receiptInk }}>Interest</span>
                   <span style={{
-                    fontFamily: "'Inter', system-ui, sans-serif",
+                    
                     fontSize: 15,
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: colors.warm,
                   }}>
                     + {formatMoney(preview.interest)}
@@ -1343,7 +1361,7 @@ export function AdvanceScreen({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                   <div>
                     <div style={{
-                      fontFamily: "'Inter', system-ui, sans-serif",
+                      
                       fontSize: 11,
                       color: colors.receiptMuted,
                       marginBottom: 3,
@@ -1355,9 +1373,9 @@ export function AdvanceScreen({
                     </div>
                   </div>
                   <span style={{
-                    fontFamily: "'Inter', system-ui, sans-serif",
+                    
                     fontSize: 20,
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: colors.receiptInk,
                   }}>
                     {formatMoney(preview.total)}
@@ -1386,7 +1404,7 @@ export function AdvanceScreen({
             style={{
               width: "100%",
               height: 60,
-              borderRadius: 18,
+              borderRadius: 8,
               background: canSubmit ? colors.ctaBg : colors.disabledBg,
               border: "none",
               display: "flex",
@@ -1394,13 +1412,13 @@ export function AdvanceScreen({
               justifyContent: "space-between",
               padding: "0 8px 0 22px",
               cursor: canSubmit ? "pointer" : "not-allowed",
-              boxShadow: canSubmit ? "0 12px 32px -14px rgba(91,60,227,0.36)" : "none",
+              boxShadow: canSubmit ? "0 12px 32px -14px rgba(49,94,255,0.36)" : "none",
             }}
           >
             <span style={{
-              fontFamily: "'Inter', system-ui, sans-serif",
+              
               fontSize: 15,
-              fontWeight: 600,
+              fontWeight: 400,
               color: canSubmit ? colors.ctaText : colors.disabledText,
             }}>
               Request {formatMoney(amount)}
@@ -1408,7 +1426,7 @@ export function AdvanceScreen({
             <div style={{
               width: 44,
               height: 44,
-              borderRadius: 14,
+              borderRadius: 8,
               background: canSubmit ? colors.ctaIconBg : colors.panelMuted,
               display: "flex",
               alignItems: "center",
@@ -1500,7 +1518,7 @@ export function AdvanceScreen({
                       padding: "4px 22px 0",
                       color: colors.muted,
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       letterSpacing: "0.28em",
                       textTransform: "uppercase",
                     }}
@@ -1513,7 +1531,7 @@ export function AdvanceScreen({
                       color: colors.text,
                       fontSize: 19,
                       lineHeight: 1.05,
-                      fontWeight: 650,
+                      fontWeight: 450,
                       letterSpacing: "-0.035em",
                     }}
                   >
@@ -1543,7 +1561,7 @@ export function AdvanceScreen({
                       <span
                         style={{
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 500,
                           letterSpacing: "0.28em",
                           textTransform: "uppercase",
                         }}
@@ -1552,7 +1570,7 @@ export function AdvanceScreen({
                       </span>
                       <span
                         style={{
-                          fontFamily: "'Inter', system-ui, sans-serif",
+                          
                           fontSize: 12,
                           letterSpacing: "-0.03em",
                         }}
@@ -1564,16 +1582,16 @@ export function AdvanceScreen({
 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 15, fontWeight: 550 }}>Credited to bank</span>
-                      <strong
+                      <span
                         style={{
-                          fontFamily: "'Inter', system-ui, sans-serif",
+                          
                           fontSize: 16,
-                          fontWeight: 650,
+                          fontWeight: 450,
                           letterSpacing: "-0.04em",
                         }}
                       >
                         {preview ? formatMoney(preview.youReceive) : formatMoney(amount)}
-                      </strong>
+                      </span>
                     </div>
 
                     <div style={{ position: "relative", margin: "13px 0" }}>
@@ -1597,17 +1615,17 @@ export function AdvanceScreen({
 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 15, fontWeight: 550 }}>Interest</span>
-                      <strong
+                      <span
                         style={{
-                          fontFamily: "'Inter', system-ui, sans-serif",
+                          
                           fontSize: 16,
-                          fontWeight: 650,
+                          fontWeight: 450,
                           letterSpacing: "-0.04em",
                           color: colors.warm,
                         }}
                       >
                         + {preview ? formatMoney(preview.interest) : "—"}
-                      </strong>
+                      </span>
                     </div>
 
                     <div style={{ position: "relative", margin: "13px 0" }}>
@@ -1634,7 +1652,7 @@ export function AdvanceScreen({
                         <small
                           style={{
                             color: colors.receiptMuted,
-                            fontFamily: "'Inter', system-ui, sans-serif",
+                            
                             fontSize: 12,
                             fontWeight: 500,
                             letterSpacing: "-0.03em",
@@ -1642,22 +1660,22 @@ export function AdvanceScreen({
                         >
                           Auto-deducted {preview ? formatShortDate(preview.recoveryDate) : "on payday"}
                         </small>
-                        <span style={{ color: colors.receiptSubtle, fontSize: 15, fontWeight: 650 }}>
+                        <span style={{ color: colors.receiptSubtle, fontSize: 15, fontWeight: 450 }}>
                           Total repayment
                         </span>
                       </span>
-                      <strong
+                      <span
                         style={{
                           color: colors.receiptInk,
-                          fontFamily: "'Inter', system-ui, sans-serif",
+                          
                           fontSize: 22,
-                          fontWeight: 650,
+                          fontWeight: 450,
                           letterSpacing: "-0.05em",
                           whiteSpace: "nowrap",
                         }}
                       >
                         {preview ? formatMoney(preview.total) : formatMoney(amount)}
-                      </strong>
+                      </span>
                     </div>
                   </div>
 
@@ -1694,14 +1712,14 @@ export function AdvanceScreen({
                       >
                         <Landmark size={16} />
                       </span>
-                      <span style={{ minWidth: 0, fontSize: 15, lineHeight: 1.25, fontWeight: 650 }}>
+                      <span style={{ minWidth: 0, fontSize: 15, lineHeight: 1.25, fontWeight: 450 }}>
                         <small
                           style={{
                             display: "block",
                             marginBottom: 4,
                             color: colors.muted,
                             fontSize: 11,
-                            fontWeight: 700,
+                            fontWeight: 500,
                             letterSpacing: "0.18em",
                             textTransform: "uppercase",
                           }}
@@ -1719,10 +1737,10 @@ export function AdvanceScreen({
                           borderRadius: 8,
                           color: colors.muted,
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 500,
                           padding: "5px 10px",
                           cursor: "pointer",
-                          fontFamily: "'Inter', system-ui, sans-serif",
+                          
                         }}
                       >
                         Change
@@ -1752,14 +1770,14 @@ export function AdvanceScreen({
                       >
                         <CalendarDays size={16} />
                       </span>
-                      <span style={{ minWidth: 0, fontSize: 15, lineHeight: 1.28, fontWeight: 650 }}>
+                      <span style={{ minWidth: 0, fontSize: 15, lineHeight: 1.28, fontWeight: 450 }}>
                         <small
                           style={{
                             display: "block",
                             marginBottom: 4,
                             color: colors.muted,
                             fontSize: 11,
-                            fontWeight: 700,
+                            fontWeight: 500,
                             letterSpacing: "0.18em",
                             textTransform: "uppercase",
                           }}
@@ -1769,7 +1787,7 @@ export function AdvanceScreen({
                         Auto-debit (from salary)
                         {preview?.recoveryDate ? ` · ${formatReadableDate(preview.recoveryDate)}` : ""}
                       </span>
-                      <span style={{ color: colors.dim, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+                      <span style={{ color: colors.dim, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}>
                         1 payment
                       </span>
                     </div>
@@ -1783,7 +1801,7 @@ export function AdvanceScreen({
                       gap: 12,
                       color: colors.dim,
                       fontSize: 13,
-                      fontWeight: 600,
+                      fontWeight: 400,
                       lineHeight: 1.55,
                     }}
                   >
@@ -1800,9 +1818,9 @@ export function AdvanceScreen({
                     />
                     <span>
                       I authorise a one-time salary auto-debit of{" "}
-                      <strong style={{ color: colors.text }}>
+                      <span style={{ color: colors.text }}>
                         {preview ? formatMoney(preview.total) : formatMoney(amount)}
-                      </strong>{" "}
+                      </span>{" "}
                       on my payday and accept the{" "}
                       <button
                         type="button"
@@ -1836,7 +1854,7 @@ export function AdvanceScreen({
                       style={{
                         width: "100%",
                         height: 60,
-                        borderRadius: 18,
+                        borderRadius: 8,
                         background: colors.ctaBg,
                         color: colors.ctaText,
                         display: "flex",
@@ -1844,7 +1862,7 @@ export function AdvanceScreen({
                         justifyContent: "space-between",
                         padding: "0 10px 0 24px",
                         fontSize: 16,
-                        fontWeight: 700,
+                        fontWeight: 500,
                         opacity: canConfirm ? 1 : 0.45,
                         cursor: canConfirm ? "pointer" : "not-allowed",
                       }}
@@ -1855,7 +1873,7 @@ export function AdvanceScreen({
                           style={{
                             width: 44,
                             height: 44,
-                            borderRadius: 14,
+                            borderRadius: 8,
                             background: colors.ctaIconBg,
                             color: colors.ctaIconText,
                             display: "grid",
@@ -1880,7 +1898,7 @@ export function AdvanceScreen({
                         justifyContent: "center",
                         gap: 8,
                         fontSize: 12,
-                        fontWeight: 650,
+                        fontWeight: 450,
                       }}
                     >
                       <ShieldCheck size={13} color={colors.text} /> Employer-verified · repaid from salary

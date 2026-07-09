@@ -130,6 +130,7 @@ export type EligibilityResult = {
     approvedLimit: number;
     usedLimit: number;
     availableAdvance: number;
+    interestFreeThreshold: number;
   };
   payroll: { payrollDate: number | null; payrollCutoffDate: number | null };
   membershipRequiredAfterEmployerApproval: boolean;
@@ -143,7 +144,7 @@ export type EligibilityResult = {
 };
 
 export type MembershipPlan = {
-  planType: 'MONTHLY' | 'BIANNUAL';
+  planType: 'MONTHLY' | 'BIANNUAL' | 'ANNUAL';
   planName: string;
   amount: number;
   validityDays: number;
@@ -180,14 +181,14 @@ export type MembershipConfig = {
   membershipBenefits: string[];
   membershipValidityDays: number;
   payment?: {
+    provider?: string;
+    keyId?: string;
+    // Legacy UPI fields kept for type compatibility
     upiId?: string;
     qrUrl?: string;
     beneficiaryName?: string;
     instructions?: string;
   };
-  paymentReference?: string;
-  paymentScreenshot?: string;
-  submittedAt?: string;
   remarks?: string;
 };
 

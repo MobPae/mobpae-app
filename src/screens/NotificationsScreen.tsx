@@ -68,7 +68,7 @@ export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkA
         </button>
         <div className="notif-heading">
           <span>Notifications</span>
-          {unread.length > 0 && <strong>{unread.length}</strong>}
+          {unread.length > 0 && <span>{unread.length}</span>}
         </div>
         {unread.length > 0 && (
           <button

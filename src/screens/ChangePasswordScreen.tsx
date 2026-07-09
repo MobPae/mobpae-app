@@ -40,10 +40,10 @@ function changePasswordVars(theme: Theme): CSSProperties {
       "--cp-text": "#17151F",
       "--cp-muted": "#6B6878",
       "--cp-dim": "#9A97A8",
-      "--cp-cream": "#5B3CE3",
+      "--cp-cream": "#315eff",
       "--cp-green": "#1F9E67",
       "--cp-warm": "#B4591F",
-      "--cp-glow": "rgba(91,60,227,0.055)",
+      "--cp-glow": "rgba(49,94,255,0.055)",
       "--cp-track": "#EEEBF6",
     } as CSSProperties;
   }
@@ -139,7 +139,7 @@ export function ChangePasswordScreen({
           "radial-gradient(circle at 50% 4%, var(--cp-glow), transparent 40%), var(--cp-surface)",
         color: TEXT,
         padding: "max(24px, env(safe-area-inset-top, 0px)) 22px 30px",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        
       }}
     >
       <header
@@ -173,7 +173,7 @@ export function ChangePasswordScreen({
           style={{
             color: MUTED,
             fontSize: 12,
-            fontWeight: 700,
+            fontWeight: 500,
             letterSpacing: "0.32em",
             textTransform: "uppercase",
           }}
@@ -235,7 +235,7 @@ export function ChangePasswordScreen({
                 color: TEXT,
                 fontSize: 24,
                 lineHeight: 1.12,
-                fontWeight: 700,
+                fontWeight: 500,
                 letterSpacing: "-0.035em",
               }}
             >
@@ -301,8 +301,8 @@ export function ChangePasswordScreen({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <span style={{ color: MUTED, fontSize: 13, fontWeight: 600 }}>Password strength</span>
-            <span style={{ color: strengthColor, fontSize: 13, fontWeight: 700 }}>{strengthLabel}</span>
+            <span style={{ color: MUTED, fontSize: 13, fontWeight: 400 }}>Password strength</span>
+            <span style={{ color: strengthColor, fontSize: 13, fontWeight: 500 }}>{strengthLabel}</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginTop: 12 }}>
             {[0, 1, 2, 3].map((index) => (
@@ -363,7 +363,7 @@ export function ChangePasswordScreen({
               padding: "12px 14px",
               fontSize: 13,
               lineHeight: 1.35,
-              fontWeight: 600,
+              fontWeight: 400,
             }}
           >
             {Array.isArray(displayError) ? displayError.join(", ") : displayError}
@@ -377,14 +377,14 @@ export function ChangePasswordScreen({
             width: "100%",
             height: 64,
             border: 0,
-            borderRadius: 18,
+            borderRadius: 8,
             background: canSubmit ? CREAM : "var(--cp-panel-soft)",
             color: canSubmit
               ? theme === "light" ? "#FFFFFF" : SURFACE
               : MUTED,
-            fontFamily: "'Inter', system-ui, sans-serif",
+            
             fontSize: 16,
-            fontWeight: 700,
+            fontWeight: 500,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -398,9 +398,9 @@ export function ChangePasswordScreen({
             style={{
               width: 50,
               height: 50,
-              borderRadius: 14,
+              borderRadius: 8,
               background: theme === "light" ? "#FFFFFF" : SURFACE,
-              color: theme === "light" ? "#5B3CE3" : CREAM,
+              color: theme === "light" ? "#315eff" : CREAM,
               display: "grid",
               placeItems: "center",
             }}
@@ -455,7 +455,7 @@ function PasswordField({
           marginBottom: 10,
           color: MUTED,
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 500,
           letterSpacing: "0.28em",
           textTransform: "uppercase",
         }}
@@ -490,9 +490,9 @@ function PasswordField({
             outline: 0,
             color: TEXT,
             background: "transparent",
-            fontFamily: "'Inter', system-ui, sans-serif",
+            
             fontSize: 15,
-            fontWeight: 650,
+            fontWeight: 450,
             letterSpacing: "0.08em",
           }}
         />

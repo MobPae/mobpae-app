@@ -149,11 +149,11 @@ export function OnboardingBankScreen({
           <div className="bankv2-card-meta">
             <div>
               <span>Holder</span>
-              <strong>{bankForm.accountHolderName || "—"}</strong>
+              <span>{bankForm.accountHolderName || "—"}</span>
             </div>
             <div>
               <span>IFSC</span>
-              <strong>{bankForm.ifscCode || "—"}</strong>
+              <span>{bankForm.ifscCode || "—"}</span>
             </div>
           </div>
         </section>

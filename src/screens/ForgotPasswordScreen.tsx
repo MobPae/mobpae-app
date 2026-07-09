@@ -78,7 +78,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
         minHeight: "100%",
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        
       }}
     >
       {/* Header */}
@@ -97,7 +97,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
           </svg>
         </button>
         <div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: p.TITLE, margin: 0 }}>Forgot password?</p>
+          <p style={{ fontSize: 12, fontWeight: 500, color: p.TITLE, margin: 0 }}>Forgot password?</p>
           <p style={{ fontSize: 12, color: p.SUB, margin: "2px 0 0" }}>We'll send a reset link to your email</p>
         </div>
       </div>
@@ -114,15 +114,15 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: p.TITLE, marginBottom: 10 }}>Check your inbox</p>
+            <p style={{ fontSize: 12, fontWeight: 500, color: p.TITLE, marginBottom: 10 }}>Check your inbox</p>
             <p style={{ fontSize: 13, color: p.SUB, lineHeight: 1.6, marginBottom: 32 }}>
               If an account exists for{" "}
-              <strong style={{ color: p.STRONG }}>{email}</strong>
+              <span style={{ color: p.STRONG }}>{email}</span>
               , a reset link has been sent. It expires in 15 minutes.
             </p>
             <button
               onClick={onBack}
-              style={{ fontSize: 13, fontWeight: 600, color: p.BACK_LINK, background: "none", border: "none", cursor: "pointer" }}
+              style={{ fontSize: 13, fontWeight: 400, color: p.BACK_LINK, background: "none", border: "none", cursor: "pointer" }}
             >
               ← Back to sign in
             </button>
@@ -130,7 +130,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
         ) : (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: p.LABEL, marginBottom: 8 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 400, color: p.LABEL, marginBottom: 8 }}>
                 Email address
               </label>
               <input
@@ -141,7 +141,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                   width: "100%", boxSizing: "border-box", padding: "13px 16px",
                   fontSize: 13, color: p.INPUT_COLOR, background: p.INPUT_BG,
                   border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 12, outline: "none",
-                  fontFamily: "'Inter', system-ui, sans-serif",
+                  
                 }}
                 onFocus={e => { e.target.style.borderColor = p.INPUT_FOCUS; }}
                 onBlur={e  => { e.target.style.borderColor = p.INPUT_BORDER; }}
@@ -157,10 +157,10 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
               style={{
                 width: "100%", padding: "15px 0", marginTop: 8,
                 background: loading ? p.ACCENT_DIS : p.ACCENT,
-                color: "white", borderRadius: 14, border: "none",
-                fontSize: 13, fontWeight: 700,
+                color: "white", borderRadius: 8, border: "none",
+                fontSize: 13, fontWeight: 500,
                 cursor: loading ? "not-allowed" : "pointer",
-                fontFamily: "'Inter', system-ui, sans-serif",
+                
                 boxShadow: loading ? "none" : "0 4px 16px rgba(107,69,244,0.3)",
               }}
             >

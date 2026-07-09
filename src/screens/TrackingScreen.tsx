@@ -30,7 +30,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
           </span>
           <div>
             <p>Status</p>
-            <strong>{latestRequest.status}</strong>
+            <span>{latestRequest.status}</span>
           </div>
         </div>
         <div className="track-detail-grid">
@@ -38,14 +38,14 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
             <IndianRupee size={18} />
             <div>
               <p>Approved amount</p>
-              <strong>{formatMoney(latestRequest.approvedAmount)}</strong>
+              <span>{formatMoney(latestRequest.approvedAmount)}</span>
             </div>
           </div>
           <div>
             <CalendarDays size={18} />
             <div>
               <p>Payment date</p>
-              <strong>{formatDate(latestRequest.recoveryDate)}</strong>
+              <span>{formatDate(latestRequest.recoveryDate)}</span>
             </div>
           </div>
         </div>
@@ -58,7 +58,7 @@ export function TrackingScreen({ requests }: TrackingScreenProps) {
             <article className={`timeline-item ${item.done ? "done" : ""}`} key={item.status}>
               <span />
               <div>
-                <strong>{item.status}</strong>
+                <span>{item.status}</span>
                 <p>{item.description}</p>
                 <small>{formatShortDate(item.timestamp)}</small>
               </div>

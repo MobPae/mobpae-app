@@ -108,7 +108,7 @@ export function KycScreen({
             <path d="m15 18-6-6 6-6"/>
           </svg>
         </button>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--t1)" }}>Setup &amp; KYC</span>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--t1)" }}>Setup &amp; KYC</span>
       </div>
 
       <div className="kyc-hero-card">
@@ -127,15 +127,15 @@ export function KycScreen({
         </div>
         <div className="kyc-hero-stats">
           <div>
-            <strong>{verifiedCount}/{documents.length || 3}</strong>
+            <span>{verifiedCount}/{documents.length || 3}</span>
             <span>Verified</span>
           </div>
           <div>
-            <strong>{submittedCount}</strong>
+            <span>{submittedCount}</span>
             <span>Submitted</span>
           </div>
           <div>
-            <strong>{kycComplete ? "Ready" : "Review"}</strong>
+            <span>{kycComplete ? "Ready" : "Review"}</span>
             <span>Status</span>
           </div>
         </div>
@@ -172,7 +172,7 @@ export function KycScreen({
         <div className="kyc-next-card">
           <div className="kyc-next-icon"><Landmark size={19} /></div>
           <div>
-            <strong>KYC verified</strong>
+            <span>KYC verified</span>
             <p>
               Add your bank account to receive salary advance payouts.
             </p>

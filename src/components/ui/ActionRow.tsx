@@ -13,7 +13,7 @@ export function ActionRow({ icon, title, description, onClick }: ActionRowProps)
     <button className="action-row" type="button" onClick={onClick}>
       <span>{icon}</span>
       <div>
-        <strong>{title}</strong>
+        <span>{title}</span>
         <p>{description}</p>
       </div>
       <ChevronRight size={18} />

@@ -101,7 +101,7 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
         {/* ── Contact strip ── */}
         <div className="help-contact-strip">
           <div className="help-contact-strip-left">
-            <div className="help-contact-strip-icon"><MessageCircle size={18} color="#5B3CE3" /></div>
+            <div className="help-contact-strip-icon"><MessageCircle size={18} color="#315eff" /></div>
             <div>
               <div className="help-contact-strip-title">Support</div>
               <div className="help-contact-strip-sub">Mon–Sat · 9am–6pm IST</div>
@@ -142,7 +142,7 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
         </div>
         <div className="help-faq-card">
           {filteredFaqs.length === 0 ? (
-            <div style={{ padding: "20px 16px", color: "#8A8892", fontSize: 13, fontWeight: 600 }}>
+            <div style={{ padding: "20px 16px", color: "#8A8892", fontSize: 13, fontWeight: 400 }}>
               No questions for this topic yet.
             </div>
           ) : (

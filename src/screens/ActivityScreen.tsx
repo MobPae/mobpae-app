@@ -45,7 +45,7 @@ function activityPalette(theme: Theme) {
       text: "#17151F",
       muted: "#6B6878",
       dim: "#9A97A8",
-      activeBg: "#5B3CE3",
+      activeBg: "#315eff",
       activeText: "#FFFFFF",
       green: "#1F9E67",
       warm: "#B4591F",
@@ -164,7 +164,7 @@ function EmptyActivity({ colors }: { colors: ReturnType<typeof activityPalette> 
   return (
     <div
       style={{
-        minHeight: "calc(100dvh - 170px)",
+        flex: 1,
         display: "grid",
         placeItems: "center",
         textAlign: "center",
@@ -192,7 +192,7 @@ function EmptyActivity({ colors }: { colors: ReturnType<typeof activityPalette> 
             margin: 0,
             color: colors.text,
             fontSize: 22,
-            fontWeight: 750,
+            fontWeight: 500,
             letterSpacing: "-0.04em",
           }}
         >
@@ -204,7 +204,7 @@ function EmptyActivity({ colors }: { colors: ReturnType<typeof activityPalette> 
             maxWidth: 285,
             color: colors.muted,
             fontSize: 14,
-            fontWeight: 600,
+            fontWeight: 400,
             lineHeight: 1.55,
           }}
         >
@@ -303,7 +303,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
         minHeight: "100%",
         background: colors.bg,
         color: colors.text,
-        fontFamily: "'Inter', system-ui, sans-serif",
+        
         padding: "18px 22px 34px",
       }}
     >
@@ -317,15 +317,15 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
             boxShadow: colors.shadow,
           }}
         >
-          <div style={{ color: colors.muted, fontSize: 12, fontWeight: 650, marginBottom: 14 }}>
+          <div style={{ color: colors.muted, fontSize: 12, fontWeight: 450, marginBottom: 14 }}>
             Total advanced
           </div>
           <div
             style={{
               color: colors.text,
-              fontFamily: "'Inter', system-ui, sans-serif",
+              
               fontSize: 18,
-              fontWeight: 650,
+              fontWeight: 450,
               letterSpacing: "-0.06em",
             }}
           >
@@ -341,15 +341,15 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
             boxShadow: colors.shadow,
           }}
         >
-          <div style={{ color: colors.muted, fontSize: 12, fontWeight: 650, marginBottom: 14 }}>
+          <div style={{ color: colors.muted, fontSize: 12, fontWeight: 450, marginBottom: 14 }}>
             Total repaid
           </div>
           <div
             style={{
               color: colors.green,
-              fontFamily: "'Inter', system-ui, sans-serif",
+              
               fontSize: 18,
-              fontWeight: 650,
+              fontWeight: 450,
               letterSpacing: "-0.06em",
             }}
           >
@@ -368,14 +368,14 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
               onClick={() => setTab(item.id)}
               style={{
                 height: 38,
-                borderRadius: 13,
+                borderRadius: 8,
                 border: `1px solid ${active ? colors.activeBg : colors.border}`,
                 background: active ? colors.activeBg : "transparent",
                 color: active ? colors.activeText : colors.muted,
                 padding: "0 15px",
-                fontFamily: "'Inter', system-ui, sans-serif",
+                
                 fontSize: 13,
-                fontWeight: 750,
+                fontWeight: 500,
               }}
             >
               {item.label}
@@ -394,7 +394,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
             placeItems: "center",
             color: colors.muted,
             fontSize: 13,
-            fontWeight: 650,
+            fontWeight: 450,
             textAlign: "center",
             padding: 24,
           }}
@@ -408,7 +408,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
               style={{
                 color: colors.muted,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 500,
                 letterSpacing: "0.28em",
                 textTransform: "uppercase",
                 marginBottom: 18,
@@ -433,14 +433,14 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                     >
                       <ActivityIcon tone={event.tone} type={event.type} colors={colors} />
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ color: colors.text, fontSize: 15, fontWeight: 750, lineHeight: 1.08 }}>
+                        <div style={{ color: colors.text, fontSize: 15, fontWeight: 500, lineHeight: 1.08 }}>
                           {event.title}
                         </div>
                         <div
                           style={{
                             color: colors.muted,
                             fontSize: 12,
-                            fontWeight: 600,
+                            fontWeight: 400,
                             marginTop: 7,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -454,9 +454,9 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                         <div
                           style={{
                             color: amountColor,
-                            fontFamily: "'Inter', system-ui, sans-serif",
+                            
                             fontSize: 15,
-                            fontWeight: 650,
+                            fontWeight: 450,
                             letterSpacing: "-0.05em",
                             whiteSpace: "nowrap",
                           }}
@@ -464,7 +464,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                           {event.prefix ? `${event.prefix} ` : ""}
                           {formatMoney(event.amount)}
                         </div>
-                        <div style={{ color: colors.dim, fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, fontWeight: 600, marginTop: 8 }}>
+                        <div style={{ color: colors.dim,  fontSize: 11, fontWeight: 400, marginTop: 8 }}>
                           {event.date}
                         </div>
                       </div>
@@ -485,7 +485,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           ? `That’s everything since ${oldestYear}`
           : "That’s everything from this year";
         return (
-          <div style={{ color: colors.dim, textAlign: "center", fontSize: 12, fontWeight: 650, marginTop: 28 }}>
+          <div style={{ color: colors.dim, textAlign: "center", fontSize: 12, fontWeight: 450, marginTop: 28 }}>
             {label}
           </div>
         );
