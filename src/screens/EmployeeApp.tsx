@@ -26,6 +26,7 @@ export function EmployeeApp() {
   const notifBackRef = useRef<View>("home");
   const legalBackRef = useRef<View>("profile");
   const onboardingBackRef = useRef<View>("advance");
+  const profileBankBackRef = useRef<View>("profile");
   const rootClassName = `app-root app-root--${theme.theme}`;
   const shellClassName = `phone-shell phone-shell--${theme.theme}`;
 
@@ -97,6 +98,28 @@ export function EmployeeApp() {
     );
   }
 
+  // ── Forced password change gate ───────────────────────────────────────────
+  // New employees get a default password from the employer. Until they set a
+  // personal one, we render ONLY this screen — no AppShell, no tab bar, no
+  // navigation to other views. "Back" logs them out; they cannot bypass it.
+  if (app.mustChangePassword) {
+    return (
+      <div className={rootClassName}>
+        <div className={shellClassName}>
+          <ChangePasswordScreen
+            loading={app.changingPassword}
+            error={app.changePasswordError}
+            onSubmit={app.changePassword}
+            onClearError={() => app.setChangePasswordError("")}
+            onBack={app.logout}
+            forced
+            theme={theme.theme}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (app.loadState === "idle" || app.loadState === "loading") {
     return (
       <div className={rootClassName}>
@@ -114,6 +137,7 @@ export function EmployeeApp() {
   const navigate = (view: View) => {
     if (view === "notifications") notifBackRef.current = app.activeView as View;
     if (view === "legal") legalBackRef.current = app.activeView as View;
+    if (view === "profile-bank") profileBankBackRef.current = app.activeView as View;
     if (app.activeView === "advance" && (view === "onboarding-kyc" || view === "onboarding-bank")) {
       onboardingBackRef.current = "advance";
     }
@@ -136,6 +160,7 @@ export function EmployeeApp() {
     if (app.activeView === "onboarding-done") return app.setActiveView("advance");
     if (app.activeView === "legal") return app.setActiveView(legalBackRef.current);
     if (app.activeView === "help") return app.setActiveView("profile");
+    if (app.activeView === "profile-bank") return app.setActiveView(profileBankBackRef.current);
     return app.setActiveView("home");
   };
 
@@ -160,6 +185,8 @@ export function EmployeeApp() {
           onUpload={app.uploadKycDocument}
           onContinue={navigate}
           bankConnected={app.bankSubmitted}
+          step={3}
+          totalSteps={4}
         />
       )}
 
@@ -230,12 +257,14 @@ export function EmployeeApp() {
           kycSubmitted={app.kycSubmitted}
           bankComplete={app.bankComplete}
           bankSubmitted={app.bankSubmitted}
-          membershipConfig={app.appState.membershipConfig}
-          membershipActive={app.appState.membershipActive}
-          membershipRequiredAfterEmployerApproval={app.eligibility?.membershipRequiredAfterEmployerApproval}
+          platformFeeConfig={app.appState.platformFeeConfig ?? app.eligibility?.platformFee}
+          platformFeeRequiredAfterEmployerApproval={app.eligibility?.platformFeeRequiredAfterEmployerApproval}
+          payingPlatformFee={app.payingPlatformFee}
+          onPayPlatformFee={app.payPlatformFee}
           interestFreeThreshold={app.eligibility?.limits.interestFreeThreshold}
           bankAccount={app.appState.bankAccount}
           kycDocumentCount={app.appState.documents.filter((document) => document.status !== "Not Uploaded").length}
+          kycDocuments={app.appState.documents}
           onAmountChange={app.setAdvanceAmount}
           onSubmit={app.submitSalaryAdvance}
           onCancelRequest={app.cancelAdvanceRequest}

@@ -1,6 +1,16 @@
+// ── AdvanceScreen.tsx ─────────────────────────────────────────────────────────
+// Salary advance workflow. Four main states:
+//   1. Setup       — KYC / bank account not yet submitted
+//   2. Under review — submitted, awaiting admin verification
+//   3. Approved    — eligible, no active request
+//   4. Calculator  — amount picker + breakdown + review sheet (main redesigned view)
+//
+// All financial figures come from the backend. Frontend only handles
+// amount-picker UX and display formatting.
+
 import {
-  ArrowRight,
   AlertTriangle,
+  ArrowRight,
   BadgeCheck,
   CalendarDays,
   CheckCircle,
@@ -10,20 +20,73 @@ import {
   Crown,
   IdCard,
   Landmark,
-  LockKeyhole,
+  Pencil,
+  RotateCcw,
   ShieldCheck,
+  Sparkles,
+  Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
-  formatReadableDate,
   formatMoney,
+  formatReadableDate,
   formatRequestStatus,
   formatShortDate,
 } from "../utils/format";
-import type { AdvanceRequest, BankAccount, MembershipConfig, RecoveryPreview, View } from "../types/app";
+import type {
+  AdvanceRequest,
+  BankAccount,
+  KycDocument,
+  PlatformFeeConfig,
+  RecoveryPreview,
+  View,
+} from "../types/app";
 import type { Theme } from "../hooks/useTheme";
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const MIN_AMOUNT = 500;
+
+// ── Colorful pill palette (one per quick-amount chip) ─────────────────────────
+
+// ── Purpose category chips ────────────────────────────────────────────────────
+
+const PURPOSE_CHIPS: { value: string; label: string }[] = [
+  { value: "EMERGENCY", label: "Emergency" },
+  { value: "MEDICAL", label: "Medical" },
+  { value: "HOUSE_RENT", label: "Rent" },
+  { value: "FAMILY_EXPENSE", label: "Family" },
+  { value: "EDUCATION", label: "Education" },
+  { value: "UTILITY_BILLS", label: "Bills" },
+  { value: "TRAVEL", label: "Travel" },
+  { value: "SHOPPING", label: "Shopping" },
+  { value: "OTHER", label: "Other" },
+];
+
+const PILL_PALETTE = [
+  {
+    solid: "#f97316",
+    soft: "rgba(249,115,22,0.12)",
+    border: "rgba(249,115,22,0.35)",
+  },
+  {
+    solid: "#a855f7",
+    soft: "rgba(168,85,247,0.12)",
+    border: "rgba(168,85,247,0.35)",
+  },
+  {
+    solid: "#315eff",
+    soft: "rgba(49,94,255,0.12)",
+    border: "rgba(49,94,255,0.35)",
+  },
+  {
+    solid: "#10b981",
+    soft: "rgba(16,185,129,0.12)",
+    border: "rgba(16,185,129,0.35)",
+  },
+];
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type AdvanceScreenProps = {
   amount: number;
@@ -40,14 +103,19 @@ type AdvanceScreenProps = {
   kycSubmitted: boolean;
   bankComplete: boolean;
   bankSubmitted: boolean;
-  membershipConfig?: MembershipConfig;
-  membershipActive?: boolean;
-  membershipRequiredAfterEmployerApproval?: boolean;
+  platformFeeConfig?: PlatformFeeConfig | null;
+  platformFeeRequiredAfterEmployerApproval?: boolean;
+  payingPlatformFee?: boolean;
+  onPayPlatformFee?: (loanApplicationId: string) => Promise<void>;
   interestFreeThreshold?: number;
   bankAccount?: BankAccount | null;
   kycDocumentCount?: number;
+  kycDocuments?: KycDocument[];
   onAmountChange: (amount: number) => void;
-  onSubmit: () => void;
+  onSubmit: (
+    purposeCategory?: string,
+    purposeNote?: string
+  ) => Promise<string | null>;
   onCancelRequest?: (id: string) => Promise<void>;
   cancellingRequest?: boolean;
   blockerActionLabel: string;
@@ -59,27 +127,18 @@ type AdvanceScreenProps = {
 type AdvanceStep = "ready" | "calculator" | "review" | "submitted";
 type VerificationStage = "submitted" | "review" | "approved";
 
-function nextPaydayDate(payrollDay?: number | null) {
-  if (!payrollDay) return null;
-  const today = new Date();
-  const offset = today.getDate() > payrollDay ? 1 : 0;
-  return new Date(today.getFullYear(), today.getMonth() + offset, payrollDay);
-}
-function formatPayday(d: Date | null) {
-  if (!d) return "—";
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-}
-
-function formatBackendMoney(value?: number | null) {
-  return value && value > 0 ? formatMoney(value) : "—";
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function compactBankLabel(bankAccount?: BankAccount | null) {
   if (!bankAccount?.accountNumber) return "Bank details submitted";
-  return `${bankAccount.bankName || "Bank"} ···· ${bankAccount.accountNumber.slice(-4)}`;
+  return `${
+    bankAccount.bankName || "Bank"
+  } ···· ${bankAccount.accountNumber.slice(-4)}`;
 }
 
-function advancePalette(theme: Theme) {
+// ── Theme palette ─────────────────────────────────────────────────────────────
+
+function advancePalette(theme: "light" | "dark") {
   if (theme === "light") {
     return {
       bg: "#FFFFFF",
@@ -91,24 +150,15 @@ function advancePalette(theme: Theme) {
       panel: "#FFFFFF",
       panelSoft: "#F7F5FC",
       panelMuted: "#EEEBF6",
-      receiptBg: "#F1EDFC",
-      receiptInk: "#1E1636",
-      receiptMuted: "#6E6786",
-      receiptSubtle: "#8B849F",
-      receiptDash: "#DCD5F2",
-      receiptNotch: "#FFFFFF",
-      ctaBg: "#315eff",
-      ctaText: "#FFFFFF",
-      ctaIconBg: "#FFFFFF",
-      ctaIconText: "#315eff",
-      glow: "rgba(49,94,255,0.06)",
-      disabledBg: "#EEEBF6",
-      disabledText: "#B6B3C2",
+      receiptBg: "#EEF2FF",
+      receiptInk: "#0F1740",
+      receiptMuted: "#5A6BAA",
+      receiptSubtle: "#8294C4",
+      receiptDash: "#C4D0F5",
       warm: "#B4591F",
       green: "#1F9E67",
     };
   }
-
   return {
     bg: "#0C0C0E",
     text: "#F2F0EA",
@@ -124,134 +174,156 @@ function advancePalette(theme: Theme) {
     receiptMuted: "#8A8676",
     receiptSubtle: "#4A473C",
     receiptDash: "#D8D3C2",
-    receiptNotch: "#0C0C0E",
-    ctaBg: "#F2F0EA",
-    ctaText: "#0C0C0E",
-    ctaIconBg: "#17150F",
-    ctaIconText: "#F2F0EA",
-    glow: "rgba(242,240,234,0.025)",
-    disabledBg: "#1A1A1E",
-    disabledText: "#3A3A40",
     warm: "#B4591F",
     green: "#20A46A",
   };
 }
 
+// ── VerificationLifecycleScreen ───────────────────────────────────────────────
+
 function VerificationLifecycleScreen({
   stage,
   bankAccount,
   kycDocumentCount,
+  kycDocuments,
   onStartAdvance,
+  onNavigate,
 }: {
   stage: VerificationStage;
   bankAccount?: BankAccount | null;
   kycDocumentCount?: number;
+  kycDocuments?: KycDocument[];
   onStartAdvance?: () => void;
+  onNavigate?: (view: View) => void;
 }) {
-  const copy: Record<VerificationStage, {
-    title: string;
-    body: string;
-    badge: string;
-    tone: "neutral" | "warm" | "success";
-  }> = {
+  const rejectedDocs = (kycDocuments ?? []).filter(
+    (d) => d.status === "Rejected"
+  );
+  const hasRejection = rejectedDocs.length > 0;
+
+  const copy = {
     submitted: {
-      title: "Submitted",
-      body: "We’ve received your documents. They’ll enter review shortly.",
-      badge: "Review starts within a few hours",
+      title: "Documents received",
+      body: "Our team will verify your KYC and bank details. This usually takes 1–2 working days.",
+      badge: "Estimated 1–2 working days",
       tone: "neutral",
     },
     review: {
       title: "Under review",
-      body: "Our team is reviewing your KYC and bank details. This usually takes 1–2 business days.",
-      badge: "Usually 1–2 business days",
+      body: "Verification is in progress. You'll be notified once your account is activated.",
+      badge: "Verification in progress",
       tone: "warm",
     },
     approved: {
-      title: "You’re approved",
-      body: "Your account is active. Request a salary advance whenever you need one.",
-      badge: "Ready for advances",
+      title: "Account active",
+      body: "Your KYC and bank account are verified. You can now request salary advances.",
+      badge: null,
       tone: "success",
     },
-  };
+  } as const;
 
   const current = copy[stage];
-  const submittedDone = stage !== "submitted";
-
-  const timeline = [
-    {
-      label: "Documents submitted",
-      detail: "KYC & bank details received",
-      status: submittedDone ? "Done" : "Done",
-      state: submittedDone ? "done" : "current",
-    },
-    {
-      label: "Under review",
-      detail: stage === "approved" ? "Verification complete" : "Waiting in queue",
-      status: stage === "submitted" ? "Pending" : stage === "review" ? "In progress" : "Done",
-      state: stage === "submitted" ? "pending" : stage === "review" ? "current" : "done",
-    },
-    {
-      label: "Account activated",
-      detail: stage === "approved" ? "You can now request advances" : "Pending verification",
-      status: stage === "approved" ? "Active" : "—",
-      state: stage === "approved" ? "done" : "pending",
-    },
-  ] as const;
 
   return (
     <div className="adv-verify-screen">
       <section className={`adv-verify-hero is-${current.tone}`}>
         <div className="adv-verify-orb">
           {current.tone === "warm" ? (
-            <Clock size={33} strokeWidth={1.9} />
+            <Clock size={26} strokeWidth={1.9} />
           ) : (
-            <CheckCircle size={34} strokeWidth={1.85} />
+            <CheckCircle size={26} strokeWidth={1.85} />
           )}
         </div>
         <h1>{current.title}</h1>
         <p>{current.body}</p>
-        {stage !== "approved" && (
+        {current.badge && (
           <div className="adv-verify-pill">
-            <Clock size={13} strokeWidth={1.9} />
+            <Clock size={12} strokeWidth={1.9} />
             {current.badge}
           </div>
         )}
       </section>
 
-      <section className="adv-verify-timeline">
-        {timeline.map((item, index) => (
-          <div className={`adv-verify-step is-${item.state}`} key={item.label}>
-            <div className="adv-verify-step-rail">
-              <span>
-                {item.state === "pending" ? "·" : <CheckCircle size={14} strokeWidth={2} />}
-              </span>
-              {index < timeline.length - 1 && <i />}
-            </div>
-            <div className="adv-verify-step-copy">
-              <span>{item.label}</span>
-              <small>{item.detail}</small>
-            </div>
-            <em>{item.status}</em>
+      {hasRejection && (
+        <div className="adv-verify-reject">
+          <div className="adv-verify-reject-head">
+            <AlertTriangle size={13} strokeWidth={2} />
+            Action required
           </div>
-        ))}
-      </section>
+          {rejectedDocs.map((d) => (
+            <div key={d.id} className="adv-verify-reject-item">
+              <span className="adv-verify-reject-label">{d.label}</span>
+              {d.originalFileName && (
+                <span className="adv-verify-reject-file">
+                  {d.originalFileName}
+                </span>
+              )}
+              <span className="adv-verify-reject-reason">
+                {d.note ||
+                  "Document was rejected. Please re-upload a clear, valid copy."}
+              </span>
+            </div>
+          ))}
+          {onNavigate && (
+            <button
+              type="button"
+              className="adv-verify-reject-btn"
+              onClick={() => onNavigate("onboarding-kyc")}
+            >
+              <RotateCcw size={12} strokeWidth={2.2} />
+              Re-upload documents
+            </button>
+          )}
+        </div>
+      )}
 
       <section className="adv-verify-summary">
-        <div>
-          <span><IdCard size={13} strokeWidth={1.9} /> KYC</span>
-          <span>{kycDocumentCount ? `${kycDocumentCount} documents` : "Documents submitted"}</span>
-        </div>
-        <div>
-          <span><Landmark size={13} strokeWidth={1.9} /> Bank</span>
-          <span>{compactBankLabel(bankAccount)}</span>
-        </div>
+        <button
+          type="button"
+          className="adv-verify-summary-card"
+          onClick={() => onNavigate?.("onboarding-kyc")}
+        >
+          <span>
+            <IdCard size={13} strokeWidth={1.9} /> KYC
+          </span>
+          <strong>
+            {kycDocumentCount
+              ? `${kycDocumentCount} document${
+                  kycDocumentCount !== 1 ? "s" : ""
+                } submitted`
+              : "Submitted"}
+          </strong>
+        </button>
+        <button
+          type="button"
+          className="adv-verify-summary-card adv-verify-summary-card--bank"
+          onClick={() => onNavigate?.("profile-bank")}
+        >
+          <span>
+            <Landmark size={13} strokeWidth={1.9} /> Bank
+          </span>
+          <strong>{compactBankLabel(bankAccount)}</strong>
+          {bankAccount && (
+            <span
+              className={`adv-verify-bank-status ${
+                bankAccount.verified ? "is-verified" : "is-pending"
+              }`}
+            >
+              <i />
+              {bankAccount.verified ? "Verified" : "In review"}
+            </span>
+          )}
+        </button>
       </section>
 
       {stage === "approved" && (
         <div className="adv-verify-footer">
-          <button type="button" className="adv-verify-cta" onClick={onStartAdvance}>
-            <span>Request your first advance</span>
-            <span><ArrowRight size={23} strokeWidth={2.2} /></span>
+          <button
+            type="button"
+            className="kycv2-cta-btn"
+            onClick={onStartAdvance}
+          >
+            Request salary advance <ArrowRight size={14} strokeWidth={2.2} />
           </button>
         </div>
       )}
@@ -259,13 +331,12 @@ function VerificationLifecycleScreen({
   );
 }
 
-/* ── Page heading shared across all advance states ── */
+// ── AdvanceScreen ─────────────────────────────────────────────────────────────
 
 export function AdvanceScreen({
   amount,
   eligible,
   limit,
-  nextBlocker,
   preview,
   previewLoading,
   currentRequest,
@@ -276,187 +347,369 @@ export function AdvanceScreen({
   kycSubmitted,
   bankComplete,
   bankSubmitted,
-  membershipConfig,
-  membershipActive,
-  membershipRequiredAfterEmployerApproval,
+  platformFeeConfig,
+  platformFeeRequiredAfterEmployerApproval,
+  payingPlatformFee,
+  onPayPlatformFee,
   interestFreeThreshold,
   bankAccount,
   kycDocumentCount,
+  kycDocuments,
   onAmountChange,
   onSubmit,
   onCancelRequest,
   cancellingRequest,
-  blockerActionLabel,
-  onResolveBlocker,
   onNavigate,
   theme = "dark",
 }: AdvanceScreenProps) {
   const [step, setStep] = useState<AdvanceStep>("ready");
+  const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [agree1, setAgree1] = useState(false);
+  const [purposeCategory, setPurposeCategory] = useState<string | null>(null);
+  const [purposeNote, setPurposeNote] = useState("");
+  const [editingAmount, setEditingAmount] = useState(false);
+  const [rawInput, setRawInput] = useState("");
+  const amountInputRef = useRef<HTMLInputElement>(null);
   const colors = advancePalette(theme);
 
+  const startAmountEdit = () => {
+    setRawInput(String(amount));
+    setEditingAmount(true);
+    setTimeout(() => {
+      amountInputRef.current?.select();
+    }, 30);
+  };
+
+  const commitAmountEdit = () => {
+    const parsed = parseInt(rawInput.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      const snapped = Math.round(parsed / 500) * 500;
+      const clamped = Math.max(MIN_AMOUNT, Math.min(sliderMax, snapped));
+      onAmountChange(clamped);
+    }
+    setEditingAmount(false);
+  };
+
+  // ── Active request ────────────────────────────────────────────────────────
   const hasActive = Boolean(
     currentRequest &&
-      !["Paid", "Recovered", "Rejected", "Cancelled", "Expired"].includes(currentRequest.status)
+      !["Paid", "Recovered", "Rejected", "Cancelled", "Expired"].includes(
+        currentRequest.status
+      )
   );
-  const canSubmit =
-    eligible &&
-    !hasActive &&
-    amount >= MIN_AMOUNT &&
-    amount <= limit &&
-    !previewLoading;
 
-  const nextPayday = nextPaydayDate(payrollDay);
-  const salary = salaryInHand ?? 0;
-  const sliderMax = Math.max(limit, MIN_AMOUNT);
-  const quickAmounts = Array.from(
-    new Set(
-      [0.25, 0.5, 0.75, 1]
-        .map((ratio) => Math.round((limit * ratio) / 500) * 500)
-        .filter((value) => value >= MIN_AMOUNT && value <= limit)
-    )
-  );
-  const maskedBankAccount = bankAccount?.accountNumber
-    ? `${bankAccount.bankName || "Bank account"} •••• ${bankAccount.accountNumber.slice(-4)}`
-    : "Verified salary account";
-  const membershipPlanAmounts = (membershipConfig?.plans ?? [])
-    .map((plan) => Number(plan.amount))
-    .filter((value) => Number.isFinite(value) && value > 0);
-  const membershipStartingAmount = membershipPlanAmounts.length
-    ? Math.min(...membershipPlanAmounts)
-    : null;
-  const membershipGateFootnote = membershipStartingAmount
-    ? `Plans from ${formatMoney(membershipStartingAmount)}`
-    : "Choose a plan to continue";
-  const membershipGateBenefits = (membershipConfig?.membershipBenefits ?? [])
-    .filter(Boolean)
-    .slice(0, 2);
-
-  // Show net salary only for the month the recovery actually hits
-  const recoveryDate =
-    hasActive && currentRequest?.recoveryDate
-      ? new Date(currentRequest.recoveryDate)
-      : null;
-  const today = new Date();
-  const recoveryIsThisMonth =
-    recoveryDate &&
-    recoveryDate.getMonth() === today.getMonth() &&
-    recoveryDate.getFullYear() === today.getFullYear();
-  const activeRecovery =
-    hasActive &&
-    currentRequest?.disbursalStatus === "Disbursed" &&
-    recoveryIsThisMonth
-      ? currentRequest.totalRecoveryAmount || 0
-      : 0;
-  const salaryThisMonth = Math.max(0, salary - activeRecovery);
-  // Sub-label for the hero card
-  const recoveryMonthName = recoveryDate
-    ? recoveryDate.toLocaleDateString("en-IN", { month: "long" })
-    : null;
-  const salarySubLabel =
-    hasActive && currentRequest?.disbursalStatus === "Disbursed" && recoveryDate
-      ? recoveryIsThisMonth
-        ? `After −${formatMoney(
-            currentRequest.totalRecoveryAmount || 0
-          )} deduction`
-        : `Full pay · deduction in ${recoveryMonthName}`
-      : "Updated just now";
+  // ── Setup step statuses ───────────────────────────────────────────────────
   const setupSteps = [
-    { label: "KYC Verification", done: kycComplete, submitted: kycSubmitted, view: "onboarding-kyc" as View },
-    { label: "Bank Account", done: bankComplete, submitted: bankSubmitted, view: "onboarding-bank" as View },
-  ].map((step) => {
-    if (step.done) return { ...step, status: "Completed", tone: "done" };
-    if (step.submitted) return { ...step, status: "Completed · Pending review", tone: "review" };
-    return { ...step, status: "Action required", tone: "todo" };
-  });
-  const hasMissingSetupAction = setupSteps.some((setupStep) => setupStep.tone === "todo");
-  const isWaitingForSetupReview = !eligible && !hasMissingSetupAction;
+    {
+      label: "Verify your identity",
+      sublabel: "PAN & Aadhaar · about 2 min",
+      done: kycComplete,
+      submitted: kycSubmitted,
+      view: "onboarding-kyc" as View,
+      isKyc: true,
+    },
+    {
+      label: "Link bank account",
+      sublabel: "Where your advance is credited",
+      done: bankComplete,
+      submitted: bankSubmitted,
+      view: "onboarding-bank" as View,
+      isKyc: false,
+    },
+  ].map(
+    (s) =>
+      ({
+        ...s,
+        state: s.done ? "done" : s.submitted ? "review" : "todo",
+      } as typeof s & { state: "done" | "review" | "todo" })
+  );
 
-  // ── Active advance overview ───────────────────────────────
+  const hasMissingSetupAction = setupSteps.some((s) => s.state === "todo");
+  const genuinelyUnderAdminReview =
+    (!kycComplete && kycSubmitted) || (!bankComplete && bankSubmitted);
+  const isWaitingForSetupReview =
+    !eligible && !hasMissingSetupAction && genuinelyUnderAdminReview;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  ACTIVE ADVANCE STATES
+  // ═══════════════════════════════════════════════════════════════════════════
+
   if (hasActive && currentRequest) {
     const isPaid = currentRequest.recoveryStatus === "Completed";
     const statusLabel = isPaid
       ? "Repaid"
       : formatRequestStatus(currentRequest.status, currentRequest.statusLabel);
     const principal = currentRequest.principalAmount;
-    const totalRepayment = currentRequest.totalRecoveryAmount;
+    const totalRepay = currentRequest.totalRecoveryAmount;
     const interest = currentRequest.interestAmount;
     const interestDays = currentRequest.interestDays;
     const interestRate = currentRequest.interestRate;
-    const rateLabel = interestRate ? `${interestRate}% p.a.` : "Flat interest";
     const scheduleDate = formatShortDate(
       currentRequest.recoveryDate ||
         currentRequest.disbursalDate ||
         currentRequest.requestDate
     );
 
-    // ── "One Step Away" — AWAITING_MEMBERSHIP_PAYMENT ──
-    const shouldShowMembershipGate =
-      !membershipActive &&
-      (currentRequest.status === "Awaiting Membership" ||
-        (currentRequest.status === "Employer Approved" && membershipRequiredAfterEmployerApproval));
+    // ── Platform-fee gate ────────────────────────────────────────────────────
+    const rawStatus = currentRequest.rawStatus ?? "";
+    const platformFeeStatus = currentRequest.platformFee?.status;
+    const feeCleared =
+      platformFeeStatus === "PAID" || platformFeeStatus === "WAIVED";
+    const shouldShowPlatformFeeGate =
+      !feeCleared &&
+      (rawStatus === "AWAITING_PLATFORM_FEE_PAYMENT" ||
+        rawStatus === "AWAITING_MEMBERSHIP_PAYMENT" ||
+        currentRequest.status === "Awaiting Platform Fee" ||
+        currentRequest.status === "Awaiting Membership" ||
+        currentRequest.nextAction === "PAY_PLATFORM_FEE" ||
+        (currentRequest.status === "Employer Approved" &&
+          platformFeeRequiredAfterEmployerApproval));
 
-    if (shouldShowMembershipGate) {
+    if (shouldShowPlatformFeeGate) {
+      const feeAmount = Number(
+        currentRequest.platformFee?.amount ?? platformFeeConfig?.amount ?? 0
+      );
+      const approvedAmount =
+        currentRequest.approvedAmount ||
+        currentRequest.principalAmount ||
+        currentRequest.requestedAmount;
+      const canPay =
+        feeAmount > 0 && Boolean(onPayPlatformFee) && !payingPlatformFee;
+      const accent = "#315eff";
+      const accentSoft =
+        theme === "light" ? "rgba(49,94,255,0.06)" : "rgba(49,94,255,0.1)";
+      const accentBorder =
+        theme === "light" ? "rgba(49,94,255,0.14)" : "rgba(49,94,255,0.22)";
+
+      const benefits = [
+        "Zero processing fees",
+        "Auto-recovery on payday",
+      ];
+
       return (
-        <div className="adv-screen adv-osa-screen">
-          <div className="adv-active-body">
-            <div className="adv-osa-status">
-              <span />
-              Employer approved
+        <div
+          style={{
+            background: colors.bg,
+            minHeight: "100%",
+            display: "flex",
+            flexDirection: "column",
+            padding: "16px 20px max(22px, env(safe-area-inset-bottom))",
+            color: colors.text,
+          }}
+        >
+          {/* Status chip */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "5px 14px",
+                borderRadius: 99,
+                background: accentSoft,
+                border: `1px solid ${accentBorder}`,
+                color: accent,
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.02em",
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: accent,
+                  display: "inline-block",
+                }}
+              />
+              Employer Approved
+            </span>
+          </div>
+
+          {/* Icon + heading */}
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                margin: "0 auto 16px",
+                borderRadius: "50%",
+                display: "grid",
+                placeItems: "center",
+                color: accent,
+                background: accentSoft,
+                border: `1px solid ${accentBorder}`,
+              }}
+            >
+              <Crown size={28} strokeWidth={1.8} />
             </div>
-            <div className="adv-osa-hero">
-              <div className="adv-osa-crown-ring">
-                <Crown size={28} />
-              </div>
-              <div className="adv-osa-headline">One Step Away</div>
-              <div className="adv-osa-sub">
-                Your employer approved your advance. Activate a membership and the
-                funds are on their way.
-              </div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 20,
+                lineHeight: 1.18,
+                fontWeight: 500,
+                color: colors.text,
+                letterSpacing: "-0.03em",
+              }}
+            >
+              One step away
+            </h1>
+            <p
+              style={{
+                margin: "10px auto 0",
+                maxWidth: 290,
+                color: colors.muted,
+                fontSize: 14,
+                lineHeight: 1.5,
+                fontWeight: 400,
+              }}
+            >
+              Your employer approved your advance. Pay the platform fee and the
+              funds move to MobPae review.
+            </p>
+          </div>
+
+          {/* Amount / fee card — blue tint */}
+          <section
+            style={{
+              border: `1px solid ${accentBorder}`,
+              borderRadius: 16,
+              background: accentSoft,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 18,
+                padding: "13px 18px",
+                borderBottom: `1px solid ${accentBorder}`,
+                color: colors.muted,
+                fontSize: 14,
+              }}
+            >
+              <span>Amount approved</span>
+              <strong style={{ color: colors.text, fontSize: 14, fontWeight: 500 }}>
+                {formatMoney(approvedAmount)}
+              </strong>
             </div>
-            <div className="adv-osa-card">
-              <div className="adv-osa-card-row">
-                <span className="adv-osa-card-lbl">Amount approved</span>
-                <span className="adv-osa-card-val">{formatBackendMoney(principal)}</span>
-              </div>
-              <div className="adv-osa-card-row">
-                <span className="adv-osa-card-lbl">Next step</span>
-                <span className="adv-osa-card-val">{currentRequest.nextActionLabel || "Choose your plan"}</span>
-              </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 18,
+                padding: "13px 18px",
+                color: colors.muted,
+                fontSize: 14,
+              }}
+            >
+              <span>Platform fee</span>
+              <strong style={{ color: colors.text, fontSize: 14, fontWeight: 500 }}>
+                {feeAmount > 0 ? formatMoney(feeAmount) : "Not configured"}
+              </strong>
             </div>
-            {membershipGateBenefits.length > 0 && (
-              <section className="adv-osa-benefits" aria-label="Membership benefits">
-                <h2>What you get</h2>
-                {membershipGateBenefits.map((benefit) => (
-                  <div key={benefit} className="adv-osa-benefit-row">
-                    <CheckCircle size={14} />
-                    <span>{benefit}</span>
-                  </div>
-                ))}
-              </section>
-            )}
-            <div className="adv-osa-action">
-              <button type="button" className="mp-btn-primary adv-osa-cta" onClick={() => onNavigate?.("profile-membership")}>
-                <span>Choose your plan</span>
-                <ArrowRight size={16} />
-              </button>
-              <div className="adv-secure-note">
-                <ShieldCheck size={12} /> {membershipGateFootnote}
-              </div>
+          </section>
+
+          {/* Benefit pills */}
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              marginTop: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            {benefits.map((benefit) => (
+              <span
+                key={benefit}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 12px",
+                  borderRadius: 99,
+                  background: accentSoft,
+                  border: `1px solid ${accentBorder}`,
+                  color: accent,
+                  fontSize: 12,
+                  fontWeight: 400,
+                }}
+              >
+                <CheckCircle size={12} strokeWidth={2.2} />
+                {benefit}
+              </span>
+            ))}
+          </div>
+
+          <div style={{ flex: 1, minHeight: 20 }} />
+
+          {/* CTA */}
+          <div style={{ display: "grid", gap: 8 }}>
+            <button
+              type="button"
+              disabled={!canPay}
+              onClick={() => void onPayPlatformFee?.(currentRequest.id)}
+              style={{
+                width: "100%",
+                height: 48,
+                borderRadius: 12,
+                border: 0,
+                background: canPay ? accent : colors.panelMuted,
+                color: canPay ? "#FFFFFF" : colors.dim,
+                fontSize: 15,
+                fontWeight: 500,
+                fontFamily: "inherit",
+                cursor: canPay ? "pointer" : "not-allowed",
+                letterSpacing: "-0.01em",
+                boxShadow:
+                  canPay && theme === "light"
+                    ? "0 6px 20px rgba(49,94,255,0.28)"
+                    : "none",
+              }}
+            >
+              {payingPlatformFee
+                ? "Opening payment..."
+                : feeAmount > 0
+                ? `Pay ${formatMoney(feeAmount)} platform fee`
+                : "Platform fee unavailable"}
+            </button>
+            <div
+              style={{
+                color: colors.dim,
+                fontSize: 12,
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <ShieldCheck size={13} strokeWidth={1.8} />
+              Secured by Razorpay · one-time fee
             </div>
           </div>
         </div>
       );
     }
 
-    // ── Terminal: CANCELLED / EXPIRED — let user start fresh ──
-    if (currentRequest.status === "Cancelled" || currentRequest.status === "Expired") {
+    // ── Cancelled / Expired ──
+    if (
+      currentRequest.status === "Cancelled" ||
+      currentRequest.status === "Expired"
+    ) {
       const isCancelled = currentRequest.status === "Cancelled";
       return (
         <div className="adv-screen">
           <div className="screen-body adv-active-body adv-inprogress-body">
             <div className="adv-ip-icon-wrap">
-              <Clock size={32} color={isCancelled ? "#6B7280" : "#F59E0B"} strokeWidth={1.5} />
+              <Clock
+                size={32}
+                color={isCancelled ? "#6B7280" : "#F59E0B"}
+                strokeWidth={1.5}
+              />
             </div>
             <div className="adv-ip-headline">
               {isCancelled ? "Request Cancelled" : "Request Expired"}
@@ -478,7 +731,11 @@ export function AdvanceScreen({
             </div>
           </div>
           <div className="adv-sticky-btn">
-            <button type="button" className="mp-btn-primary" onClick={() => onNavigate?.("advance")}>
+            <button
+              type="button"
+              className="mp-btn-primary"
+              onClick={() => onNavigate?.("advance")}
+            >
               Request Again <ChevronRight size={16} />
             </button>
           </div>
@@ -486,60 +743,369 @@ export function AdvanceScreen({
       );
     }
 
-    // ── "Request in Progress" — early statuses (not yet disbursed) ──
-    const earlyStatuses: string[] = ["Submitted", "Employer Approved", "Admin Approved", "Under Review", "Approved"];
+    // ── In progress ──
+    const earlyStatuses = [
+      "Submitted",
+      "Employer Approved",
+      "Admin Approved",
+      "Under Review",
+      "Approved",
+    ];
     if (earlyStatuses.includes(currentRequest.status)) {
-      const statusHint: Record<string, string> = {
-        "Submitted":        "Sent to your employer for approval",
-        "Employer Approved":"Employer approved · awaiting admin review",
-        "Under Review":     "Under review by admin",
-        "Admin Approved":   "Approved · processing disbursal",
-        "Approved":         "Approved · processing disbursal",
-      };
-      const hint = statusHint[currentRequest.status] ?? "Being processed";
+      const blue = "#315eff";
+      const blueSoft = "rgba(49,94,255,0.07)";
+      const blueBorder = "rgba(49,94,255,0.16)";
+      const blueMuted = "rgba(49,94,255,0.45)";
+
+      // Which timeline step is currently active (0-based)
+      const activeStep =
+        currentRequest.status === "Submitted"
+          ? 1
+          : currentRequest.status === "Employer Approved"
+          ? 2
+          : currentRequest.status === "Under Review"
+          ? 2
+          : 3; // Admin Approved / Approved
+
+      const bankLabel = bankAccount?.accountNumber
+        ? `${
+            bankAccount.bankName || "Bank"
+          } •••• ${bankAccount.accountNumber.slice(-4)}`
+        : "Verified salary account";
+
+      const timelineSteps: { label: string; sub: string }[] = [
+        {
+          label: "Request submitted",
+          sub: formatReadableDate(currentRequest.requestDate),
+        },
+        {
+          label: "Employer review",
+          sub:
+            activeStep > 1
+              ? "Approved by employer"
+              : "Your Employer is reviewing your request",
+        },
+        {
+          label: "Admin approval",
+          sub:
+            activeStep > 2
+              ? "Approved · preparing disbursal"
+              : "Once approved, funds will be disbursed.",
+        },
+        {
+          label: "Funds credited",
+          sub: bankLabel,
+        },
+      ];
+
       return (
-        <div className="adv-screen">
-          <div className="screen-body adv-active-body adv-inprogress-body">
-            <div className="adv-ip-icon-wrap">
-              <Clock size={32} color="#5E7FFF" strokeWidth={1.5} />
+        <div
+          style={{
+            background: colors.bg,
+            minHeight: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Hero */}
+          <div style={{ padding: "32px 24px 20px", textAlign: "center" }}>
+            <div
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: "50%",
+                background: blueSoft,
+                border: `1.5px solid ${blueBorder}`,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 18,
+              }}
+            >
+              <Clock size={26} color={blue} strokeWidth={1.5} />
             </div>
-            <div className="adv-ip-headline">Request in Progress</div>
-            <div className="adv-ip-sub">Please wait while we process your advance.</div>
-
-            <div className="adv-ip-card">
-              <div className="adv-ip-row">
-                <span>Amount requested</span>
-                <span>{formatMoney(currentRequest.requestedAmount)}</span>
-              </div>
-              <div className="adv-ip-row adv-ip-row--status">
-                <span>Status</span>
-                <span className="chip chip-amber">{statusLabel}</span>
-              </div>
-              <div className="adv-ip-row">
-                <span>Submitted on</span>
-                <span>{formatReadableDate(currentRequest.requestDate)}</span>
-              </div>
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 300,
+                letterSpacing: "-0.04em",
+                color: colors.text,
+                lineHeight: 1,
+                marginBottom: 6,
+              }}
+            >
+              {formatMoney(currentRequest.requestedAmount)}
             </div>
-
-            <div className="adv-ip-hint">
-              <Clock size={13} color="#5E7FFF" />
-              <span>{hint}</span>
+            <div
+              style={{
+                fontSize: 14,
+                color: colors.muted,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Advance under review
             </div>
           </div>
 
-          <div className="adv-sticky-btn">
-            <button type="button" className="mp-btn-secondary" onClick={() => onNavigate?.("activity")}>
-              View in Activity <ChevronRight size={16} />
+          {/* Status pill */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 22,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "6px 14px",
+                borderRadius: 99,
+                background: blueSoft,
+                border: `1px solid ${blueBorder}`,
+                color: blue,
+                fontSize: 12,
+                fontWeight: 500,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: blue,
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
+              {statusLabel}
+            </span>
+          </div>
+
+          <div
+            style={{
+              flex: 1,
+              padding: "0 18px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            {/* Meta pills — submitted date + bank */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 11px",
+                  borderRadius: 99,
+                  border: `1px solid rgba(49,94,255,0.25)`,
+                  background: "rgba(49,94,255,0.1)",
+                  fontSize: 11,
+                  color: blue,
+                  fontWeight: 500,
+                }}
+              >
+                <CalendarDays size={10} strokeWidth={2} />
+                {formatShortDate(currentRequest.requestDate)}
+              </span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 11px",
+                  borderRadius: 99,
+                  border: `1px solid rgba(99,60,255,0.25)`,
+                  background: "rgba(99,60,255,0.08)",
+                  fontSize: 11,
+                  color: "#6330ff",
+                  fontWeight: 500,
+                }}
+              >
+                <Landmark size={10} strokeWidth={2} />
+                {bankLabel}
+              </span>
+            </div>
+
+            {/* Timeline card */}
+            <div
+              style={{
+                borderRadius: 18,
+                border: `1px solid ${blueBorder}`,
+                background: colors.panelSoft,
+                padding: "18px 18px 16px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: blueMuted,
+                  marginBottom: 18,
+                  fontWeight: 500,
+                }}
+              >
+                Progress
+              </div>
+              {timelineSteps.map((step, i) => {
+                const done = i < activeStep;
+                const active = i === activeStep;
+                return (
+                  <div key={step.label} style={{ display: "flex", gap: 14 }}>
+                    {/* Dot + connector line */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        flexShrink: 0,
+                        width: 20,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          flexShrink: 0,
+                          background: done ? blue : "transparent",
+                          border: done
+                            ? "none"
+                            : active
+                            ? `2px solid ${blue}`
+                            : `1.5px solid ${blueBorder}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: active
+                            ? `0 0 0 4px rgba(49,94,255,0.1)`
+                            : "none",
+                        }}
+                      >
+                        {done && (
+                          <CheckCircle
+                            size={14}
+                            color="#fff"
+                            strokeWidth={2.5}
+                          />
+                        )}
+                        {active && (
+                          <div
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: "50%",
+                              background: blue,
+                            }}
+                          />
+                        )}
+                      </div>
+                      {i < timelineSteps.length - 1 && (
+                        <div
+                          style={{
+                            width: 1.5,
+                            flex: 1,
+                            minHeight: 18,
+                            background: done ? blue : blueBorder,
+                            margin: "3px 0",
+                            opacity: done ? 1 : 0.4,
+                          }}
+                        />
+                      )}
+                    </div>
+                    {/* Text */}
+                    <div
+                      style={{
+                        paddingBottom: i < timelineSteps.length - 1 ? 16 : 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: done || active ? 450 : 400,
+                          color: done || active ? colors.text : colors.dim,
+                          lineHeight: 1.2,
+                          marginBottom: 3,
+                        }}
+                      >
+                        {step.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: active ? blue : blueMuted,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {step.sub}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer actions */}
+          <div
+            style={{
+              padding: "0 18px",
+              paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => onNavigate?.("activity")}
+              style={{
+                height: 38,
+                padding: "0 20px",
+                borderRadius: 99,
+                background: blue,
+                color: "#fff",
+                border: 0,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+                letterSpacing: "-0.01em",
+                boxShadow: "0 3px 12px rgba(49,94,255,0.3)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontFamily: "inherit",
+                flexShrink: 0,
+              }}
+            >
+              Track in Activity <ArrowRight size={13} strokeWidth={2} />
             </button>
             {currentRequest.allowedActions?.cancel && onCancelRequest && (
               <button
                 type="button"
-                className="mp-btn-ghost"
-                style={{ marginTop: 8, color: "#EF4444", fontSize: 13 }}
                 disabled={cancellingRequest}
                 onClick={() => void onCancelRequest(currentRequest.id)}
+                style={{
+                  height: 38,
+                  padding: "0 18px",
+                  borderRadius: 99,
+                  background: "transparent",
+                  color: blueMuted,
+                  border: `1px solid ${blueBorder}`,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  opacity: cancellingRequest ? 0.5 : 1,
+                  flexShrink: 0,
+                }}
               >
-                {cancellingRequest ? "Cancelling…" : "Cancel Request"}
+                {cancellingRequest ? "Cancelling…" : "Withdraw"}
               </button>
             )}
           </div>
@@ -547,19 +1113,29 @@ export function AdvanceScreen({
       );
     }
 
-    // ── Post-disbursal breakdown (Disbursed / Payment Scheduled / etc.) ──
+    // ── Post-disbursal breakdown ──
     return (
       <div className="adv-screen">
         <div className="screen-body adv-active-body">
           <div className="adv-inline-hero">
             <div className="adv-inline-top">
               <div className="adv-inline-eyebrow">
-                {currentRequest.disbursalStatus === "Disbursed" ? "Credited" : "Advance"}
+                {currentRequest.disbursalStatus === "Disbursed"
+                  ? "Credited"
+                  : "Advance"}
               </div>
-              <span className={isPaid ? "chip chip-green" : "chip chip-amber"}>{statusLabel}</span>
+              <span className={isPaid ? "chip chip-green" : "chip chip-amber"}>
+                {statusLabel}
+              </span>
             </div>
-            <div className="adv-inline-amount">{formatBackendMoney(principal)}</div>
-            <button type="button" className="adv-inline-link" onClick={() => onNavigate?.("repayments")}>
+            <div className="adv-inline-amount">
+              {principal ? formatMoney(principal) : "—"}
+            </div>
+            <button
+              type="button"
+              className="adv-inline-link"
+              onClick={() => onNavigate?.("repayments")}
+            >
               View repayment schedule <ChevronRight size={13} />
             </button>
             <div className="adv-inline-divider" />
@@ -574,14 +1150,17 @@ export function AdvanceScreen({
               </div>
               <div className="adv-inline-stat">
                 <span>Total payable</span>
-                <span className="amber">{formatBackendMoney(totalRepayment)}</span>
+                <span className="amber">
+                  {totalRepay ? formatMoney(totalRepay) : "—"}
+                </span>
               </div>
             </div>
           </div>
-
           <div className="adv-calc-head">
             <h2>How we calculate</h2>
-            <span>{rateLabel}</span>
+            <span>
+              {interestRate ? `${interestRate}% p.a.` : "Flat interest"}
+            </span>
           </div>
           <div className="adv-calc-list">
             <div className="adv-calc-row">
@@ -590,23 +1169,31 @@ export function AdvanceScreen({
                 <span>Advance amount</span>
                 <small>Principal you receive</small>
               </div>
-              <span>{formatBackendMoney(principal)}</span>
+              <span>{principal ? formatMoney(principal) : "—"}</span>
             </div>
             <div className="adv-calc-row">
               <span className="adv-calc-icon adv-calc-icon--warm">+</span>
               <div>
                 <span>Interest</span>
-                <small>{formatBackendMoney(principal)} × {interestRate ? `${interestRate}% p.a.` : "rate"} × {interestDays || "—"} days</small>
+                <small>
+                  {principal ? formatMoney(principal) : "—"} ×{" "}
+                  {interestRate ? `${interestRate}% p.a.` : "rate"} ×{" "}
+                  {interestDays ?? "—"} days
+                </small>
               </div>
-              <span className="orange">{formatBackendMoney(interest)}</span>
+              <span className="orange">
+                {interest ? formatMoney(interest) : "—"}
+              </span>
             </div>
             <div className="adv-calc-total">
-              <span className="adv-calc-check">✓</span>
+              <span className="adv-calc-check">
+                <CheckCircle size={18} strokeWidth={2} />
+              </span>
               <div>
                 <span>Total repayable</span>
                 <small>Auto-deducted on payday</small>
               </div>
-              <span>{formatBackendMoney(totalRepayment)}</span>
+              <span>{totalRepay ? formatMoney(totalRepay) : "—"}</span>
             </div>
           </div>
         </div>
@@ -614,14 +1201,373 @@ export function AdvanceScreen({
     );
   }
 
-  // canConfirm lives here so the review sheet can read it
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  1. SETUP STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  if (!eligible && hasMissingSetupAction) {
+    const completedCount = setupSteps.filter((s) => s.state !== "todo").length;
+
+    return (
+      <div
+        style={{
+          background: colors.bg,
+          minHeight: "100%",
+          color: colors.text,
+          padding: "20px 22px 32px",
+        }}
+      >
+        <div style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              marginBottom: 8,
+            }}
+          >
+            Complete your setup
+          </div>
+          <div style={{ fontSize: 14, color: colors.muted, lineHeight: 1.5 }}>
+            Advances unlock as soon as we verify your identity and bank details.
+            One-time setup.
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 22,
+          }}
+        >
+          {setupSteps.map((s) => (
+            <div
+              key={s.label}
+              style={{
+                flex: 1,
+                height: 5,
+                borderRadius: 99,
+                background:
+                  s.state !== "todo" ? "#315eff" : "rgba(49,94,255,0.15)",
+                transition: "background 0.25s ease",
+              }}
+            />
+          ))}
+          <span
+            style={{
+              color: colors.muted,
+              fontSize: 12,
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {completedCount} / {setupSteps.length}
+          </span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {setupSteps.map((s) => {
+            const isDone = s.state === "done";
+            const isReview = s.state === "review";
+            const isTodo = s.state === "todo";
+            const Icon = s.isKyc ? IdCard : Landmark;
+            return (
+              <div
+                key={s.label}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "44px 1fr auto",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "18px 16px",
+                  borderRadius: 18,
+                  border: `1px solid ${
+                    isTodo ? "rgba(49,94,255,0.25)" : colors.border
+                  }`,
+                  background: isTodo ? "rgba(49,94,255,0.04)" : colors.panel,
+                }}
+              >
+                <span
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    display: "grid",
+                    placeItems: "center",
+                    background: isDone
+                      ? "rgba(49,94,255,0.12)"
+                      : isReview
+                      ? "rgba(217,119,6,0.12)"
+                      : "rgba(49,94,255,0.10)",
+                    color: isDone
+                      ? "#315eff"
+                      : isReview
+                      ? "#D97706"
+                      : "#315eff",
+                  }}
+                >
+                  {isDone ? (
+                    <CheckCircle size={18} strokeWidth={1.9} />
+                  ) : (
+                    <Icon size={18} strokeWidth={1.9} />
+                  )}
+                </span>
+                <span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: 15,
+                      fontWeight: 450,
+                      color: isDone ? colors.dim : colors.text,
+                    }}
+                  >
+                    {s.label}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: 4,
+                      fontSize: 12,
+                      color: colors.dim,
+                    }}
+                  >
+                    {isReview
+                      ? "Submitted · pending review"
+                      : isDone
+                      ? "Verified"
+                      : s.sublabel}
+                  </span>
+                </span>
+                {isTodo && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate?.(s.view)}
+                    style={{
+                      height: 36,
+                      padding: "0 16px",
+                      borderRadius: 12,
+                      border: 0,
+                      background: "#315eff",
+                      color: "#FFFFFF",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {s.isKyc ? "Start" : "Add"}
+                  </button>
+                )}
+                {isReview && (
+                  <span
+                    style={{
+                      color: "#D97706",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    In review
+                  </span>
+                )}
+                {isDone && (
+                  <CheckCircle size={18} strokeWidth={1.9} color="#315eff" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 7,
+            color: colors.faint,
+            fontSize: 12,
+            marginTop: 28,
+          }}
+        >
+          <ShieldCheck size={13} strokeWidth={1.9} />
+          Your details are encrypted and never shared
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  2. UNDER REVIEW
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  if (!eligible && isWaitingForSetupReview) {
+    const reviewStage: VerificationStage =
+      kycComplete || bankComplete ? "review" : "submitted";
+    return (
+      <VerificationLifecycleScreen
+        stage={reviewStage}
+        bankAccount={bankAccount}
+        kycDocumentCount={kycDocumentCount}
+        kycDocuments={kycDocuments}
+        onNavigate={onNavigate}
+      />
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  3. CALCULATOR — minimal fintech layout, no top card, no slider
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const sliderMax = Math.max(limit, MIN_AMOUNT);
+  const canSubmit =
+    !hasActive &&
+    amount >= MIN_AMOUNT &&
+    amount <= sliderMax &&
+    !previewLoading;
   const canConfirm = agree1 && !submitting;
 
-  // ── Onboarding task guide (new user, actions to take) ──
-  if (!eligible && hasMissingSetupAction) {
-    const completedSetup = setupSteps.filter((s) => s.done).length;
-    const lockedTicks = 40;
+  const quickAmounts = Array.from(
+    new Set(
+      [0.25, 0.5, 0.75, 1]
+        .map((r) => Math.round((limit * r) / 500) * 500)
+        .filter((v) => v >= MIN_AMOUNT && v <= limit)
+    )
+  ).slice(0, 4);
 
+  const maskedBank = bankAccount?.accountNumber
+    ? `${bankAccount.bankName || "Bank"} •••• ${bankAccount.accountNumber.slice(
+        -4
+      )}`
+    : "Verified salary account";
+
+  const isInterestFree = Boolean(
+    interestFreeThreshold &&
+      interestFreeThreshold > 0 &&
+      amount <= interestFreeThreshold
+  );
+
+  // ── SUBMITTED — full-page redesign ───────────────────────────────────────────
+  if (step === "submitted") {
+    const dateStr = submittedAt
+      ? new Date(submittedAt).toLocaleString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : null;
+
+    return (
+      <div className="adv-sub2-root">
+        {/* Blue hero */}
+        <div className="adv-sub2-hero">
+          <div className="adv-sub2-check-wrap">
+            <div className="adv-sub2-ripple" />
+            <div className="adv-sub2-ripple adv-sub2-ripple--2" />
+            <div className="adv-sub2-check-circle">
+              <CheckCircle size={30} strokeWidth={1.8} color="#fff" />
+            </div>
+          </div>
+          <div className="adv-sub2-amount">{formatMoney(amount)}</div>
+          <div className="adv-sub2-lbl">Request submitted</div>
+          {dateStr && <div className="adv-sub2-date">{dateStr}</div>}
+        </div>
+
+        {/* White card */}
+        <div className="adv-sub2-card">
+          {preview && (
+            <div className="adv-sub2-cols">
+              <div className="adv-sub2-col">
+                <span className="adv-sub2-col-lbl">You receive</span>
+                <span className="adv-sub2-col-val adv-sub2-col-val--blue">
+                  {formatMoney(preview.youReceive)}
+                </span>
+              </div>
+              <span className="adv-sub2-vdiv" />
+              <div className="adv-sub2-col">
+                <span className="adv-sub2-col-lbl">Interest</span>
+                <span className="adv-sub2-col-val">
+                  {formatMoney(preview.interest)}
+                </span>
+              </div>
+              <span className="adv-sub2-vdiv" />
+              <div className="adv-sub2-col">
+                <span className="adv-sub2-col-lbl">Repay on</span>
+                <span className="adv-sub2-col-val">
+                  {formatShortDate(preview.recoveryDate)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="adv-sub2-sep" />
+
+          <div className="adv-sub2-tl-hdr">What happens next</div>
+          {(
+            [
+              {
+                label: "Employer review",
+                sub: "They'll approve or ask questions",
+              },
+              {
+                label: "Admin approval",
+                sub: "MobPae team gives final green light",
+              },
+              {
+                label: "Funds credited",
+                sub: "Directly to your linked bank account",
+              },
+              {
+                label: "Auto-deducted",
+                sub: preview
+                  ? `On ${formatShortDate(
+                      preview.recoveryDate
+                    )} from your salary`
+                  : "On your next payday",
+              },
+            ] as { label: string; sub: string }[]
+          ).map((item, i, arr) => (
+            <div key={item.label} className="adv-sub2-tl-row">
+              <div className="adv-sub2-tl-aside">
+                <div className="adv-sub2-tl-dot" />
+                {i < arr.length - 1 && <div className="adv-sub2-tl-line" />}
+              </div>
+              <div className="adv-sub2-tl-body">
+                <div className="adv-sub2-tl-label">{item.label}</div>
+                <div className="adv-sub2-tl-sub">{item.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sticky CTA */}
+        <div className="adv-sub2-footer">
+          <button
+            type="button"
+            className="mp-btn-primary"
+            onClick={() => {
+              setStep("calculator");
+              onNavigate?.("activity");
+            }}
+          >
+            Track in Activity <ArrowRight size={16} />
+          </button>
+          <div className="adv-secure-note">
+            <ShieldCheck size={12} /> We'll notify you at every step
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Review — full page (no slide) ──────────────────────────────────────────
+  if (step === "review") {
     return (
       <div
         style={{
@@ -629,1363 +1575,582 @@ export function AdvanceScreen({
           minHeight: "100%",
           display: "flex",
           flexDirection: "column",
-          
+          padding: "16px 20px max(24px, env(safe-area-inset-bottom))",
           color: colors.text,
-          position: "relative",
         }}
       >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+          <button
+            type="button"
+            onClick={() => setStep("calculator")}
+            style={{
+              width: 36, height: 36, borderRadius: 10,
+              border: `1px solid ${colors.border}`,
+              background: colors.panelSoft, color: colors.text,
+              display: "grid", placeItems: "center", cursor: "pointer", flexShrink: 0,
+            }}
+          >
+            ←
+          </button>
+          <span style={{ fontSize: 16, fontWeight: 450, color: colors.text, letterSpacing: "-0.025em" }}>
+            Confirm your advance
+          </span>
+        </div>
+
+        {/* Amount summary card */}
         <div
           style={{
-            position: "absolute",
-            top: -80,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 360,
-            height: 250,
-            background:
-              `radial-gradient(ellipse at center top, ${colors.glow}, transparent 70%)`,
-            pointerEvents: "none",
+            borderRadius: 14,
+            border: `1px solid rgba(49,94,255,0.14)`,
+            background: "rgba(49,94,255,0.05)",
+            padding: "14px 16px",
+            marginBottom: 14,
           }}
-        />
-
-        <div style={{ position: "relative", zIndex: 1, flex: 1, padding: "4px 22px 26px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: "17px 18px",
-              borderRadius: 18,
-              border: "1px solid rgba(180, 89, 31, 0.55)",
-              background:
-                "linear-gradient(135deg, rgba(180,89,31,0.18), rgba(180,89,31,0.06))",
-              color: colors.text,
-              marginBottom: 30,
-            }}
-          >
-            <AlertTriangle size={20} color="#C66C2B" strokeWidth={1.9} />
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 450, lineHeight: 1.1 }}>
-                Verification required
-              </div>
-              <div
-                style={{
-                  marginTop: 5,
-                  fontSize: 13,
-                  fontWeight: 400,
-                  color: "#B68C72",
-                  letterSpacing: "0.03em",
-                }}
-              >
-                Finish setup to unlock instant advances.
-              </div>
-            </div>
+        >
+          <div style={{ fontSize: 28, fontWeight: 300, letterSpacing: "-0.04em", color: "#315eff", marginBottom: 6 }}>
+            {preview ? formatMoney(preview.youReceive) : formatMoney(amount)}
           </div>
-
-          <div style={{ textAlign: "center", opacity: 0.34, pointerEvents: "none" }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.32em",
-                color: colors.faint,
-                textTransform: "uppercase",
-                marginBottom: 20,
-              }}
-            >
-              Up to
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 54,
-                marginBottom: 22,
-              }}
-            >
-              <span
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  border: `1px solid ${colors.border}`,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 22,
-                  color: colors.faint,
-                }}
-              >
-                −
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {preview?.recoveryDate && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: colors.panelSoft, border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 12 }}>
+                <CalendarDays size={11} /> Repay {formatShortDate(preview.recoveryDate)}
               </span>
-              <span
-                style={{
-                  
-                  fontSize: 30,
-                  fontWeight: 400,
-                  letterSpacing: "-0.04em",
-                  color: colors.text,
-                  minWidth: 120,
-                }}
-              >
-                {formatMoney(limit || amount || MIN_AMOUNT)}
+            )}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: colors.panelSoft, border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 12 }}>
+              <Landmark size={11} /> {maskedBank}
+            </span>
+            {preview?.interest != null && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: colors.panelSoft, border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 12 }}>
+                +{formatMoney(preview.interest)} interest
               </span>
-              <span
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  border: `1px solid ${colors.border}`,
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: 22,
-                  color: colors.faint,
-                }}
-              >
-                +
-              </span>
-            </div>
-            <div style={{ height: 32, display: "flex", alignItems: "center", gap: 4 }}>
-              {Array.from({ length: lockedTicks }, (_, i) => (
-                <span
-                  key={i}
-                  style={{
-                    flex: "1 0 0",
-                    height: i % 4 === 0 ? 14 : 8,
-                    borderRadius: 1,
-                    background: colors.panelMuted,
-                  }}
-                />
-              ))}
-            </div>
+            )}
           </div>
+        </div>
 
-          <div style={{ display: "flex", justifyContent: "center", marginTop: -94, marginBottom: 112 }}>
-            <div
-              style={{
-                height: 37,
-                padding: "0 22px",
-                borderRadius: 999,
-                border: `1px solid ${colors.border}`,
-                background: colors.panel,
-                boxShadow: "0 12px 28px rgba(0,0,0,0.36)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                color: colors.text,
-                fontSize: 13,
-                fontWeight: 450,
-                letterSpacing: "0.03em",
-              }}
-            >
-              <LockKeyhole size={15} strokeWidth={1.9} />
-              Locked until verified
-            </div>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 22,
-              border: `1px solid ${colors.border}`,
-              background: colors.panel,
-              padding: "22px 20px",
-              marginBottom: 26,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingBottom: 18,
-                borderBottom: `1px solid ${colors.border}`,
-              }}
-            >
-              <span
-                style={{
-                  color: colors.muted,
-                  fontSize: 12,
-                  fontWeight: 500,
-                  letterSpacing: "0.28em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Complete your setup
-              </span>
-              <span
-                style={{
-                  
-                  color: colors.muted,
-                  fontSize: 13,
-                  fontWeight: 400,
-                }}
-              >
-                {completedSetup} / {setupSteps.length}
-              </span>
-            </div>
-
-            {setupSteps.map((s, index) => {
-              const isKyc = s.label.toLowerCase().includes("kyc");
-              const Icon = isKyc ? IdCard : Landmark;
-              const action =
-                s.tone === "done"
-                  ? "Done"
-                  : s.tone === "review"
-                    ? "Review"
-                    : isKyc
-                      ? "Start"
-                      : "Add";
-
+        {/* Purpose */}
+        <div style={{ marginBottom: 14 }}>
+          <span style={{ display: "block", fontSize: 11, color: colors.dim, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
+            Purpose · optional
+          </span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+            {PURPOSE_CHIPS.map(({ value, label }) => {
+              const sel = purposeCategory === value;
               return (
-                <button
-                  key={s.label}
-                  type="button"
-                  disabled={s.tone === "done" || s.tone === "review"}
-                  onClick={() => s.tone === "todo" && onNavigate?.(s.view)}
-                  style={{
-                    width: "100%",
-                    display: "grid",
-                    gridTemplateColumns: "48px 1fr auto",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: index === 0 ? "22px 0 20px" : "20px 0 0",
-                    borderTop: index === 0 ? "none" : `1px solid ${colors.border}`,
-                    color: s.tone === "todo" ? colors.text : colors.dim,
-                    background: "transparent",
-                    textAlign: "left",
-                    cursor: s.tone === "todo" ? "pointer" : "default",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: "50%",
-                      border: `1px solid ${colors.border}`,
-                      display: "grid",
-                      placeItems: "center",
-                      color: s.tone === "todo" ? colors.text : colors.faint,
-                    }}
-                  >
-                    {s.tone === "done" ? (
-                      <CheckCircle size={17} strokeWidth={1.8} />
-                    ) : (
-                      <Icon size={17} strokeWidth={1.8} />
-                    )}
-                  </span>
-                  <span style={{ minWidth: 0 }}>
-                    <span
-                      style={{
-                        display: "block",
-                        fontSize: 15,
-                        lineHeight: 1.1,
-                        fontWeight: 450,
-                        color: s.tone === "todo" ? colors.text : colors.dim,
-                      }}
-                    >
-                      {isKyc ? "Verify your identity" : "Link bank account"}
-                    </span>
-                    <span
-                      style={{
-                        display: "block",
-                        marginTop: 6,
-                        fontSize: 12,
-                        lineHeight: 1.25,
-                        fontWeight: 400,
-                        color: colors.dim,
-                      }}
-                    >
-                      {s.tone === "review"
-                        ? "Submitted · pending review"
-                        : s.tone === "done"
-                          ? "Verified and ready"
-                          : isKyc
-                            ? "PAN & Aadhaar · about 2 min"
-                            : "Where your advance is credited"}
-                    </span>
-                  </span>
-                  <span
-                    style={{
-                      minWidth: 68,
-                      height: 36,
-                      borderRadius: 14,
-                      border: s.tone === "todo" ? "none" : `1px solid ${colors.border}`,
-                      background: s.tone === "todo" ? colors.ctaBg : "transparent",
-                      color: s.tone === "todo" ? colors.ctaText : colors.faint,
-                      display: "grid",
-                      placeItems: "center",
-                      fontSize: 13,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {action}
-                  </span>
+                <button key={value} type="button" onClick={() => setPurposeCategory(sel ? null : value)}
+                  style={{ padding: "7px 0", borderRadius: 10, border: sel ? "1.5px solid #315eff" : `1.5px solid ${colors.border}`, background: sel ? "rgba(49,94,255,0.08)" : colors.panelSoft, color: sel ? "#315eff" : colors.muted, fontSize: 12, fontWeight: 450, cursor: "pointer", textAlign: "center", fontFamily: "inherit" }}>
+                  {label}
                 </button>
               );
             })}
           </div>
+          <input type="text" placeholder="Add a note (optional)" value={purposeNote}
+            onChange={(e) => setPurposeNote(e.target.value)} maxLength={200}
+            style={{ marginTop: 8, width: "100%", padding: "9px 12px", borderRadius: 10, border: `1px solid ${colors.border}`, background: colors.panelSoft, color: colors.text, fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+        </div>
 
-          <div
-            style={{
-              textAlign: "center",
-              color: colors.dim,
-              fontSize: 12,
-              fontWeight: 400,
-              marginBottom: 26,
-            }}
-          >
-            One-time setup · your details are encrypted
-          </div>
+        {/* Consent */}
+        <label style={{ display: "grid", gridTemplateColumns: "20px 1fr", gap: 12, color: colors.dim, fontSize: 13, lineHeight: 1.55, marginBottom: 18 }}>
+          <input type="checkbox" checked={agree1} onChange={(e) => setAgree1(e.target.checked)}
+            style={{ width: 18, height: 18, marginTop: 2, accentColor: "#315eff" }} />
+          <span>
+            I authorise a one-time salary auto-debit of{" "}
+            <span style={{ color: colors.text }}>{preview ? formatMoney(preview.total) : formatMoney(amount)}</span>{" "}
+            on my payday and accept the{" "}
+            <button type="button" onClick={() => onNavigate?.("legal")}
+              style={{ background: "none", border: "none", padding: 0, color: colors.text, textDecoration: "underline", textUnderlineOffset: 3, fontSize: "inherit", fontFamily: "inherit", cursor: "pointer" }}>
+              advance terms
+            </button>.
+          </span>
+        </label>
 
-          <button
-            type="button"
-            disabled
-            style={{
-              width: "100%",
-              height: 58,
-              borderRadius: 8,
-              border: `1px solid ${colors.border}`,
-              background: colors.panel,
-              color: colors.faint,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 11,
-              fontSize: 15,
-              fontWeight: 450,
-              marginBottom: 14,
-            }}
-          >
-            <LockKeyhole size={16} strokeWidth={1.9} />
-            Complete setup to request
-          </button>
+        <div style={{ flex: 1 }} />
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 7,
-              color: colors.faint,
-              fontSize: 11.5,
-              fontWeight: 400,
-            }}
-          >
-            <ShieldCheck size={12} color={colors.faint} strokeWidth={1.9} />
-            Advances unlock instantly after verification
-          </div>
+        {/* Confirm CTA */}
+        <button type="button" disabled={!canConfirm}
+          onClick={async () => {
+            const requestDate = await onSubmit(purposeCategory ?? undefined, purposeNote.trim() || undefined);
+            if (requestDate !== null) { setSubmittedAt(requestDate); setStep("submitted"); }
+          }}
+          style={{ width: "100%", height: 48, borderRadius: 12, background: canConfirm ? "#315eff" : colors.panelMuted, color: canConfirm ? "#fff" : colors.faint, border: 0, fontSize: 15, fontWeight: 500, opacity: canConfirm ? 1 : 0.5, cursor: canConfirm ? "pointer" : "not-allowed", letterSpacing: "-0.01em", boxShadow: canConfirm ? "0 6px 20px rgba(49,94,255,0.30)" : "none" }}>
+          {submitting ? "Confirming…" : `Confirm & get ${formatMoney(amount)}`}
+        </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10, color: colors.dim, fontSize: 12 }}>
+          <ShieldCheck size={13} strokeWidth={1.8} /> Employer-verified · repaid from salary
         </div>
       </div>
     );
   }
 
-  // ── Under review (all submitted, waiting for admin) ──
-  if (!eligible && isWaitingForSetupReview) {
-    const reviewStage: VerificationStage =
-      kycComplete || bankComplete ? "review" : "submitted";
-
-    return (
-      <VerificationLifecycleScreen
-        stage={reviewStage}
-        bankAccount={bankAccount}
-        kycDocumentCount={kycDocumentCount}
-      />
-    );
-  }
-
-  if (eligible && kycComplete && bankComplete && !hasActive && step === "ready") {
-    return (
-      <VerificationLifecycleScreen
-        stage="approved"
-        bankAccount={bankAccount}
-        kycDocumentCount={kycDocumentCount}
-        onStartAdvance={() => setStep("calculator")}
-      />
-    );
-  }
-
-  // ── Redesigned calculator (eligible completed user) ──
-  const rulerProgress = sliderMax > MIN_AMOUNT
-    ? (Math.min(amount, sliderMax) - MIN_AMOUNT) / (sliderMax - MIN_AMOUNT)
-    : 0;
-  const TOTAL_TICKS = 40;
-  const activeTicks = Math.round(rulerProgress * TOTAL_TICKS);
-
+  // ── Calculator ───────────────────────────────────────────────────────────────
   return (
-    <div style={{
-      background: colors.bg,
-      minHeight: "100%",
-      display: "flex",
-      flexDirection: "column",
-      
-      position: "relative",
-    }}>
-
-      {/* Radial glow */}
-      <div style={{
-        position: "absolute",
-        top: -40,
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: 340,
-        height: 220,
-        background: `radial-gradient(ellipse at center top, ${colors.glow} 0%, transparent 70%)`,
-        pointerEvents: "none",
-        zIndex: 0,
-      }} />
-
-      <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column" }}>
-
-        {/* ── Stats row ── */}
-        <div style={{
+    <div
+      style={{
+        background: colors.bg,
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* ── Stats strip — limit left, salary·payday right ── */}
+      <div
+        style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-start",
-          padding: "20px 22px 18px",
+          alignItems: "center",
+          padding: "14px 20px",
           borderBottom: `1px solid ${colors.border}`,
-        }}>
-          <div>
-            <div style={{
-              fontSize: 11,
-              fontWeight: 400,
-              letterSpacing: "0.22em",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 10,
               color: colors.dim,
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
-              marginBottom: 5,
-            }}>Eligible today</div>
-            <div style={{
-              
-              fontSize: 15,
-              fontWeight: 400,
-              color: colors.text,
-            }}>
-              {formatMoney(MIN_AMOUNT)} – {formatMoney(limit)}
-            </div>
+              marginBottom: 3,
+            }}
+          >
+            Max Limit
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{
-              fontSize: 11,
-              fontWeight: 400,
-              letterSpacing: "0.22em",
-              color: colors.dim,
-              textTransform: "uppercase",
-              marginBottom: 5,
-            }}>Salary · Payday</div>
-            <div style={{
-              
-              fontSize: 15,
-              fontWeight: 400,
-              color: colors.text,
-            }}>
-              {salary > 0 ? formatMoney(salary) : "—"} · {formatPayday(nextPayday)}
-            </div>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 450,
+              color: "#315eff",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {formatMoney(limit)}
           </div>
         </div>
-
-        {/* ── YOU'RE TAKING + hero amount ── */}
-        <div style={{ padding: "24px 22px 0", textAlign: "center" }}>
-          <div style={{
-            fontSize: 11,
-            fontWeight: 400,
-            letterSpacing: "0.32em",
-            color: colors.faint,
-            textTransform: "uppercase",
-            marginBottom: 20,
-          }}>
-            YOU&rsquo;RE TAKING
+        {(salaryInHand || payrollDay) && (
+          <div style={{ textAlign: "right" }}>
+            <div
+              style={{
+                fontSize: 10,
+                color: colors.dim,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 3,
+              }}
+            >
+              Salary{payrollDay ? ` · Day ${payrollDay}` : ""}
+            </div>
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 450,
+                color: colors.text,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {salaryInHand ? formatMoney(salaryInHand) : "—"}
+            </div>
           </div>
+        )}
+      </div>
 
-          {/* Amount with ± buttons */}
-          <div style={{
+      {/* ── Main content + CTA in one scrollable flex column ── */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: "0 20px",
+          overflowY: "auto",
+        }}
+      >
+        {/* Label */}
+        <div style={{ textAlign: "center", paddingTop: 24, marginBottom: 14 }}>
+          <span
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.32em",
+              textTransform: "uppercase",
+              color: colors.dim,
+            }}
+          >
+            You're requesting
+          </span>
+        </div>
+
+        {/* Amount hero — tap to type */}
+        <div
+          style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 28,
-            marginBottom: 28,
-          }}>
-            <button
-              type="button"
-              onClick={() => onAmountChange(Math.max(MIN_AMOUNT, amount - 500))}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                border: `1px solid ${colors.border}`,
-                background: "transparent",
-                color: colors.text,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                lineHeight: 1,
-                flexShrink: 0,
-              }}
-            >−</button>
-
-            <div style={{
-              fontSize: 30,
-              fontWeight: 400,
-              letterSpacing: "-0.03em",
+            gap: 14,
+            marginBottom: 6,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => onAmountChange(Math.max(MIN_AMOUNT, amount - 500))}
+            disabled={amount <= MIN_AMOUNT}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              border: `1.5px solid ${colors.border}`,
+              background: "transparent",
               color: colors.text,
-              minWidth: 120,
-            }}>
+              fontSize: 20,
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              cursor: "pointer",
+              opacity: amount <= MIN_AMOUNT ? 0.22 : 1,
+              transition: "opacity 0.15s",
+            }}
+          >
+            −
+          </button>
+
+          {editingAmount ? (
+            <input
+              ref={amountInputRef}
+              type="number"
+              inputMode="numeric"
+              value={rawInput}
+              onChange={(e) => setRawInput(e.target.value)}
+              onBlur={commitAmountEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+              style={
+                {
+                  fontSize: 46,
+                  fontWeight: 300,
+                  letterSpacing: "-0.05em",
+                  width: 190,
+                  border: "none",
+                  outline: "none",
+                  borderBottom: "2px solid #315eff",
+                  textAlign: "center",
+                  background: "transparent",
+                  color: colors.text,
+                  lineHeight: 1,
+                } as React.CSSProperties
+              }
+            />
+          ) : (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={startAmountEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") startAmountEdit();
+              }}
+              style={{
+                fontSize: 46,
+                fontWeight: 300,
+                letterSpacing: "-0.05em",
+                color: colors.text,
+                lineHeight: 1,
+                textAlign: "center",
+                minWidth: 160,
+                cursor: "text",
+                userSelect: "none",
+              }}
+            >
               {formatMoney(amount)}
             </div>
+          )}
 
+          <button
+            type="button"
+            onClick={() => onAmountChange(Math.min(sliderMax, amount + 500))}
+            disabled={amount >= sliderMax}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              border: 0,
+              background: "#315eff",
+              color: "#fff",
+              fontSize: 20,
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              cursor: "pointer",
+              opacity: amount >= sliderMax ? 0.28 : 1,
+              boxShadow:
+                amount >= sliderMax
+                  ? "none"
+                  : "0 2px 10px rgba(49,94,255,0.45)",
+              transition: "opacity 0.15s, box-shadow 0.15s",
+            }}
+          >
+            +
+          </button>
+        </div>
+
+        {/* Tap-to-type hint */}
+        {!editingAmount && (
+          <div style={{ textAlign: "center", marginBottom: 10 }}>
             <button
               type="button"
-              onClick={() => onAmountChange(Math.min(sliderMax, amount + 500))}
+              onClick={startAmountEdit}
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                border: `1px solid ${colors.border}`,
-                background: "transparent",
-                color: colors.text,
+                background: "none",
+                border: "none",
+                padding: "2px 10px",
                 cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                lineHeight: 1,
-                flexShrink: 0,
-              }}
-            >+</button>
-          </div>
-
-          {/* Ruler gauge */}
-          {limit >= MIN_AMOUNT && (
-            <div style={{ position: "relative", height: 32, marginBottom: 18, margin: "0 2px 18px" }}>
-              {/* Tick row */}
-              <div style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
+                fontSize: 11,
+                color: colors.faint,
+                display: "inline-flex",
                 alignItems: "center",
                 gap: 4,
-              }}>
-                {Array.from({ length: TOTAL_TICKS }, (_, i) => {
-                  const isMajor = i % 4 === 0;
-                  const isActive = i < activeTicks;
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        flex: "1 0 0",
-                        height: isMajor ? 14 : 8,
-                        background: isActive ? colors.text : colors.panelMuted,
-                        borderRadius: 1,
-                      }}
-                    />
-                  );
-                })}
-              </div>
+              }}
+            >
+              <Pencil size={10} strokeWidth={1.8} />
+              Type amount
+            </button>
+          </div>
+        )}
 
-              {/* Knob */}
-              <div style={{
-                position: "absolute",
-                top: "50%",
-                left: `clamp(0px, calc(${rulerProgress * 100}% - 10px), calc(100% - 20px))`,
-                transform: "translateY(-50%)",
-                width: 20,
-                height: 20,
-                borderRadius: "50%",
-                background: colors.text,
-                pointerEvents: "none",
-                zIndex: 2,
-                boxShadow: "0 0 10px rgba(242,240,234,0.35)",
-              }} />
+        {/* Range */}
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 11,
+            color: colors.faint,
+            marginBottom: 14,
+          }}
+        >
+          ₹500 – {formatMoney(limit)}
+        </div>
 
-              {/* Invisible range input on top */}
-              <input
-                type="range"
-                min={MIN_AMOUNT}
-                max={sliderMax}
-                step={500}
-                value={Math.min(amount, sliderMax)}
-                onChange={(e) => onAmountChange(Number(e.target.value))}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  opacity: 0,
-                  cursor: "pointer",
-                  zIndex: 3,
-                  margin: 0,
-                }}
-              />
-            </div>
-          )}
+        {/* Interest-free chip */}
+        {interestFreeThreshold && interestFreeThreshold > 0 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 14,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "4px 12px",
+                borderRadius: 99,
+                fontSize: 11,
+                fontWeight: 500,
+                background: isInterestFree
+                  ? "rgba(34,197,94,0.1)"
+                  : "transparent",
+                border: `1px solid ${
+                  isInterestFree ? "rgba(34,197,94,0.3)" : colors.border
+                }`,
+                color: isInterestFree ? "#22c55e" : colors.faint,
+                transition: "all 0.2s",
+              }}
+            >
+              <Sparkles size={10} strokeWidth={2} />
+              {isInterestFree
+                ? "Interest-free"
+                : `Free up to ${formatMoney(interestFreeThreshold)}`}
+            </span>
+          </div>
+        )}
 
-          {/* Interest-free badge */}
-          {interestFreeThreshold && interestFreeThreshold > 0 && (
-            <div style={{
-              textAlign: "center",
-              fontSize: 11,
-              fontWeight: 500,
-              color: amount <= interestFreeThreshold ? "#4ade80" : colors.dim,
-              marginBottom: 12,
-              letterSpacing: "0.02em",
-            }}>
-              {amount <= interestFreeThreshold
-                ? `✓ This amount is interest-free`
-                : `First ${formatMoney(interestFreeThreshold)} is interest-free`}
-            </div>
-          )}
-
-          {/* Quick-select chips */}
-          <div style={{
-            display: "flex",
-            gap: 8,
-            justifyContent: "center",
-            marginBottom: 22,
-            flexWrap: "nowrap",
-          }}>
-            {quickAmounts.map((v) => (
+        {/* 4 colorful pills */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+          {quickAmounts.map((v, i) => {
+            const p = PILL_PALETTE[i % PILL_PALETTE.length];
+            const sel = amount === v;
+            return (
               <button
                 key={v}
                 type="button"
                 onClick={() => onAmountChange(v)}
                 style={{
-                  padding: "7px 14px",
-                  borderRadius: 13,
-                  border: `1px solid ${amount === v ? "transparent" : colors.border}`,
-                  background: amount === v ? colors.ctaBg : "transparent",
-                  color: amount === v ? colors.ctaText : colors.dim,
-                  
-                  fontSize: 13,
-                  fontWeight: 400,
+                  flex: 1,
+                  padding: "9px 0",
+                  borderRadius: 99,
+                  border: `1.5px solid ${sel ? p.solid : p.border}`,
+                  background: sel ? p.solid : p.soft,
+                  color: sel ? "#fff" : p.solid,
+                  fontSize: 12,
+                  fontWeight: sel ? 500 : 400,
                   cursor: "pointer",
-                  flexShrink: 0,
+                  boxShadow: sel ? `0 2px 8px ${p.solid}35` : "none",
+                  transition: "all 0.15s",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {formatMoney(v)}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* ── Receipt / breakdown card ── */}
-        <div style={{ padding: "0 22px", flex: 1 }}>
-          <div style={{
-            position: "relative",
-            background: colors.receiptBg,
-            borderRadius: 20,
-            padding: "18px 22px 20px",
-          }}>
-            {preview ? (
-              <>
-                {/* Header row */}
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 16,
-                }}>
-                  <span style={{
-                    fontSize: 11,
-                    fontWeight: 400,
-                    letterSpacing: "0.22em",
-                    color: colors.receiptMuted,
+        {/* Breakdown */}
+        {preview ? (
+          <div
+            style={{
+              border: `1px solid ${colors.border}`,
+              borderRadius: 14,
+              overflow: "hidden",
+              background: colors.panelSoft,
+              marginBottom: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1px 1fr 1px 1fr",
+              }}
+            >
+              <div style={{ padding: "12px 8px", textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: colors.dim,
                     textTransform: "uppercase",
-                  }}>BREAKDOWN</span>
-                  <span style={{
-                    
-                    fontSize: 12,
-                    color: colors.receiptMuted,
-                  }}>
-                    {preview.interestDays != null ? `${preview.interestDays} days` : ""}
-                    {preview.interestRate ? ` @ ${preview.interestRate}%` : ""}
-                  </span>
+                    letterSpacing: "0.08em",
+                    marginBottom: 4,
+                  }}
+                >
+                  Receive
                 </div>
-
-                {/* Credited to bank */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: colors.receiptInk }}>Credited to bank</span>
-                  <span style={{
-                    
-                    fontSize: 15,
-                    fontWeight: 400,
-                    color: colors.receiptInk,
-                  }}>
-                    {formatMoney(preview.youReceive)}
-                  </span>
+                <div
+                  style={{ fontSize: 14, fontWeight: 450, color: colors.text }}
+                >
+                  {formatMoney(preview.youReceive)}
                 </div>
-
-                {/* Dashed separator + notches */}
-                <div style={{ position: "relative", margin: "14px 0" }}>
-                  <div style={{ borderTop: `1px dashed ${colors.receiptDash}` }} />
-                  <div style={{
-                    position: "absolute", left: -34, top: 0,
-                    transform: "translateY(-50%)",
-                    width: 22, height: 22, borderRadius: "50%", background: colors.receiptNotch,
-                  }} />
-                  <div style={{
-                    position: "absolute", right: -34, top: 0,
-                    transform: "translateY(-50%)",
-                    width: 22, height: 22, borderRadius: "50%", background: colors.receiptNotch,
-                  }} />
-                </div>
-
-                {/* Interest */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: colors.receiptInk }}>Interest</span>
-                  <span style={{
-                    
-                    fontSize: 15,
-                    fontWeight: 400,
-                    color: colors.warm,
-                  }}>
-                    + {formatMoney(preview.interest)}
-                  </span>
-                </div>
-
-                {/* Dashed separator + notches */}
-                <div style={{ position: "relative", margin: "14px 0" }}>
-                  <div style={{ borderTop: `1px dashed ${colors.receiptDash}` }} />
-                  <div style={{
-                    position: "absolute", left: -34, top: 0,
-                    transform: "translateY(-50%)",
-                    width: 22, height: 22, borderRadius: "50%", background: colors.receiptNotch,
-                  }} />
-                  <div style={{
-                    position: "absolute", right: -34, top: 0,
-                    transform: "translateY(-50%)",
-                    width: 22, height: 22, borderRadius: "50%", background: colors.receiptNotch,
-                  }} />
-                </div>
-
-                {/* Total repayment */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <div>
-                    <div style={{
-                      
-                      fontSize: 11,
-                      color: colors.receiptMuted,
-                      marginBottom: 3,
-                    }}>
-                      Auto-deducted {formatShortDate(preview.recoveryDate)}
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: colors.receiptSubtle }}>
-                      Total repayment
-                    </div>
-                  </div>
-                  <span style={{
-                    
-                    fontSize: 20,
-                    fontWeight: 400,
-                    color: colors.receiptInk,
-                  }}>
-                    {formatMoney(preview.total)}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div style={{
-                textAlign: "center",
-                padding: "20px 0",
-                color: colors.receiptMuted,
-                fontSize: 13,
-              }}>
-                {previewLoading ? "Calculating…" : "Adjust the amount to see a breakdown"}
               </div>
-            )}
+              <div style={{ background: colors.border }} />
+              <div style={{ padding: "12px 8px", textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: colors.dim,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 4,
+                  }}
+                >
+                  Interest
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 450,
+                    color: preview.interest > 0 ? colors.warm : colors.green,
+                  }}
+                >
+                  +{formatMoney(preview.interest)}
+                </div>
+              </div>
+              <div style={{ background: colors.border }} />
+              <div style={{ padding: "12px 8px", textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: colors.dim,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 4,
+                  }}
+                >
+                  Pay back
+                </div>
+                <div
+                  style={{ fontSize: 14, fontWeight: 450, color: colors.text }}
+                >
+                  {formatMoney(preview.total)}
+                </div>
+              </div>
+            </div>
+            <div
+              style={{
+                borderTop: `1px solid ${colors.border}`,
+                padding: "8px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                color: colors.dim,
+                fontSize: 11,
+              }}
+            >
+              <CalendarDays size={11} strokeWidth={1.8} />
+              Auto-deducted on{" "}
+              {preview.recoveryDate
+                ? formatShortDate(preview.recoveryDate)
+                : `Day ${payrollDay ?? "payday"}`}
+              {preview.interestRate ? ` · ${preview.interestRate}% p.a.` : ""}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div
+            style={{
+              textAlign: "center",
+              color: colors.faint,
+              fontSize: 12,
+              marginBottom: 16,
+            }}
+          >
+            {previewLoading
+              ? "Calculating…"
+              : "Tap an amount or type to see the breakdown"}
+          </div>
+        )}
 
-        {/* ── CTA + caption ── */}
-        <div style={{ padding: "20px 22px 28px" }}>
+        {/* Spacer — CTA floats to bottom */}
+        <div style={{ flex: 1, minHeight: 16 }} />
+
+        {/* CTA */}
+        <div
+          style={{ paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}
+        >
           <button
             type="button"
             disabled={!canSubmit}
             onClick={canSubmit ? () => setStep("review") : undefined}
             style={{
               width: "100%",
-              height: 60,
-              borderRadius: 8,
-              background: canSubmit ? colors.ctaBg : colors.disabledBg,
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 8px 0 22px",
+              height: 48,
+              borderRadius: 12,
+              border: 0,
+              background: canSubmit
+                ? "linear-gradient(135deg, #315eff 0%, #5b78ff 100%)"
+                : colors.panelMuted,
+              color: canSubmit ? "#fff" : colors.faint,
+              fontSize: 15,
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
               cursor: canSubmit ? "pointer" : "not-allowed",
-              boxShadow: canSubmit ? "0 12px 32px -14px rgba(49,94,255,0.36)" : "none",
+              boxShadow: canSubmit ? "0 6px 20px rgba(49,94,255,0.35)" : "none",
+              transition: "all 0.2s",
             }}
           >
-            <span style={{
-              
-              fontSize: 15,
-              fontWeight: 400,
-              color: canSubmit ? colors.ctaText : colors.disabledText,
-            }}>
-              Request {formatMoney(amount)}
-            </span>
-            <div style={{
-              width: 44,
-              height: 44,
-              borderRadius: 8,
-              background: canSubmit ? colors.ctaIconBg : colors.panelMuted,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <ArrowRight size={18} color={canSubmit ? colors.ctaIconText : colors.disabledText} strokeWidth={2} />
-            </div>
+            Request {formatMoney(amount)}
           </button>
-
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            marginTop: 12,
-            fontSize: 11.5,
-            color: colors.faint,
-          }}>
-            <ShieldCheck size={12} color={colors.faint} strokeWidth={2} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 5,
+              marginTop: 10,
+              fontSize: 11,
+              color: colors.faint,
+            }}
+          >
+            <ShieldCheck size={11} strokeWidth={2} />
             256-bit encrypted · RBI compliant
           </div>
         </div>
-
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          BOTTOM SHEET — slides up for Review / Membership / Done
-         ═══════════════════════════════════════════════════════ */}
-      {(step === "review" || step === "submitted") && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="adv-sheet-backdrop"
-            style={step === "review" ? {
-              position: "fixed",
-              inset: 0,
-              zIndex: 900,
-              background: "rgba(0, 0, 0, 0.72)",
-            } : undefined}
-            onClick={() => {
-              if (step === "submitted") return;
-              setStep("calculator");
-            }}
-          />
-
-          {/* ══ REVIEW + SUBMITTED — shared sheet ══ */}
-          {(step === "review" || step === "submitted") && (
-            <div
-              className={`adv-sheet${step === "submitted" ? " adv-sheet--full" : " adv-sheet--auto"}`}
-              style={step === "review" ? {
-                position: "fixed",
-                top: 128,
-                right: "auto",
-                bottom: 0,
-                left: "50%",
-                width: "min(390px, 100vw)",
-                height: "auto",
-                maxHeight: "none",
-                minHeight: "calc(100dvh - 128px)",
-                transform: "translateX(-50%)",
-                zIndex: 901,
-                overflowY: "auto",
-                WebkitOverflowScrolling: "touch",
-                animation: "none",
-                background: colors.panel,
-                border: `1px solid ${colors.border}`,
-                borderBottom: 0,
-                borderRadius: "24px 24px 0 0",
-                boxShadow: "0 -22px 60px rgba(0, 0, 0, 0.58)",
-                paddingBottom: "max(12px, env(safe-area-inset-bottom))",
-                display: "block",
-              } : undefined}
-            >
-
-              {/* Drag handle — only on review */}
-              {step === "review" && (
-                <div className="adv-sheet-drag">
-                  <div className="adv-sheet-pill" />
-                  <button className="adv-sheet-x" onClick={() => setStep("calculator")}>✕</button>
-                </div>
-              )}
-
-              {/* ── REVIEW ── */}
-              {step === "review" && (
-                <>
-                  <div
-                    style={{
-                      padding: "4px 22px 0",
-                      color: colors.muted,
-                      fontSize: 12,
-                      fontWeight: 500,
-                      letterSpacing: "0.28em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Review request
-                  </div>
-                  <div
-                    style={{
-                      padding: "8px 22px 14px",
-                      color: colors.text,
-                      fontSize: 19,
-                      lineHeight: 1.05,
-                      fontWeight: 450,
-                      letterSpacing: "-0.035em",
-                    }}
-                  >
-                    Confirm your advance
-                  </div>
-
-                  <div
-                    style={{
-                      position: "relative",
-                      margin: "0 22px 14px",
-                      padding: "18px 22px 18px",
-                      borderRadius: 20,
-                      background: colors.receiptBg,
-                      color: colors.receiptInk,
-                      overflow: "visible",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 18,
-                        color: colors.receiptMuted,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 500,
-                          letterSpacing: "0.28em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Breakdown
-                      </span>
-                      <span
-                        style={{
-                          
-                          fontSize: 12,
-                          letterSpacing: "-0.03em",
-                        }}
-                      >
-                        {preview?.interestDays != null ? `${preview.interestDays} days` : "Payday"}
-                        {preview?.interestRate ? ` @ ${preview.interestRate}%` : ""}
-                      </span>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 15, fontWeight: 550 }}>Credited to bank</span>
-                      <span
-                        style={{
-                          
-                          fontSize: 16,
-                          fontWeight: 450,
-                          letterSpacing: "-0.04em",
-                        }}
-                      >
-                        {preview ? formatMoney(preview.youReceive) : formatMoney(amount)}
-                      </span>
-                    </div>
-
-                    <div style={{ position: "relative", margin: "13px 0" }}>
-                      <div style={{ borderTop: `1px dashed ${colors.receiptDash}` }} />
-                      {["left", "right"].map((side) => (
-                        <span
-                          key={`credit-${side}`}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            [side]: -34,
-                            transform: "translateY(-50%)",
-                            width: 22,
-                            height: 22,
-                            borderRadius: 999,
-                            background: colors.panel,
-                          }}
-                        />
-                      ))}
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 15, fontWeight: 550 }}>Interest</span>
-                      <span
-                        style={{
-                          
-                          fontSize: 16,
-                          fontWeight: 450,
-                          letterSpacing: "-0.04em",
-                          color: colors.warm,
-                        }}
-                      >
-                        + {preview ? formatMoney(preview.interest) : "—"}
-                      </span>
-                    </div>
-
-                    <div style={{ position: "relative", margin: "13px 0" }}>
-                      <div style={{ borderTop: `1px dashed ${colors.receiptDash}` }} />
-                      {["left", "right"].map((side) => (
-                        <span
-                          key={`interest-${side}`}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            [side]: -34,
-                            transform: "translateY(-50%)",
-                            width: 22,
-                            height: 22,
-                            borderRadius: 999,
-                            background: colors.panel,
-                          }}
-                        />
-                      ))}
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
-                      <span style={{ display: "grid", gap: 4 }}>
-                        <small
-                          style={{
-                            color: colors.receiptMuted,
-                            
-                            fontSize: 12,
-                            fontWeight: 500,
-                            letterSpacing: "-0.03em",
-                          }}
-                        >
-                          Auto-deducted {preview ? formatShortDate(preview.recoveryDate) : "on payday"}
-                        </small>
-                        <span style={{ color: colors.receiptSubtle, fontSize: 15, fontWeight: 450 }}>
-                          Total repayment
-                        </span>
-                      </span>
-                      <span
-                        style={{
-                          color: colors.receiptInk,
-                          
-                          fontSize: 22,
-                          fontWeight: 450,
-                          letterSpacing: "-0.05em",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {preview ? formatMoney(preview.total) : formatMoney(amount)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      margin: "0 22px 15px",
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: 18,
-                      overflow: "hidden",
-                      background: colors.panelSoft,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "42px 1fr auto",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "14px 16px",
-                        minHeight: 86,
-                        borderBottom: `1px solid ${colors.border}`,
-                        color: colors.text,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 36,
-                          height: 36,
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: 12,
-                          display: "grid",
-                          placeItems: "center",
-                        }}
-                      >
-                        <Landmark size={16} />
-                      </span>
-                      <span style={{ minWidth: 0, fontSize: 15, lineHeight: 1.25, fontWeight: 450 }}>
-                        <small
-                          style={{
-                            display: "block",
-                            marginBottom: 4,
-                            color: colors.muted,
-                            fontSize: 11,
-                            fontWeight: 500,
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          Deposit to
-                        </small>
-                        {maskedBankAccount}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onNavigate?.("profile-bank")}
-                        style={{
-                          background: "transparent",
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: 8,
-                          color: colors.muted,
-                          fontSize: 12,
-                          fontWeight: 500,
-                          padding: "5px 10px",
-                          cursor: "pointer",
-                          
-                        }}
-                      >
-                        Change
-                      </button>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "42px 1fr auto",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "14px 16px",
-                        minHeight: 86,
-                        color: colors.text,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 36,
-                          height: 36,
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: 12,
-                          display: "grid",
-                          placeItems: "center",
-                        }}
-                      >
-                        <CalendarDays size={16} />
-                      </span>
-                      <span style={{ minWidth: 0, fontSize: 15, lineHeight: 1.28, fontWeight: 450 }}>
-                        <small
-                          style={{
-                            display: "block",
-                            marginBottom: 4,
-                            color: colors.muted,
-                            fontSize: 11,
-                            fontWeight: 500,
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          Repayment
-                        </small>
-                        Auto-debit (from salary)
-                        {preview?.recoveryDate ? ` · ${formatReadableDate(preview.recoveryDate)}` : ""}
-                      </span>
-                      <span style={{ color: colors.dim, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap" }}>
-                        1 payment
-                      </span>
-                    </div>
-                  </div>
-
-                  <label
-                    style={{
-                      margin: "0 22px 18px",
-                      display: "grid",
-                      gridTemplateColumns: "22px 1fr",
-                      gap: 12,
-                      color: colors.dim,
-                      fontSize: 13,
-                      fontWeight: 400,
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={agree1}
-                      onChange={(e) => setAgree1(e.target.checked)}
-                      style={{
-                        width: 20,
-                        height: 20,
-                        marginTop: 1,
-                        accentColor: colors.ctaBg,
-                      }}
-                    />
-                    <span>
-                      I authorise a one-time salary auto-debit of{" "}
-                      <span style={{ color: colors.text }}>
-                        {preview ? formatMoney(preview.total) : formatMoney(amount)}
-                      </span>{" "}
-                      on my payday and accept the{" "}
-                      <button
-                        type="button"
-                        onClick={() => onNavigate?.("legal")}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          padding: 0,
-                          color: colors.text,
-                          textDecoration: "underline",
-                          textUnderlineOffset: 3,
-                          fontSize: "inherit",
-                          fontWeight: "inherit",
-                          fontFamily: "inherit",
-                          cursor: "pointer",
-                        }}
-                      >
-                        advance terms
-                      </button>.
-                    </span>
-                  </label>
-
-                  <div style={{ padding: "0 22px 24px" }}>
-                    <button
-                      type="button"
-                      disabled={!canConfirm}
-                      onClick={async () => {
-                        await onSubmit();
-                        setStep("submitted");
-                      }}
-                      style={{
-                        width: "100%",
-                        height: 60,
-                        borderRadius: 8,
-                        background: colors.ctaBg,
-                        color: colors.ctaText,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0 10px 0 24px",
-                        fontSize: 16,
-                        fontWeight: 500,
-                        opacity: canConfirm ? 1 : 0.45,
-                        cursor: canConfirm ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      <span>{submitting ? "Confirming..." : `Confirm & get ${formatMoney(amount)}`}</span>
-                      {!submitting && (
-                        <span
-                          style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 8,
-                            background: colors.ctaIconBg,
-                            color: colors.ctaIconText,
-                            display: "grid",
-                            placeItems: "center",
-                          }}
-                        >
-                          <ArrowRight size={18} />
-                        </span>
-                      )}
-                    </button>
-                    <div
-                      style={{
-                        height: 42,
-                        marginTop: 12,
-                        marginBottom: 2,
-                        borderRadius: 14,
-                        border: `1px solid ${colors.border}`,
-                        background: colors.panelSoft,
-                        color: colors.dim,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        fontSize: 12,
-                        fontWeight: 450,
-                      }}
-                    >
-                      <ShieldCheck size={13} color={colors.text} /> Employer-verified · repaid from salary
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* ── SUBMITTED (full-height celebration) ── */}
-              {step === "submitted" && (
-                <>
-                  <div className="adv-submitted-body">
-                    <div className="adv-submitted-check-wrap">
-                      <div className="adv-submitted-ripple" />
-                      <div className="adv-submitted-ripple adv-submitted-ripple--2" />
-                      <div className="adv-submitted-check-circle">
-                        <CheckCircle size={36} strokeWidth={2} />
-                      </div>
-                    </div>
-                    <div className="adv-submitted-title">Request Submitted!</div>
-                    <div className="adv-submitted-sub">
-                      We've notified your employer. You'll get an update as soon as they approve.
-                    </div>
-                    <div className="adv-submitted-slip">
-                      <div className="adv-submitted-slip-top">
-                        <span className="adv-submitted-slip-lbl">Amount requested</span>
-                        <span className="adv-submitted-slip-amt">{formatMoney(amount)}</span>
-                      </div>
-                      {preview && (
-                        <div className="adv-submitted-slip-cols">
-                          <div className="adv-submitted-slip-col">
-                            <div className="adv-submitted-slip-col-lbl">You receive</div>
-                            <div className="adv-submitted-slip-col-val green">{formatMoney(preview.youReceive)}</div>
-                          </div>
-                          <div className="adv-submitted-slip-divider" />
-                          <div className="adv-submitted-slip-col">
-                            <div className="adv-submitted-slip-col-lbl">Interest</div>
-                            <div className="adv-submitted-slip-col-val">{formatMoney(preview.interest)}</div>
-                          </div>
-                          <div className="adv-submitted-slip-divider" />
-                          <div className="adv-submitted-slip-col">
-                            <div className="adv-submitted-slip-col-lbl">Repay on</div>
-                            <div className="adv-submitted-slip-col-val">{formatShortDate(preview.recoveryDate)}</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="adv-submitted-timeline">
-                      <div className="adv-submitted-timeline-title">What happens next</div>
-                      {[
-                        { icon: <Clock size={14} />, label: "Employer review", sub: "They'll approve or ask questions" },
-                        { icon: <BadgeCheck size={14} />, label: "Admin approval", sub: "MobPae team gives final green light" },
-                        { icon: <CreditCard size={14} />, label: "Funds credited", sub: "Directly to your linked bank account" },
-                        { icon: <CalendarDays size={14} />, label: "Auto-deducted", sub: preview ? `On ${formatShortDate(preview.recoveryDate)} from your salary` : "On your next payday" },
-                      ].map((item, i, arr) => (
-                        <div key={item.label} className="adv-submitted-tl-row">
-                          <div className="adv-submitted-tl-left">
-                            <div className="adv-submitted-tl-dot">{item.icon}</div>
-                            {i < arr.length - 1 && <div className="adv-submitted-tl-line" />}
-                          </div>
-                          <div className="adv-submitted-tl-body">
-                            <div className="adv-submitted-tl-label">{item.label}</div>
-                            <div className="adv-submitted-tl-sub">{item.sub}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="adv-sticky-btn">
-                    <button
-                      type="button"
-                      className="mp-btn-primary"
-                      onClick={() => { setStep("calculator"); onNavigate?.("activity"); }}
-                    >
-                      Track in Activity <ArrowRight size={16} />
-                    </button>
-                    <div className="adv-secure-note">
-                      <ShieldCheck size={12} /> We'll notify you at every step
-                    </div>
-                  </div>
-                </>
-              )}
-
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
+
 }

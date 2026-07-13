@@ -151,7 +151,7 @@ export function HelpScreen({ onBack }: HelpScreenProps) {
               return (
                 <div
                   key={globalIdx}
-                  style={{ borderBottom: i < filteredFaqs.length - 1 ? "1px solid #F3F1FF" : "none" }}
+                  className={i < filteredFaqs.length - 1 ? "help-faq-item" : undefined}
                 >
                   <button
                     type="button"

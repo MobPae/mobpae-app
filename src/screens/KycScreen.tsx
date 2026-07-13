@@ -24,6 +24,7 @@ function KycItemRow({
   onUpload: (type: KycDocumentType, file: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const type     = documentTypeFrom(document);
   const isDone   = document.status === "Verified";
   const isPending = document.status === "Under Review";
@@ -54,12 +55,15 @@ function KycItemRow({
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf,image/jpeg,image/png,image/jpg"
+            accept="application/pdf,image/jpeg,image/png,image/webp"
             style={{ display: "none" }}
             disabled={uploading}
             onChange={e => {
               const file = e.target.files?.[0];
-              if (file) onUpload(type, file);
+              if (file) {
+                setFileName(file.name);
+                onUpload(type, file);
+              }
               e.target.value = "";
             }}
           />
@@ -70,7 +74,7 @@ function KycItemRow({
             onClick={() => inputRef.current?.click()}
           >
             <UploadCloud size={14} />
-            {uploading ? "Uploading…" : document.status === "Not Uploaded" ? "Upload" : "Replace"}
+            {uploading ? "Uploading…" : document.status === "Not Uploaded" ? "Upload" : fileName ?? "Replace"}
           </button>
         </>
       )}

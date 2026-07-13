@@ -5825,6 +5825,12 @@ button,
   background: #fafaf8 !important;
 }
 
+/* Light mode: white base for all screen containers */
+.phone-shell--light .screen-body,
+.phone-shell--light .screen-body-onboarding {
+  background: #FFFFFF !important;
+}
+
 .phone-shell .adv-new-screen {
   min-height: 100%;
   background: #fafaf8 !important;
@@ -10374,7 +10380,7 @@ button,
 .phone-shell .adv-memgate-body {
   flex: 1;
   overflow-y: auto;
-  background: #f4f3ff;
+  background: #eef2ff;
   border-radius: 24px 24px 0 0;
   padding: 20px 16px 24px;
   /* pull up to overlap dark section slightly */
@@ -10698,6 +10704,197 @@ button,
   font-size: 11px;
   color: var(--t2);
   margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUBMITTED V2 — full-page redesign
+   ══════════════════════════════════════════════════════════ */
+.phone-shell .adv-sub2-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: #315EFF; /* hero bg shows through rounded card gap */
+}
+
+/* Blue hero */
+.phone-shell .adv-sub2-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 38px 24px 42px;
+  background: #315EFF;
+}
+
+/* Animated check */
+.phone-shell .adv-sub2-check-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.phone-shell .adv-sub2-ripple {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.28);
+  animation: sub-ripple 2s ease-out infinite;
+  opacity: 0;
+}
+.phone-shell .adv-sub2-ripple--2 {
+  inset: -16px;
+  animation-delay: 0.72s;
+}
+.phone-shell .adv-sub2-check-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sub-pop 0.4s 0.05s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes sub-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.phone-shell .adv-sub2-amount {
+  font-size: 38px;
+  color: #fff;
+  letter-spacing: -0.055em;
+  font-weight: 450;
+  line-height: 1;
+  animation: sub-slide 0.35s 0.1s both;
+}
+.phone-shell .adv-sub2-lbl {
+  font-size: 14px;
+  color: rgba(255,255,255,0.72);
+  margin-top: 6px;
+  font-weight: 450;
+  animation: sub-slide 0.35s 0.18s both;
+}
+.phone-shell .adv-sub2-date {
+  font-size: 12px;
+  color: rgba(255,255,255,0.46);
+  margin-top: 4px;
+  animation: sub-slide 0.35s 0.24s both;
+}
+
+/* White card — overlaps hero with rounded top */
+.phone-shell .adv-sub2-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 22px 20px 12px;
+  overflow-y: auto;
+  margin-top: -22px;
+  animation: sub-slide 0.4s 0.12s both;
+}
+
+/* 3-col breakdown strip */
+.phone-shell .adv-sub2-cols {
+  display: flex;
+  align-items: stretch;
+  background: #EEF2FF;
+  border-radius: 16px;
+  padding: 14px 0 12px;
+  margin-bottom: 20px;
+}
+.phone-shell .adv-sub2-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+}
+.phone-shell .adv-sub2-col-lbl {
+  font-size: 10px;
+  color: #5A6BAA;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+.phone-shell .adv-sub2-col-val {
+  font-size: 15px;
+  font-weight: 500;
+  color: #0F1740;
+  letter-spacing: -0.025em;
+}
+.phone-shell .adv-sub2-col-val--blue { color: #315EFF; }
+.phone-shell .adv-sub2-vdiv {
+  width: 1px;
+  background: #C4D0F5;
+  align-self: stretch;
+}
+
+/* Dashed separator */
+.phone-shell .adv-sub2-sep {
+  border: none;
+  border-top: 1px dashed #C4D0F5;
+  margin: 0 0 20px;
+}
+
+/* Timeline */
+.phone-shell .adv-sub2-tl-hdr {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5A6BAA;
+  margin-bottom: 16px;
+}
+.phone-shell .adv-sub2-tl-row {
+  display: flex;
+  gap: 14px;
+}
+.phone-shell .adv-sub2-tl-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+  flex-shrink: 0;
+}
+.phone-shell .adv-sub2-tl-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #315EFF;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.phone-shell .adv-sub2-tl-line {
+  width: 2px;
+  flex: 1;
+  background: #C4D0F5;
+  margin: 4px 0;
+  min-height: 18px;
+}
+.phone-shell .adv-sub2-tl-label {
+  font-size: 14px;
+  color: #0F1740;
+  font-weight: 450;
+  line-height: 1.25;
+}
+.phone-shell .adv-sub2-tl-sub {
+  font-size: 12px;
+  color: #5A6BAA;
+  margin-top: 2px;
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+/* Sticky footer CTA */
+.phone-shell .adv-sub2-footer {
+  padding: 14px 20px max(20px, env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #EEF2FF;
+  flex-shrink: 0;
 }
 
 /* Shared sticky footer */
@@ -11160,7 +11357,7 @@ button,
   width: 38px;
   height: 4px;
   border-radius: 99px;
-  background: #e0dcff;
+  background: #c4d0f5;
 }
 .phone-shell .adv-sheet-x {
   position: absolute;
@@ -11169,8 +11366,8 @@ button,
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #f4f3ff;
-  border: 1.5px solid #ede9ff;
+  background: #eef2ff;
+  border: 1.5px solid #d1dcff;
   cursor: pointer;
   font-size: 14px;
   color: var(--t2);
@@ -11188,7 +11385,7 @@ button,
   letter-spacing: -0.2px;
   padding: 2px 18px 10px;
   flex-shrink: 0;
-  border-bottom: 1px solid #f3f1ff;
+  border-bottom: 1px solid #e4eaff;
 }
 
 /* Scrollable content area */
@@ -11211,7 +11408,7 @@ button,
 .phone-shell .adv-sheet .adv-memgate-body {
   flex: 1;
   overflow-y: auto;
-  background: #f4f3ff;
+  background: #eef2ff;
   border-radius: 0;
   margin-top: 0;
   box-shadow: none;
@@ -12464,13 +12661,11 @@ button,
 }
 
 .pbv2-card {
-  border: 1px solid var(--pbv-border);
+  border: 1px solid rgba(18, 122, 74, 0.4);
   border-radius: 23px;
-  background:
-    radial-gradient(circle at 85% 10%, rgba(242, 240, 234, 0.05), transparent 32%),
-    linear-gradient(145deg, #222225, #17171A);
+  background: linear-gradient(135deg, #0B3020 0%, #0E5C38 60%, #127A4A 100%);
   padding: 24px 22px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  box-shadow: 0 8px 32px rgba(10, 46, 26, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .pbv2-card-top {
@@ -12484,8 +12679,9 @@ button,
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--pbv-text);
+  border: 1px solid rgba(31, 158, 103, 0.22);
+  background: rgba(31, 158, 103, 0.12);
+  color: #20A46A;
   display: grid;
   place-items: center;
 }
@@ -12538,6 +12734,33 @@ button,
   letter-spacing: 0.26em;
 }
 
+.pbv2-card-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 0;
+  background: none;
+  border: none;
+  color: var(--pbv-muted);
+  font-size: 13px;
+  font-weight: 450;
+  cursor: pointer;
+  text-align: left;
+  letter-spacing: 0;
+}
+
+.pbv2-card-row span {
+  flex: 1;
+  min-width: 0;
+  color: var(--pbv-text);
+}
+
+.pbv2-card-row svg {
+  flex-shrink: 0;
+  color: var(--pbv-dim);
+}
+
 .pbv2-line {
   height: 1px;
   margin: 24px 0 20px;
@@ -12570,9 +12793,59 @@ button,
   font-weight: 500;
 }
 
-.pbv2-note,
+.pbv2-note {
+  margin-top: 16px;
+  border: 1px solid rgba(49, 94, 255, 0.18);
+  border-radius: 20px;
+  background: rgba(49, 94, 255, 0.07);
+  color: var(--pbv-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 18px;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 1.5;
+}
+
+.pbv2-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #315eff;
+}
+
+.pbv2-note > div {
+  min-width: 0;
+}
+
+.pbv2-note-title {
+  display: block;
+  color: var(--pbv-text);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.pbv2-note-body {
+  margin: 0 0 8px;
+  color: var(--pbv-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.pbv2-note-body:last-child {
+  margin-bottom: 0;
+}
+
+.pbv2-note-body strong {
+  color: var(--pbv-text);
+  font-weight: 500;
+}
+
 .pbv2-security {
-  min-height: 58px;
+  min-height: 42px;
   margin-top: 16px;
   border: 1px solid var(--pbv-border);
   border-radius: 17px;
@@ -12587,7 +12860,6 @@ button,
   line-height: 1.42;
 }
 
-.pbv2-note svg,
 .pbv2-security svg {
   flex-shrink: 0;
   color: #A7A4AD;
@@ -12692,134 +12964,665 @@ button,
   padding: 14px 20px 116px;
 }
 
+/* ── Hero — bare, no card chrome ── */
 .kycv2-hero {
   position: relative;
-  min-height: 168px;
-  border: 1px solid #29292F;
-  border-radius: 24px;
-  background: linear-gradient(145deg, #222225, #17171B);
-  padding: 24px 24px 30px;
-  overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  padding: 6px 0 22px;
 }
 
+/* Step kicker — plain text, no box chrome */
 .kycv2-kicker {
-  color: #8A8892;
-  font-size: 12px;
+  color: #6B6878;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.34em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
 }
 
 .kycv2-hero h1 {
-  margin: 20px 72px 12px 0;
+  margin: 16px 52px 10px 0;
   color: #F2F0EA;
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.035em;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
   line-height: 1.05;
 }
 
 .kycv2-hero p {
-  max-width: 245px;
-  margin: 0;
-  color: #A2A0AA;
+  margin: 0 0 20px;
+  color: #8A8892;
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
+/* Shield icon tile — top-right */
 .kycv2-hero-icon {
   position: absolute;
-  top: 25px;
-  right: 24px;
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.11);
-  color: #F2F0EA;
+  top: 6px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  /* Blue tinted — works in both dark and light mode */
+  border: 1px solid rgba(49, 94, 255, 0.30);
+  background: rgba(49, 94, 255, 0.12);
+  color: #5b8aff;
   display: grid;
   place-items: center;
 }
 
-.kycv2-progress {
-  position: absolute;
-  left: 24px;
-  right: 66px;
-  bottom: 26px;
-  height: 5px;
-  border-radius: 999px;
-  background: #303036;
-  overflow: hidden;
+/* Segmented progress — one bar per document */
+.kycv2-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.kycv2-progress span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #F4F1E8;
-  transition: width 220ms ease;
+.kycv2-progress-segs {
+  flex: 1;
+  display: flex;
+  gap: 5px;
+}
+
+.kycv2-seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 99px;
+  /* Dim blue — visible on white AND dark backgrounds */
+  background: rgba(49, 94, 255, 0.15);
+  transition: background 0.25s ease;
+}
+
+.kycv2-seg--on {
+  /* Full brand blue when document is uploaded */
+  background: #315eff;
+  box-shadow: none;
 }
 
 .kycv2-progress-count {
-  position: absolute;
-  right: 24px;
-  bottom: 18px;
-  color: #A2A0AA;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
-  font-size: 13px;
+  color: #7C7C85;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
+/* ── Document cards ── */
 .kycv2-docs {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   margin-top: 20px;
 }
 
-.kycv2-doc-card {
-  min-height: 98px;
-  border: 1px solid #29292F;
-  border-radius: 20px;
-  background: #111114;
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
+/* ══════════════════════════════════════════════════════════
+   kycdoc — new document section design
+   Label heading above · compact upload tile below
+   ══════════════════════════════════════════════════════════ */
+
+.kycdoc {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Label row — "PAN" / "Aadhaar" / "Salary Slip" */
+.kycdoc-hd {
+  display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 18px;
+  justify-content: space-between;
+  padding: 0 3px;
 }
 
-.kycv2-doc-card.is-uploaded {
-  border-color: rgba(32, 164, 106, 0.52);
-  background: rgba(20, 20, 24, 0.82);
+.kycdoc-hd-name {
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6A6A7E;
 }
 
-.kycv2-doc-card.is-rejected {
-  border-color: rgba(180, 89, 31, 0.48);
+/* ── Single-upload tile (PAN / Salary Slip) ── */
+.kycdoc-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1.5px dashed rgba(49, 94, 255, 0.28);
+  border-radius: 16px;
+  background: rgba(49, 94, 255, 0.05);
+  transition: border-color 0.2s, background 0.2s;
 }
 
-.kycv2-doc-icon {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #29292F;
-  border-radius: 14px;
-  background: #17171B;
-  color: #C9C7D0;
+/* Uploaded — green */
+.kycdoc-tile.is-done {
+  border-style: solid;
+  border-color: rgba(32, 164, 106, 0.38);
+  background: rgba(32, 164, 106, 0.07);
+  box-shadow: inset 3px 0 0 rgba(32, 164, 106, 0.55);
+}
+
+/* Rejected — amber */
+.kycdoc-tile.is-bad {
+  border-style: solid;
+  border-color: rgba(180, 89, 31, 0.38);
+  background: rgba(180, 89, 31, 0.04);
+  box-shadow: inset 3px 0 0 rgba(180, 89, 31, 0.5);
+}
+
+/* Uploading — pulse */
+.kycdoc-tile.is-busy {
+  animation: kycv2-pulse 1.2s ease-in-out infinite;
+}
+
+/* Icon tile */
+.kycdoc-tile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+  background: rgba(49, 94, 255, 0.10);
+  color: #5b8aff;
+  border: 1px solid rgba(49, 94, 255, 0.20);
+}
+
+.kycdoc-tile.is-done .kycdoc-tile-icon {
+  background: rgba(32, 164, 106, 0.14);
+  color: #20A46A;
+  border-color: rgba(32, 164, 106, 0.28);
+}
+
+.kycdoc-tile.is-bad .kycdoc-tile-icon {
+  background: rgba(180, 89, 31, 0.10);
+  color: #B4591F;
+  border-color: rgba(180, 89, 31, 0.24);
+}
+
+/* Hint text */
+.kycdoc-tile-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #6A6A80;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kycdoc-tile.is-done .kycdoc-tile-hint { color: #4CAF85; }
+.kycdoc-tile.is-bad  .kycdoc-tile-hint { color: #B4591F; }
+
+/* ── Action button — SOLID blue (not pale) ── */
+.kycdoc-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 9px;
+  border: none;
+  background: #315eff;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: -0.01em;
+}
+
+.kycdoc-btn:hover:not(:disabled)     { background: #1e4ee0; }
+.kycdoc-btn:disabled                  { opacity: 0.5; cursor: not-allowed; }
+
+/* Done/Replace variant — solid blue (same as upload button, clearly actionable) */
+.kycdoc-btn--done {
+  background: #315eff;
+  color: #fff;
+  border: none;
+}
+.kycdoc-btn--done:hover:not(:disabled) {
+  background: #1e4ee0;
+}
+
+/* Rejection note (above mini cards) */
+.kycdoc-rejection-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #C47F2A;
+  padding: 0 2px;
+}
+
+/* ── Aadhaar mini-cards ── */
+.kycdoc-aadhar-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Each mini card is a tappable button */
+.kycdoc-half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 20px 10px 18px;
+  border: 1.5px dashed rgba(49, 94, 255, 0.30);
+  border-radius: 16px;
+  background: rgba(49, 94, 255, 0.05);
+  cursor: pointer;
+  min-height: 112px;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  color: inherit;
+}
+
+.kycdoc-half:hover:not(:disabled) {
+  border-color: rgba(49, 94, 255, 0.55);
+  background: rgba(49, 94, 255, 0.09);
+}
+
+/* Picked (file selected) — green */
+.kycdoc-half.is-done {
+  border-style: solid;
+  border-color: rgba(32, 164, 106, 0.45);
+  background: rgba(32, 164, 106, 0.08);
+}
+
+.kycdoc-half.is-done:hover:not(:disabled) {
+  background: rgba(32, 164, 106, 0.13);
+}
+
+.kycdoc-half:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Icon circle inside mini card */
+.kycdoc-half-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(49, 94, 255, 0.12);
+  color: #5b8aff;
+  flex-shrink: 0;
+}
+
+.kycdoc-half.is-done .kycdoc-half-icon {
+  background: rgba(32, 164, 106, 0.16);
+  color: #20A46A;
+}
+
+/* Side label — "Front" / "Back" */
+.kycdoc-half-label {
+  font-size: 12px;
+  font-weight: 550;
+  color: #5b8aff;
+  letter-spacing: 0.01em;
+}
+
+.kycdoc-half.is-done .kycdoc-half-label { color: #20A46A; }
+
+/* Sub-label when not yet picked */
+.kycdoc-half-cta {
+  font-size: 10.5px;
+  color: rgba(91, 138, 255, 0.60);
+  letter-spacing: 0.01em;
+}
+
+/* Filename shown after picking */
+.kycdoc-half-file {
+  font-size: 10px;
+  color: #20A46A;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 6px;
+}
+
+/* Status note below the two mini-cards */
+.kycdoc-aadhar-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: rgba(91, 138, 255, 0.65);
+  margin-top: 1px;
+  text-align: center;
+}
+
+.kycdoc-aadhar-note.is-error { color: #D97706; }
+
+/* ── kycdoc light-mode overrides ── */
+.phone-shell--light .kycdoc-hd-name {
+  color: #9090A8 !important;
+}
+
+.phone-shell--light .kycdoc-tile {
+  background: #FAFAFF !important;
+  border-color: rgba(49, 94, 255, 0.22) !important;
+}
+
+.phone-shell--light .kycdoc-tile.is-done {
+  background: #F0FBF5 !important;
+  border-color: rgba(31, 158, 103, 0.30) !important;
+  box-shadow: inset 3px 0 0 rgba(31, 158, 103, 0.50) !important;
+}
+
+.phone-shell--light .kycdoc-tile.is-bad {
+  background: #FEF8F0 !important;
+}
+
+.phone-shell--light .kycdoc-tile-hint { color: #8080A0 !important; }
+.phone-shell--light .kycdoc-tile.is-done .kycdoc-tile-hint { color: #1F9E67 !important; }
+
+.phone-shell--light .kycdoc-half {
+  background: #FAFAFF !important;
+  border-color: rgba(49, 94, 255, 0.22) !important;
+}
+
+.phone-shell--light .kycdoc-half:hover:not(:disabled) {
+  background: rgba(49, 94, 255, 0.07) !important;
+}
+
+.phone-shell--light .kycdoc-half.is-done {
+  background: #F0FBF5 !important;
+  border-color: rgba(31, 158, 103, 0.35) !important;
+}
+
+.phone-shell--light .kycdoc-aadhar-note {
+  color: rgba(49, 94, 255, 0.55) !important;
+}
+
+.phone-shell--light .kycdoc-aadhar-note.is-error {
+  color: #B45309 !important;
+}
+
+/* chip: pending state (not uploaded) */
+.kycv2-chip--pending {
+  background: rgba(49, 94, 255, 0.10);
+  color: #5b8aff;
+}
+.kycv2-chip--pending span {
+  background: #5b8aff;
+}
+.phone-shell--light .kycv2-chip--pending {
+  background: rgba(130, 130, 145, 0.10) !important;
+  color: #9090A8 !important;
+}
+
+/* ══ end kycdoc ══════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════
+   kyc-rows — flat list layout (no cards)
+   Used by the redesigned OnboardingKycScreen.
+   4 rows: PAN · Aadhaar Front · Aadhaar Back · Salary Slip
+   ══════════════════════════════════════════════════════════ */
+
+.kycv2-docs.kyc-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 18px;
+}
+
+/* Single row */
+.kyc-row {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: start;
+  gap: 13px;
+  padding: 14px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.kyc-row:last-child {
+  border-bottom: none;
+}
+
+/* Left icon circle */
+.kyc-row-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: rgba(49, 94, 255, 0.12);
+  color: #5b8aff;
+  transition: background 0.2s, color 0.2s;
+}
+
+.kyc-row-icon.is-done {
+  background: rgba(32, 164, 106, 0.14);
+  color: #20A46A;
+}
+
+.kyc-row-icon.is-bad {
+  background: rgba(180, 89, 31, 0.12);
+  color: #D97706;
+}
+
+/* Middle copy */
+.kyc-row-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.kyc-row-label {
+  font-size: 14px;
+  font-weight: 450;
+  color: inherit;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.kyc-row-sub {
+  font-size: 11.5px;
+  color: rgba(180, 180, 200, 0.70);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kyc-row-sub.is-bad {
+  color: #D97706;
+}
+
+/* Right: button only */
+.kyc-row-right {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 1px;
+  flex-shrink: 0;
+}
+
+/* Status chip — lives inside .kyc-row-copy, below the sub line */
+.kyc-row-chip {
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1.5;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.kyc-row-chip--done {
+  background: none;
+  color: #20A46A;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.kyc-row-chip--review {
+  background: none;
+  color: #A78040;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.kyc-row-chip--bad {
+  background: none;
+  color: #E5423A;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Action button */
+.kyc-row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: none;
+  background: #315eff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.kyc-row-btn:hover:not(:disabled) { background: #1e4ee0; }
+.kyc-row-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Replace button — solid blue (same shade, clearly actionable) */
+.kyc-row-btn--replace {
+  background: #315eff;
+  color: #fff;
+}
+
+/* ── Light mode overrides ── */
+.phone-shell--light .kyc-row {
+  border-bottom-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+.phone-shell--light .kyc-row-icon {
+  background: rgba(49, 94, 255, 0.09) !important;
+  color: #315eff !important;
+}
+
+.phone-shell--light .kyc-row-icon.is-done {
+  background: rgba(31, 158, 103, 0.10) !important;
+  color: #1F9E67 !important;
+}
+
+.phone-shell--light .kyc-row-icon.is-review {
+  background: rgba(167, 128, 64, 0.10) !important;
+  color: #A78040 !important;
+}
+
+.phone-shell--light .kyc-row-label {
+  color: #17151F !important;
+}
+
+.phone-shell--light .kyc-row-sub {
+  color: #9090A8 !important;
+}
+
+.phone-shell--light .kyc-row-sub.is-bad {
+  color: #B45309 !important;
+}
+
+.phone-shell--light .kyc-row-chip--done {
+  background: none !important;
+  color: #1F9E67 !important;
+}
+
+.phone-shell--light .kyc-row-chip--review {
+  background: none !important;
+  color: #A78040 !important;
+}
+
+.phone-shell--light .kyc-row-chip--bad {
+  background: none !important;
+  color: #C8302A !important;
+}
+
+/* ══ end kyc-rows ════════════════════════════════════════════════════════════ */
+
+.kycv2-doc-card {
+  border: 1px solid #29292F;
+  border-radius: 18px;
+  background: #111114;
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 14px 15px 15px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+/* Uploaded: green accent left border + subtle green wash */
+.kycv2-doc-card.is-uploaded {
+  border-color: rgba(32, 164, 106, 0.38);
+  background: rgba(32, 164, 106, 0.04);
+  box-shadow: inset 3px 0 0 rgba(32, 164, 106, 0.55);
+}
+
+/* Rejected: amber accent */
+.kycv2-doc-card.is-rejected {
+  border-color: rgba(180, 89, 31, 0.4);
+  box-shadow: inset 3px 0 0 rgba(180, 89, 31, 0.5);
+}
+
+/* Uploading: subtle pulse */
+.kycv2-doc-card.is-uploading {
+  animation: kycv2-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes kycv2-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+/* Icon tile — blue icons for clear visual affordance */
+.kycv2-doc-icon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(49, 94, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(49, 94, 255, 0.08);
+  color: #5b8aff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .kycv2-doc-card.is-uploaded .kycv2-doc-icon {
-  border-color: rgba(32, 164, 106, 0.34);
-  background: rgba(32, 164, 106, 0.12);
+  border-color: rgba(32, 164, 106, 0.28);
+  background: rgba(32, 164, 106, 0.1);
   color: #20A46A;
 }
 
 .kycv2-doc-card.is-rejected .kycv2-doc-icon {
-  border-color: rgba(180, 89, 31, 0.35);
-  background: rgba(180, 89, 31, 0.1);
+  border-color: rgba(180, 89, 31, 0.28);
+  background: rgba(180, 89, 31, 0.08);
   color: #B4591F;
 }
 
@@ -12827,46 +13630,63 @@ button,
   min-width: 0;
 }
 
-.kycv2-doc-text h2 {
+/* Title + chip on same row */
+.kycv2-doc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kycv2-doc-title-row h2 {
   margin: 0;
   color: #F2F0EA;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 450;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .kycv2-doc-text p {
-  margin: 5px 0 10px;
-  color: #8A8892;
-  font-size: 12px;
+  margin: 5px 0 0;
+  color: #5C5C64;
+  font-size: 11.5px;
   font-weight: 400;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
+/* Status chips */
 .kycv2-chip {
-  min-height: 24px;
+  height: 20px;
   width: fit-content;
   border-radius: 999px;
-  background: #222227;
-  color: #8A8892;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  font-size: 11px;
+  gap: 5px;
+  padding: 0 8px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
+/* Dot — only shown for uploaded/rejected states */
 .kycv2-chip span {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 99px;
-  background: #5C5C64;
+  flex-shrink: 0;
 }
 
+/* Not uploaded — neutral muted, no dot */
+.kycv2-chip--pending {
+  background: rgba(130, 130, 145, 0.12);
+  color: #8A8898;
+}
+
+/* Uploaded — green dot */
 .kycv2-chip--uploaded {
-  background: rgba(32, 164, 106, 0.13);
+  background: rgba(32, 164, 106, 0.12);
   color: #20A46A;
 }
 
@@ -12874,8 +13694,9 @@ button,
   background: #20A46A;
 }
 
+/* Rejected — amber dot */
 .kycv2-chip--rejected {
-  background: rgba(180, 89, 31, 0.13);
+  background: rgba(180, 89, 31, 0.12);
   color: #D47D43;
 }
 
@@ -12883,87 +13704,183 @@ button,
   background: #B4591F;
 }
 
+/* Action button — compact pill */
 .kycv2-doc-action {
-  min-width: 84px;
-  height: 42px;
+  height: 34px;
+  min-width: 80px;
   border: 0;
-  border-radius: 14px;
-  background: #F4F1E8;
-  color: #11100D;
+  border-radius: 11px;
+  background: #315eff;
+  color: #FFFFFF;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 0 14px;
-  font-size: 13px;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
 }
 
-.kycv2-doc-action--ghost {
-  border: 1px solid #29292F;
+/* Uploaded — ghost "Replace" button */
+.kycv2-doc-action--done {
   background: transparent;
-  color: #F2F0EA;
+  border: 1px solid #29292F;
+  color: #7C7C85;
+  min-width: 36px;
+  padding: 0 10px;
 }
 
 .kycv2-doc-action:disabled {
-  opacity: 0.58;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.kycv2-tips {
-  margin-top: 20px;
-  border: 1px solid #29292F;
-  border-radius: 20px;
-  background: rgba(17, 17, 20, 0.74);
-  padding: 18px;
+/* ── Aadhaar — front/back upload card ─────────────────────────── */
+
+/* Override the 3-column grid from the base card rule */
+.kycv2-doc-card--aadhar {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
 }
 
-.kycv2-tips-title {
-  color: #8A8892;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
+/* Header row inside the Aadhaar card */
+.kycv2-aadhar-header {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  align-items: start;
+  gap: 12px;
 }
 
-.kycv2-tip-grid {
+/* Two side-by-side upload zones */
+.kycv2-aadhar-sides {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.kycv2-tip-grid span {
-  min-height: 34px;
+/* Single zone tile */
+.kycv2-aadhar-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 12px 11px;
+  border: 1px dashed rgba(49, 94, 255, 0.30);
   border-radius: 12px;
-  background: #17171B;
-  color: #A2A0AA;
+  background: rgba(49, 94, 255, 0.04);
+  transition: border-color 0.2s;
+}
+
+/* Picked state — solid border */
+.kycv2-aadhar-zone.is-picked {
+  border-style: solid;
+  border-color: rgba(49, 94, 255, 0.45);
+  background: rgba(49, 94, 255, 0.07);
+}
+
+.kycv2-aadhar-zone-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b8aff;
+  opacity: 0.8;
+}
+
+.kycv2-aadhar-zone-name {
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  gap: 4px;
   font-size: 11px;
+  font-weight: 450;
+  color: #5b8aff;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kycv2-aadhar-zone-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(49, 94, 255, 0.35);
+  background: rgba(49, 94, 255, 0.10);
+  color: #5b8aff;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.kycv2-aadhar-zone-btn:hover {
+  background: rgba(49, 94, 255, 0.18);
+}
+.kycv2-aadhar-zone-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Merge status row (progress / error) */
+.kycv2-aadhar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 450;
+  color: #5b8aff;
+}
+.kycv2-aadhar-status.is-error {
+  color: #D97706;
+}
+
+/* Replace button (when already uploaded) */
+.kycv2-aadhar-replace {
+  margin-top: 10px;
+  grid-column: unset;
+  width: fit-content;
+}
+
+/* ── Tips — amber accent, inline ── */
+.kycv2-tips {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 20px;
+  padding-top: 16px;
+  /* rgba border — visible on dark, barely visible on light (intentional) */
+  border-top: 1px solid rgba(49, 94, 255, 0.12);
+  color: #C47F2A;
+  font-size: 11.5px;
   font-weight: 450;
 }
 
+/* ── Footer CTA ── */
 .kycv2-footer {
   position: sticky;
   bottom: 0;
   z-index: 5;
   margin: 22px -20px -116px;
-  padding: 10px 20px max(20px, env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, rgba(12, 12, 14, 0), #0C0C0E 20%);
+  padding: 12px 20px max(20px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(12, 12, 14, 0), #0C0C0E 22%);
 }
 
 .kycv2-primary {
   width: 100%;
-  min-height: 62px;
+  min-height: 60px;
   border: 0;
   border-radius: 18px;
-  background: #F4F1E8;
-  color: #11100D;
+  background: #202025;
+  color: #5C5C64;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -12972,47 +13889,80 @@ button,
   font-size: 15px;
   font-weight: 500;
   letter-spacing: -0.01em;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  box-shadow: none;
+  cursor: not-allowed;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.kycv2-primary:disabled {
-  background: #202025;
-  color: #5C5C64;
-  box-shadow: none;
+/* Ready state — when all docs uploaded */
+.kycv2-primary--ready {
+  background: #F4F1E8;
+  color: #11100D;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+  cursor: pointer;
 }
 
 .kycv2-primary-icon {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: 13px;
-  background: #0C0C0E;
-  color: #F4F1E8;
+  background: rgba(0, 0, 0, 0.18);
+  color: currentColor;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  transition: background 0.2s ease;
 }
 
-.kycv2-primary:disabled .kycv2-primary-icon {
-  background: #303036;
-  color: #6B6972;
+.kycv2-primary--ready .kycv2-primary-icon {
+  background: #0C0C0E;
+  color: #F4F1E8;
 }
 
 .kycv2-secure {
   margin-top: 14px;
-  color: #5C5C64;
+  color: #4A4A54;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 400;
+}
+
+/* Compact CTA button — always blue, validation on click */
+.kycv2-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: none;
+  background: #315eff;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  width: 100%;
+}
+
+.kycv2-cta-btn:hover { background: #1e4ee0; }
+
+.kycv2-cta-error {
+  margin-top: 8px;
   font-size: 12px;
-  font-weight: 450;
+  color: #D97706;
+  text-align: center;
 }
 
 @media (max-width: 360px) {
   .kycv2-doc-card {
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: 36px 1fr;
+    gap: 10px;
   }
-
   .kycv2-doc-action {
     grid-column: 2;
     width: fit-content;
@@ -13377,15 +14327,331 @@ button,
   }
 }
 
+/* ══ bnk2 — Bank Account Screen (compact redesign) ══════════════════════════ */
+
+.bnk2-screen {
+  min-height: 100%;
+  background: #0C0C0E;
+  padding: 20px 20px 116px;
+  color: #F2F0EA;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.bnk2-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.bnk2-hero-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(242, 240, 234, 0.08);
+  display: grid;
+  place-items: center;
+  color: #A8A5A0;
+}
+
+.bnk2-hero-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.bnk2-hero-copy h1 {
+  margin: 0 0 2px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #F2F0EA;
+}
+
+.bnk2-hero-copy p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: #7A7880;
+  line-height: 1.4;
+}
+
+/* ── Colored bank card (deep emerald green) ───────────────────────────────── */
+.bnk2-card {
+  border-radius: 18px;
+  padding: 20px;
+  background: linear-gradient(135deg, #0B3020 0%, #0E5C38 60%, #127A4A 100%);
+  margin-bottom: 22px;
+  box-shadow:
+    0 8px 32px rgba(10, 46, 26, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.bnk2-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.bnk2-card-bank {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bnk2-card-number {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "SF Mono", "Courier New", monospace;
+  margin-bottom: 16px;
+}
+
+.bnk2-card-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin-bottom: 14px;
+}
+
+.bnk2-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bnk2-card-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bnk2-card-meta > div:last-child {
+  text-align: right;
+}
+
+.bnk2-card-meta span:first-child {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.bnk2-card-meta span:last-child {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* bankv2-status badge inside the emerald card — !important beats phone-shell--light overrides */
+.bnk2-card .bankv2-status.is-verified,
+.phone-shell--light .bnk2-card .bankv2-status.is-verified {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: transparent !important;
+  color: #A8F0CB !important;
+  font-size: 11px;
+}
+.bnk2-card .bankv2-status.is-verified span,
+.phone-shell--light .bnk2-card .bankv2-status.is-verified span {
+  background: #A8F0CB !important;
+}
+.bnk2-card .bankv2-status.is-pending,
+.phone-shell--light .bnk2-card .bankv2-status.is-pending {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: transparent !important;
+  color: #A84C0A !important;
+  font-size: 11px;
+}
+.bnk2-card .bankv2-status.is-pending span,
+.phone-shell--light .bnk2-card .bankv2-status.is-pending span {
+  background: #C97020 !important;
+}
+
+/* ── Compact form ─────────────────────────────────────────────────────────── */
+.bnk2-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bnk2-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bnk2-field > span {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #7A7880;
+  letter-spacing: 0.01em;
+}
+
+.bnk2-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 240, 234, 0.09);
+  background: rgba(242, 240, 234, 0.04);
+  color: #F2F0EA;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-size: 14px;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.bnk2-field input::placeholder {
+  color: rgba(242, 240, 234, 0.25);
+}
+
+.bnk2-field input:focus {
+  border-color: rgba(49, 94, 255, 0.55);
+}
+
+.bnk2-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bnk2-input-row input {
+  width: 100%;
+  height: 42px;
+  padding: 0 36px 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 240, 234, 0.09);
+  background: rgba(242, 240, 234, 0.04);
+  color: #F2F0EA;
+  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-size: 14px;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.bnk2-input-row input::placeholder {
+  color: rgba(242, 240, 234, 0.25);
+}
+
+.bnk2-input-row input:focus {
+  border-color: rgba(49, 94, 255, 0.55);
+}
+
+.bnk2-check {
+  position: absolute;
+  right: 11px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* ── Success notice ───────────────────────────────────────────────────────── */
+.bnk2-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(242, 240, 234, 0.06);
+  border: 1px solid rgba(242, 240, 234, 0.12);
+  color: #8A8892;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.bnk2-success svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+.bnk2-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 22px -20px -116px;
+  padding: 10px 20px max(20px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(12, 12, 14, 0), #0C0C0E 20%);
+}
+
+.bnk2-secure {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #5C5C64;
+}
+
+/* ── Light-mode overrides ─────────────────────────────────────────────────── */
+.phone-shell--light .bnk2-screen { background: #FFFFFF !important; color: #11100D; }
+.phone-shell--light .bnk2-hero-copy h1 { color: #11100D; }
+.phone-shell--light .bnk2-hero-copy p  { color: #6B6870; }
+
+.phone-shell--light .bnk2-hero-icon {
+  background: rgba(17, 16, 13, 0.06);
+  color: #6B6870;
+}
+
+.phone-shell--light .bnk2-field > span { color: #6B6870; }
+
+.phone-shell--light .bnk2-field input,
+.phone-shell--light .bnk2-input-row input {
+  border-color: rgba(17, 16, 13, 0.12) !important;
+  background: rgba(17, 16, 13, 0.03) !important;
+  color: #11100D !important;
+}
+
+.phone-shell--light .bnk2-field input::placeholder,
+.phone-shell--light .bnk2-input-row input::placeholder {
+  color: rgba(17, 16, 13, 0.3) !important;
+}
+
+.phone-shell--light .bnk2-field input:focus,
+.phone-shell--light .bnk2-input-row input:focus {
+  border-color: rgba(49, 94, 255, 0.4) !important;
+}
+
+.phone-shell--light .bnk2-success {
+  background: rgba(17, 16, 13, 0.04);
+  border-color: rgba(17, 16, 13, 0.10);
+  color: #6B6870;
+}
+
+.phone-shell--light .bnk2-footer {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #FFFFFF 20%);
+}
+
+.phone-shell--light .bnk2-secure { color: #9A9898; }
+
+/* ══ end bnk2 ══════════════════════════════════════════════════════════════ */
+
 /* Advance verification lifecycle v2 */
 .adv-verify-screen {
   min-height: 100%;
-  background:
-    radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.035), transparent 32%),
-    #0C0C0E;
+  background: #0C0C0E;
   color: #F2F0EA;
   font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
-  padding: 30px 22px 116px;
+  padding: 18px 20px 116px;
 }
 
 .adv-verify-hero {
@@ -13393,221 +14659,255 @@ button,
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding-bottom: 4px;
 }
 
 .adv-verify-orb {
-  width: 94px;
-  height: 94px;
+  width: 64px;
+  height: 64px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 16px;
 }
 
 .adv-verify-hero.is-neutral .adv-verify-orb {
-  background: #4A4A4A;
-  color: #F4F1E8;
-  border: 1px solid #686868;
-  box-shadow: 0 0 0 11px rgba(255, 255, 255, 0.045);
+  background: #303036;
+  color: #A2A0AA;
+  border: 1px solid #45454C;
 }
 
 .adv-verify-hero.is-warm .adv-verify-orb {
-  background: rgba(180, 89, 31, 0.18);
+  background: rgba(180, 89, 31, 0.14);
   color: #D47D43;
-  border: 1px solid rgba(180, 89, 31, 0.52);
-  box-shadow: 0 0 0 11px rgba(180, 89, 31, 0.08);
+  border: 1px solid rgba(180, 89, 31, 0.40);
 }
 
 .adv-verify-hero.is-success .adv-verify-orb {
-  background: rgba(32, 164, 106, 0.16);
+  background: rgba(32, 164, 106, 0.14);
   color: #35CE8D;
-  border: 1px solid rgba(32, 164, 106, 0.42);
+  border: 1px solid rgba(32, 164, 106, 0.35);
 }
 
 .adv-verify-hero h1 {
-  margin: 0 0 14px;
+  margin: 0 0 8px;
   color: #F2F0EA;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 500;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
   line-height: 1.05;
 }
 
 .adv-verify-hero p {
-  max-width: 270px;
+  max-width: 280px;
   margin: 0;
-  color: #A2A0AA;
-  font-size: 14px;
+  color: #8A8892;
+  font-size: 13px;
   font-weight: 400;
   line-height: 1.45;
 }
 
 .adv-verify-pill {
-  min-height: 36px;
-  margin-top: 24px;
-  border: 1px solid #45454C;
+  min-height: 30px;
+  margin-top: 14px;
+  border: 1px solid #3A3A40;
   border-radius: 999px;
-  color: #F2F0EA;
+  color: #8A8892;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 0 16px;
-  font-size: 12px;
+  gap: 7px;
+  padding: 0 14px;
+  font-size: 11.5px;
   font-weight: 500;
 }
 
 .adv-verify-hero.is-warm .adv-verify-pill {
-  border-color: rgba(180, 89, 31, 0.58);
+  border-color: rgba(180, 89, 31, 0.45);
+  background: rgba(180, 89, 31, 0.07);
+  color: #C97D43;
+}
+
+/* ── Rejection alert ───────────────────────────────────────────────────────── */
+.adv-verify-reject {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
   background: rgba(180, 89, 31, 0.08);
+  border: 1px solid rgba(180, 89, 31, 0.30);
+}
+
+.adv-verify-reject-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #D47D43;
+  margin-bottom: 6px;
+}
+
+.adv-verify-reject p {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: #A28070;
+  line-height: 1.4;
+}
+
+.adv-verify-reject-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.adv-verify-reject-label {
+  font-size: 12.5px;
+  font-weight: 600;
   color: #D47D43;
 }
 
-.adv-verify-timeline {
-  margin-top: 38px;
-  border: 1px solid #29292F;
-  border-radius: 20px;
-  background: #111114;
-  padding: 22px 20px;
+.adv-verify-reject-file {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(210, 140, 80, 0.7);
+  word-break: break-all;
 }
 
-.adv-verify-step {
-  min-height: 74px;
-  display: grid;
-  grid-template-columns: 38px 1fr auto;
-  gap: 14px;
-}
-
-.adv-verify-step:last-child {
-  min-height: 0;
-}
-
-.adv-verify-step-rail {
-  display: grid;
-  grid-template-rows: 30px 1fr;
-  justify-items: center;
-}
-
-.adv-verify-step-rail span {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #303036;
-  background: #141418;
-  color: #5C5C64;
-  font-size: 17px;
-  line-height: 1;
-}
-
-.adv-verify-step-rail i {
-  width: 2px;
-  min-height: 36px;
-  background: #29292F;
-}
-
-.adv-verify-step.is-done .adv-verify-step-rail span,
-.adv-verify-step.is-done .adv-verify-step-rail i {
-  background: #35CE8D;
-  border-color: #35CE8D;
-  color: #0C0C0E;
-}
-
-.adv-verify-step.is-current .adv-verify-step-rail span {
-  background: rgba(180, 89, 31, 0.12);
-  border-color: #B4591F;
-  color: #D47D43;
-}
-
-.adv-verify-step-copy {
-  min-width: 0;
-  padding-bottom: 20px;
-}
-
-.adv-verify-step:last-child .adv-verify-step-copy {
-  padding-bottom: 0;
-}
-
-.adv-verify-step-copy strong {
-  display: block;
-  color: #F2F0EA;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.adv-verify-step.is-pending .adv-verify-step-copy strong {
-  color: #5C5C64;
-}
-
-.adv-verify-step-copy small {
-  display: block;
-  margin-top: 7px;
-  color: #8A8892;
+.adv-verify-reject-reason {
   font-size: 12px;
   font-weight: 400;
-  line-height: 1.32;
+  color: #A28070;
+  line-height: 1.4;
+  margin-top: 2px;
 }
 
-.adv-verify-step em {
-  align-self: start;
-  color: #5C5C64;
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.adv-verify-step.is-done em {
-  color: #35CE8D;
-}
-
-.adv-verify-step.is-current em {
+.adv-verify-reject-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(180, 89, 31, 0.18);
   color: #D47D43;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
+/* ── Summary cards ─────────────────────────────────────────────────────────── */
 .adv-verify-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
-.adv-verify-summary div {
-  min-height: 76px;
-  border: 1px solid #29292F;
-  border-radius: 16px;
-  background: #111114;
+.adv-verify-summary-card {
+  /* button reset */
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* KYC card — blue indigo */
+  border: 1px solid rgba(49, 94, 255, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0D1228 0%, #162058 55%, #1A2870 100%);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 16px;
+  gap: 6px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 16px rgba(10, 20, 80, 0.45);
+  transition: opacity 0.15s ease;
+}
+.adv-verify-summary-card:active {
+  opacity: 0.75;
+}
+
+/* Bank card — deep emerald, matching bnk2-card */
+.adv-verify-summary-card--bank {
+  background: linear-gradient(135deg, #0B3020 0%, #0E5C38 60%, #127A4A 100%);
+  border-color: rgba(18, 122, 74, 0.4);
+  box-shadow: 0 4px 16px rgba(10, 46, 26, 0.5);
 }
 
 .adv-verify-summary span {
-  color: #F2F0EA;
+  color: #6A6870;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.adv-verify-summary span svg {
-  color: #35CE8D;
+/* White text on the blue KYC card */
+.adv-verify-summary-card span {
+  color: rgba(255, 255, 255, 0.5);
+}
+.adv-verify-summary-card strong {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Labels on the green bank card */
+.adv-verify-summary-card--bank span {
+  color: rgba(255, 255, 255, 0.5);
+}
+.adv-verify-summary-card--bank span svg {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .adv-verify-summary strong {
-  color: #8A8892;
-  font-size: 12px;
+  color: #C8C6D2;
+  font-size: 12.5px;
   font-weight: 450;
   line-height: 1.25;
 }
 
+/* Value text on the green bank card */
+.adv-verify-summary-card--bank strong {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.adv-verify-bank-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.adv-verify-bank-status i {
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.adv-verify-bank-status.is-verified {
+  color: #A8F0CB;
+}
+.adv-verify-bank-status.is-verified i {
+  background: #A8F0CB;
+}
+
+.adv-verify-bank-status.is-pending {
+  color: rgba(255, 255, 255, 0.65);
+}
+.adv-verify-bank-status.is-pending i {
+  background: rgba(255, 200, 120, 0.8);
+}
+
 .adv-verify-footer {
   position: static;
-  margin: 18px 0 0;
+  margin: 16px 0 0;
   padding: 0;
   background: transparent;
 }
@@ -13770,7 +15070,6 @@ html[data-theme="light"] body {
 .phone-shell--light .kycv2-kicker,
 .phone-shell--light .kycv2-hero p,
 .phone-shell--light .kycv2-doc-text p,
-.phone-shell--light .kycv2-tips-title,
 .phone-shell--light .bankv2-kicker,
 .phone-shell--light .bankv2-hero p,
 .phone-shell--light .bankv2-field > span,
@@ -13808,15 +15107,12 @@ html[data-theme="light"] body {
 .phone-shell--light .pbv2-card,
 .phone-shell--light .pbv2-note,
 .phone-shell--light .pbv2-manage,
-.phone-shell--light .kycv2-hero,
 .phone-shell--light .kycv2-doc-card,
-.phone-shell--light .kycv2-tips,
 .phone-shell--light .bankv2-hero,
 .phone-shell--light .bankv2-input-wrap,
 .phone-shell--light .bankv2-note,
 .phone-shell--light .bankv2-account-card,
-.phone-shell--light .adv-verify-timeline,
-.phone-shell--light .adv-verify-summary div {
+.phone-shell--light .adv-verify-timeline {
   border-color: #E9E6F1 !important;
   background: #FFFFFF !important;
   box-shadow: 0 30px 80px -30px rgba(30, 22, 54, 0.14) !important;
@@ -13831,7 +15127,6 @@ html[data-theme="light"] body {
 .phone-shell--light .pbv2-bank-icon,
 .phone-shell--light .pbv2-manage button > span,
 .phone-shell--light .kycv2-doc-icon,
-.phone-shell--light .kycv2-tip-grid span,
 .phone-shell--light .bankv2-hero-icon {
   border-color: #ECE9F5 !important;
   background: #F5F3FB !important;
@@ -13939,10 +15234,10 @@ html[data-theme="light"] body {
   box-shadow: 0 12px 32px -8px rgba(30, 22, 54, 0.14) !important;
 }
 
-.phone-shell--light .kycv2-doc-action--ghost {
+.phone-shell--light .kycv2-doc-action--done {
   border-color: #E2DEEE !important;
-  background: #FFFFFF !important;
-  color: #17151F !important;
+  background: transparent !important;
+  color: #6B6878 !important;
 }
 
 .phone-shell--light .kycv2-primary:disabled,
@@ -14001,6 +15296,50 @@ html[data-theme="light"] body {
 
 .phone-shell--light .adv-verify-step.is-current em {
   color: #B4591F !important;
+}
+
+/* KYC summary card — always blue indigo regardless of theme */
+.phone-shell--light .adv-verify-summary-card {
+  background: linear-gradient(135deg, #0D1228 0%, #162058 55%, #1A2870 100%) !important;
+  border-color: rgba(49, 94, 255, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(10, 20, 80, 0.35) !important;
+}
+.phone-shell--light .adv-verify-summary-card span {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.phone-shell--light .adv-verify-summary-card strong {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* Bank summary card — always emerald green regardless of theme */
+.phone-shell--light .adv-verify-summary-card--bank,
+.adv-verify-summary-card--bank {
+  background: linear-gradient(135deg, #0B3020 0%, #0E5C38 60%, #127A4A 100%) !important;
+  border-color: rgba(18, 122, 74, 0.4) !important;
+  box-shadow: 0 4px 16px rgba(10, 46, 26, 0.4) !important;
+}
+
+.phone-shell--light .adv-verify-summary-card--bank span,
+.adv-verify-summary-card--bank span {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.phone-shell--light .adv-verify-summary-card--bank span svg,
+.adv-verify-summary-card--bank span svg {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.phone-shell--light .adv-verify-summary-card--bank strong,
+.adv-verify-summary-card--bank strong {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* Chevron on bank card always white-ish; on KYC card subtle in light mode */
+.adv-verify-summary-card--bank .adv-verify-summary-chevron {
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+.phone-shell--light .adv-verify-summary-card .adv-verify-summary-chevron {
+  color: rgba(23, 21, 31, 0.2) !important;
 }
 
 /* ============================================================
@@ -14387,9 +15726,8 @@ html[data-theme="light"] body {
   position: relative;
   display: flex !important;
   align-items: flex-start !important;
-  gap: 14px !important;
-  min-height: 92px;
-  padding: 16px 18px 16px 18px !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
   border-radius: 22px;
   border: 1px solid var(--notif-border) !important;
   border-bottom: 1px solid var(--notif-border) !important;
@@ -14429,9 +15767,9 @@ html[data-theme="light"] body {
 }
 
 .phone-shell .notif-icon {
-  width: 44px !important;
-  height: 44px !important;
-  flex: 0 0 44px;
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px;
   border-radius: 14px !important;
   display: inline-flex;
   align-items: center;
@@ -14477,7 +15815,7 @@ html[data-theme="light"] body {
   line-height: 1.18 !important;
   font-weight: 500 !important;
   letter-spacing: -0.03em !important;
-  margin: 0 0 6px !important;
+  margin: 0 0 3px !important;
 }
 
 .phone-shell .notif-title i {
@@ -14501,7 +15839,7 @@ html[data-theme="light"] body {
 }
 
 .phone-shell .notif-time {
-  margin-top: 12px !important;
+  margin-top: 4px !important;
   color: var(--notif-dim) !important;
   font-size: 12px !important;
   line-height: 1 !important;
@@ -14814,9 +16152,11 @@ html[data-theme="light"] body {
 .phone-shell .profile-membership-summary {
   min-height: 118px;
   margin: 10px 0 4px;
-  border: 1px solid var(--profile-border, #29292F);
+  border: 1px solid rgba(220, 150, 20, 0.20);
   border-radius: 24px;
-  background: linear-gradient(145deg, var(--profile-panel, rgba(20,20,24,0.72)), var(--profile-panel-soft, #17171B));
+  background:
+    radial-gradient(circle at 90% 15%, rgba(245, 166, 35, 0.10), transparent 40%),
+    linear-gradient(145deg, #1E1600, #161000);
   color: var(--profile-text, #F2F0EA);
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr);
@@ -14830,10 +16170,10 @@ html[data-theme="light"] body {
 .phone-shell .profile-membership-summary-icon {
   width: 54px;
   height: 54px;
-  border: 1px solid var(--profile-border, #29292F);
+  border: 1px solid rgba(245, 166, 35, 0.24);
   border-radius: 16px;
-  background: var(--profile-panel-soft, #17171B);
-  color: var(--profile-icon, #C9C7D0);
+  background: rgba(245, 166, 35, 0.12);
+  color: #F5A623;
   display: grid;
   place-items: center;
 }
@@ -14982,18 +16322,12 @@ html[data-theme="light"] body {
   background: #FFFFFF !important;
 }
 
-.phone-shell--light .kycv2-doc-action--ghost svg,
 .phone-shell--light .kycv2-doc-card.is-uploaded .kycv2-doc-icon svg,
 .phone-shell--light .profile-v2-status-pill--green svg {
   color: #1F9E67 !important;
   stroke: currentColor !important;
 }
 
-.phone-shell--light .kycv2-tip-grid span {
-  white-space: nowrap;
-  justify-content: center;
-  padding: 0 10px !important;
-}
 
 .phone-shell--light .change-password-screen button[type="submit"]:disabled,
 .phone-shell--light .change-password-screen button[disabled] {
@@ -15114,21 +16448,8 @@ html[data-theme="light"] body {
 
 .phone-shell .kycv2-tips {
   margin-top: 18px !important;
-  padding: 16px !important;
-  border-radius: 20px !important;
 }
 
-.phone-shell .kycv2-tip-grid {
-  gap: 9px !important;
-  margin-top: 14px !important;
-}
-
-.phone-shell .kycv2-tip-grid span {
-  min-height: 34px !important;
-  border-radius: 13px !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
-}
 
 .phone-shell .kycv2-primary,
 .phone-shell .bankv2-primary {
@@ -15166,6 +16487,11 @@ html[data-theme="light"] body {
 .phone-shell--light .kycv2-footer,
 .phone-shell--light .bankv2-footer--form {
   background: transparent !important;
+}
+
+.phone-shell--light .kycv2-tips {
+  color: #B45309 !important;
+  border-top-color: #F0EBF8 !important;
 }
 
 .phone-shell--light .kycv2-secure,
@@ -15251,4 +16577,193 @@ html[data-theme="light"] body {
   .phone-shell .bankv2-input-wrap input {
     font-size: 15px !important;
   }
+}
+
+/* ── Card accent colours (light theme overrides) ─────────────────────────
+   Bank card  → emerald green
+   Membership summary → amber / gold
+────────────────────────────────────────────────────────────────────────── */
+
+.phone-shell--light .pbv2-card {
+  border-color: rgba(18, 122, 74, 0.4) !important;
+  background: linear-gradient(135deg, #0B3020 0%, #0E5C38 60%, #127A4A 100%) !important;
+  box-shadow: 0 8px 32px rgba(10, 46, 26, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Text inside pbv2-card is now on dark green — must be white */
+.phone-shell--light .pbv2-card h1,
+.phone-shell--light .pbv2-meta strong {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.phone-shell--light .pbv2-meta span {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.phone-shell--light .pbv2-number {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.phone-shell--light .pbv2-bank-icon {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.phone-shell--light .pbv2-line {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.phone-shell--light .pbv2-card-row span {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.phone-shell--light .pbv2-card-row svg {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.phone-shell--light .profile-membership-summary {
+  border-color: rgba(200, 130, 0, 0.18) !important;
+  background: linear-gradient(145deg, #FFFCEE, #FFF7D8) !important;
+  box-shadow: 0 20px 60px -24px rgba(200, 130, 0, 0.14) !important;
+}
+
+.phone-shell--light .profile-membership-summary-icon {
+  border-color: rgba(200, 130, 0, 0.22) !important;
+  background: rgba(245, 166, 35, 0.10) !important;
+  color: #A06800 !important;
+}
+
+.phone-shell--light .profile-membership-summary p {
+  color: #6B6878 !important;
+}
+
+.phone-shell--light .profile-membership-summary-term {
+  border-color: rgba(200, 130, 0, 0.22) !important;
+  color: #8A6A00 !important;
+}
+
+/* ── pbv2-note: blue info tint (override the generic white rule above) ── */
+.phone-shell--light .pbv2-note {
+  border-color: rgba(49, 94, 255, 0.14) !important;
+  background: rgba(49, 94, 255, 0.05) !important;
+  box-shadow: none !important;
+}
+
+.phone-shell--light .pbv2-note svg {
+  color: #315eff !important;
+}
+
+.phone-shell--light .pbv2-note-title {
+  color: #17151F !important;
+}
+
+.phone-shell--light .pbv2-note-body {
+  color: #6B6878 !important;
+}
+
+.phone-shell--light .pbv2-note-body strong {
+  color: #17151F !important;
+}
+
+/* ============================================================
+   Help: FAQ item divider (replaces hardcoded inline #F3F1FF)
+   ============================================================ */
+.help-faq-item {
+  border-bottom: 1px solid #F3F1FF;
+}
+.phone-shell--dark .help-faq-item {
+  border-bottom-color: #1C1C20 !important;
+}
+
+/* ============================================================
+   Help: Security card — dark mode overrides
+   ============================================================ */
+.phone-shell--dark .help-security-card {
+  background: rgba(31, 158, 103, 0.08) !important;
+  border-color: rgba(31, 158, 103, 0.18) !important;
+}
+.phone-shell--dark .help-security-title {
+  color: #3FBF84 !important;
+}
+.phone-shell--dark .help-security-sub {
+  color: #2D9966 !important;
+}
+.phone-shell--dark .help-security-icon {
+  color: #3FBF84 !important;
+}
+
+/* ============================================================
+   Bank card: tighter pbv2-line margin inside card
+   ============================================================ */
+.pbv2-card .pbv2-line {
+  margin: 14px 0 12px !important;
+}
+
+/* ============================================================
+   KYC light mode: keep screen white; give cards a tinted lift
+   so they're visible against the white page background
+   ============================================================ */
+.phone-shell--light .kycv2-doc-card {
+  background: #F5F3FA !important;
+  border-color: #D8D4EC !important;
+  box-shadow: none !important;
+}
+.phone-shell--light .kycv2-doc-card.is-uploaded {
+  background: #F0FBF5 !important;
+  border-color: rgba(31, 158, 103, 0.28) !important;
+}
+
+/* ============================================================
+   Help light mode: override purple --bg with white
+   ============================================================ */
+.phone-shell--light .help-screen {
+  background: #FFFFFF !important;
+}
+
+/* ============================================================
+   KYC light mode: uploaded doc-icon SVG must stay white
+   (base rule accidentally set it to green on a green bg)
+   ============================================================ */
+.phone-shell--light .kycv2-doc-card.is-uploaded .kycv2-doc-icon svg {
+  color: #FFFFFF !important;
+  stroke: currentColor !important;
+}
+
+/* ============================================================
+   Aadhaar front/back zones — light mode
+   ============================================================ */
+.phone-shell--light .kycv2-aadhar-zone {
+  border-color: rgba(49, 94, 255, 0.25) !important;
+  background: rgba(49, 94, 255, 0.03) !important;
+}
+.phone-shell--light .kycv2-aadhar-zone.is-picked {
+  border-color: rgba(49, 94, 255, 0.50) !important;
+  background: rgba(49, 94, 255, 0.06) !important;
+}
+.phone-shell--light .kycv2-aadhar-zone-btn {
+  border-color: rgba(49, 94, 255, 0.30) !important;
+  background: rgba(49, 94, 255, 0.07) !important;
+}
+.phone-shell--light .kycv2-aadhar-status.is-error {
+  color: #B45309 !important;
+}
+
+/* ============================================================
+   Help: remove doubled horizontal spacing inside phone-shell
+   (.phone-shell .help-screen already has padding: 0 16px)
+   ============================================================ */
+.phone-shell .help-contact-strip,
+.phone-shell .help-faq-card,
+.phone-shell .help-security-card {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.phone-shell .help-topic-grid {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.phone-shell .help-section-label {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }

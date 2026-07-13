@@ -1,13 +1,21 @@
+// ── DashboardScreen.tsx ───────────────────────────────────────────────────────
+// Home screen. Shows salary on file, advance limit/used, paydate,
+// and a recent-activity summary. All financial figures come directly from
+// the backend (dashboard object); no re-computation on the frontend.
+
 import {
   Archive,
   ArrowDownToLine,
-  ArrowRight,
   CalendarDays,
+  XCircle,
+  Clock,
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { AdvanceRequest, AppState, View } from "../types/app";
 import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
 import type { Theme } from "../hooks/useTheme";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 type DashboardScreenProps = {
   appState: AppState;
@@ -16,36 +24,83 @@ type DashboardScreenProps = {
   theme?: Theme;
 };
 
-const DARK = "#0C0C0E";
-const PANEL = "#17171B";
-const PANEL_2 = "#141418";
-const BORDER = "#29292F";
-const TEXT = "#F2F0EA";
-const MUTED = "#8A8892";
-const DIM = "#5C5C64";
-const WARM = "#B4591F";
-const GREEN = "#20A46A";
+// ── Hero card constants (blue gradient, same in both themes) ──────────────────
 
-function latestRequest(requests: AdvanceRequest[]) {
-  return [...requests].sort(
-    (a, b) =>
-      new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
-  )[0];
+const HERO_BG         = "linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%)";
+const HERO_SHADOW     = "0 16px 48px rgba(49,94,255,0.30)";
+const HERO_TEXT       = "#FFFFFF";
+const HERO_MUTED      = "rgba(255,255,255,0.65)";
+const HERO_BORDER     = "rgba(255,255,255,0.16)";
+const HERO_TILE_BG    = "rgba(255,255,255,0.13)";
+const HERO_METRIC_USED = "#FFD4A0";   // amber — draws attention to amount drawn
+
+// ── Theme palette ─────────────────────────────────────────────────────────────
+
+function dashboardPalette(theme: Theme) {
+  if (theme === "light") {
+    return {
+      bg:          "#FFFFFF",
+      panel2:      "#FFFFFF",
+      border:      "#E9E6F1",
+      text:        "#17151F",
+      muted:       "#6B6878",
+      dim:         "#9A97A8",
+      warm:        "#B4591F",
+      green:       "#1F9E67",
+      divider:     "#F1EEF7",
+      emptyBorder: "#E2DEEE",
+      emptyBg:     "#FFFFFF",
+      iconTile:    "#F5F3FB",
+      shadow:      "0 8px 32px -8px rgba(30,22,54,0.12), 0 1px 0 rgba(30,22,54,0.04)",
+    };
+  }
+  return {
+    bg:          "#0C0C0E",
+    panel2:      "#141418",
+    border:      "#29292F",
+    text:        "#F2F0EA",
+    muted:       "#8A8892",
+    dim:         "#5C5C64",
+    warm:        "#B4591F",
+    green:       "#20A46A",
+    divider:     "#1C1C20",
+    emptyBorder: "#303036",
+    emptyBg:     "rgba(20,20,24,0.32)",
+    iconTile:    "#141418",
+    shadow:      "0 4px 24px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.03)",
+  };
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// ── Status semantic colour ─────────────────────────────────────────────────────
+
+type StatusTone = "success" | "error" | "warning" | "pending" | "neutral";
+
+function statusTone(status: string, disbursalStatus?: string): StatusTone {
+  if (disbursalStatus === "Disbursed") return "success";
+  const s = status.toLowerCase();
+  if (s.includes("reject") || s.includes("cancelled") || s.includes("expired")) return "error";
+  if (s.includes("paid") || s.includes("recovered") || s.includes("repaid")) return "success";
+  if (s.includes("approved")) return "warning"; // employer/admin approved but not yet disbursed
+  return "pending";
+}
+
+const TONE_TOKEN = {
+  success: { bg: "rgba(16,185,129,0.10)", fg: "#10b981", pill: "rgba(16,185,129,0.12)", pillBorder: "rgba(16,185,129,0.3)" },
+  error:   { bg: "rgba(239,68,68,0.10)",  fg: "#ef4444", pill: "rgba(239,68,68,0.12)",  pillBorder: "rgba(239,68,68,0.3)"  },
+  warning: { bg: "rgba(245,158,11,0.10)", fg: "#f59e0b", pill: "rgba(245,158,11,0.12)", pillBorder: "rgba(245,158,11,0.3)" },
+  pending: { bg: "rgba(49,94,255,0.10)",  fg: "#315eff", pill: "rgba(49,94,255,0.10)",  pillBorder: "rgba(49,94,255,0.25)" },
+  neutral: { bg: "rgba(107,104,120,0.10)",fg: "#6B6878", pill: "rgba(107,104,120,0.10)",pillBorder: "rgba(107,104,120,0.2)"},
+} as const;
+
+// Most-relevant advance to surface in Recent Activity.
 function activeAdvance(requests: AdvanceRequest[]) {
   return (
-    requests.find(
-      (r) =>
-        r.disbursalStatus === "Disbursed" && r.recoveryStatus === "Scheduled"
-    ) ??
+    requests.find((r) => r.disbursalStatus === "Disbursed" && r.recoveryStatus === "Scheduled") ??
     requests.find((r) => r.disbursalStatus === "Pending") ??
-    latestRequest(requests)
+    [...requests].sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())[0]
   );
-}
-
-function firstNameOnly(displayName: string) {
-  return displayName.trim().split(/\s+/)[0] || "Colleague";
 }
 
 function maskBank(bankName?: string, accountNumber?: string) {
@@ -53,62 +108,7 @@ function maskBank(bankName?: string, accountNumber?: string) {
   return `${bankName || "Bank"} ••${accountNumber.slice(-4)}`;
 }
 
-function peerTime(daysAgo: number) {
-  if (daysAgo <= 0) return "Today";
-  if (daysAgo === 1) return "Yesterday";
-  return `${daysAgo}d ago`;
-}
-
-function dashboardPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      bg: "#FFFFFF",
-      panel: "#FFFFFF",
-      panel2: "#FFFFFF",
-      border: "#E9E6F1",
-      text: "#17151F",
-      muted: "#6B6878",
-      dim: "#9A97A8",
-      warm: "#B4591F",
-      green: "#1F9E67",
-      ring: "#315eff",
-      ringTrack: "#EEEBF6",
-      divider: "#F1EEF7",
-      emptyBorder: "#E2DEEE",
-      emptyBg: "#FFFFFF",
-      ctaBg: "#315eff",
-      ctaText: "#FFFFFF",
-      ctaIconBg: "#FFFFFF",
-      ctaIconText: "#315eff",
-      iconTile: "#F5F3FB",
-      shadow: "0 8px 32px -8px rgba(30,22,54,0.12), 0 1px 0 rgba(30,22,54,0.04)",
-    };
-  }
-
-  return {
-    bg: DARK,
-    panel: PANEL,
-    panel2: PANEL_2,
-    border: BORDER,
-    text: TEXT,
-    muted: MUTED,
-    dim: DIM,
-    warm: WARM,
-    green: GREEN,
-    ring: TEXT,
-    ringTrack: "#2A2A30",
-    divider: "#1C1C20",
-    emptyBorder: "#303036",
-    emptyBg: "rgba(20,20,24,0.32)",
-    ctaBg: "#F4F1E8",
-    ctaText: "#11100D",
-    ctaIconBg: "#0F0E0C",
-    ctaIconText: "#F4F1E8",
-    iconTile: PANEL_2,
-    shadow: "0 4px 24px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.03)",
-  };
-}
-
+// Only show repayment row when a recovery amount exists and advance is live.
 function hasVisibleRepayment(request?: AdvanceRequest) {
   if (!request) return false;
   return (
@@ -118,6 +118,8 @@ function hasVisibleRepayment(request?: AdvanceRequest) {
     request.status === "Recovered"
   );
 }
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function SectionLabel({
   children,
@@ -129,419 +131,273 @@ function SectionLabel({
   colors: ReturnType<typeof dashboardPalette>;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 14,
-      }}
-    >
-      <span
-        style={{
-          color: colors.muted,
-          fontSize: 12,
-          fontWeight: 500,
-          letterSpacing: "0.28em",
-          textTransform: "uppercase",
-        }}
-      >
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+      <span style={{ color: colors.muted, fontSize: 12, fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase" }}>
         {children}
       </span>
       {action && (
         <button
           type="button"
           onClick={action}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            color: colors.text,
-            fontSize: 13,
-            fontWeight: 450,
-            background: "transparent",
-            border: 0,
-          }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, color: colors.text, fontSize: 13, fontWeight: 450, background: "transparent", border: 0, cursor: "pointer" }}
         >
-          View all <ArrowRight size={15} strokeWidth={2.1} />
+          View all
         </button>
       )}
     </div>
   );
 }
 
-export function DashboardScreen({
-  appState,
-  notice,
-  onNavigate,
-  theme = "dark",
-}: DashboardScreenProps) {
+// ── DashboardScreen ───────────────────────────────────────────────────────────
+
+export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }: DashboardScreenProps) {
   const { profile, dashboard, requests, bankAccount, peerActivity } = appState;
   const colors = dashboardPalette(theme);
-  const DARK = colors.bg;
-  const PANEL = colors.panel;
-  const PANEL_2 = colors.panel2;
-  const BORDER = colors.border;
-  const TEXT = colors.text;
-  const MUTED = colors.muted;
-  const DIM = colors.dim;
-  const WARM = colors.warm;
-  const GREEN = colors.green;
 
-  const monthlySalary = dashboard?.salaryInHand ?? profile.salaryLimit ?? 0;
-  const limit = dashboard?.approvedLimit ?? monthlySalary;
-  const current = activeAdvance(requests);
-  const advanceTaken = current
-    ? current.approvedAmount || current.requestedAmount
-    : dashboard?.activeRequestAmount ?? 0;
-  const availableNow =
-    dashboard?.availableAdvance ?? Math.max(0, limit - advanceTaken);
-  const heroMetrics = [
-    { label: "Total limit", value: formatMoney(limit), tone: TEXT },
-    { label: "Used", value: formatMoney(advanceTaken), tone: advanceTaken > 0 ? WARM : TEXT },
-    { label: "Available", value: formatMoney(availableNow), tone: GREEN },
-  ];
-  const usedPercent =
-    limit > 0 ? Math.min(100, Math.round((advanceTaken / limit) * 100)) : 0;
-  const hasAdvanceHistory = requests.length > 0 || advanceTaken > 0;
-  const primaryActionCopy = hasAdvanceHistory ? "Manage advance" : "Access advance";
-  const bankMeta = maskBank(bankAccount?.bankName, bankAccount?.accountNumber);
-  const recent = current ?? latestRequest(requests);
-  const repaymentAmount = recent?.totalRecoveryAmount || advanceTaken;
-  const repaymentDate = recent?.recoveryDate ? formatShortDate(recent.recoveryDate) : "Payday";
-  const recentIsDisbursed = recent?.disbursalStatus === "Disbursed";
+  // ── Data — straight from backend; no derived arithmetic ───────────────────
+  const salary       = dashboard?.salaryInHand ?? 0;
+  const limit        = dashboard?.approvedLimit ?? 0;
+  const advanceTaken = dashboard?.activeRequestAmount ?? 0;
+  const payrollDay   = dashboard?.payrollDay;          // day-of-month, e.g. 28
+  const recent       = activeAdvance(requests);
+  const hasHistory   = requests.length > 0 || advanceTaken > 0;
+  const bankMeta     = maskBank(bankAccount?.bankName, bankAccount?.accountNumber);
+  const recentDisbursed  = recent?.disbursalStatus === "Disbursed";
+  const repaymentAmount  = recent?.totalRecoveryAmount ?? advanceTaken;
+  const repaymentDate    = recent?.recoveryDate ? formatShortDate(recent.recoveryDate) : "Payday";
   const showRepaymentRow = hasVisibleRepayment(recent) && repaymentAmount > 0;
-  const peer = peerActivity;
-  const peerRows = peer?.recentActivity?.slice(0, 3) ?? [];
-  const peerCount = peer?.activeUsers ?? 0;
+  const firstName        = (profile.name || "").split(" ")[0] || "there";
+
+  // ── Peer activity ─────────────────────────────────────────────────────────
+  const peerInitials = peerActivity?.initials ?? [];
+  const peerCount    = peerActivity?.activeUsers ?? 0;
+
+  const PEER_PALETTES = [
+    { bg: "rgba(49,94,255,0.18)",  fg: theme === "light" ? "#2549DA" : "#7B9FFF" },
+    { bg: "rgba(31,158,103,0.18)", fg: theme === "light" ? "#1A7A52" : "#3FBF84" },
+    { bg: "rgba(245,166,35,0.18)", fg: theme === "light" ? "#A06800" : "#F5A623" },
+    { bg: "rgba(207,78,255,0.15)", fg: theme === "light" ? "#8B20B5" : "#CF4EFF" },
+    { bg: "rgba(255,94,78,0.15)",  fg: theme === "light" ? "#C02A18" : "#FF6B5B" },
+  ];
 
   const shellStyle: CSSProperties = {
     minHeight: "100%",
-    background: DARK,
-    color: TEXT,
-    
+    background: colors.bg,
+    color: colors.text,
     padding: "20px 22px 28px",
   };
 
   return (
     <div style={shellStyle}>
+
+      {/* ── Notice banner (admin-set messages) ───────────────────────────── */}
       {notice && (
         <div
           style={{
             marginBottom: 14,
             padding: "12px 14px",
-            border: `1px solid ${BORDER}`,
+            border: `1px solid ${colors.border}`,
             borderRadius: 16,
-            background: PANEL_2,
-            color: MUTED,
+            background: colors.panel2,
+            color: colors.muted,
             fontSize: 12,
-            fontWeight: 400,
           }}
         >
           {notice}
         </div>
       )}
 
+      {/* ── Greeting ─────────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ color: colors.text, fontSize: 22, fontWeight: 400, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+          Hey, {firstName}
+        </div>
+        <div style={{ color: colors.muted, fontSize: 13, fontWeight: 400, marginTop: 4 }}>
+          Here's your advance overview
+        </div>
+      </div>
+
+      {/* ── Hero card — blue gradient ─────────────────────────────────────── */}
       <section
         style={{
-          border: `1px solid ${BORDER}`,
+          position: "relative",
           borderRadius: 22,
-          background: PANEL,
-          padding: "24px 22px 22px",
-          boxShadow: colors.shadow,
+          background: HERO_BG,
+          padding: "22px 20px 20px",
+          boxShadow: HERO_SHADOW,
+          overflow: "hidden",
         }}
       >
+        {/* Subtle dot pattern overlay */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "92px 1fr",
-            gap: 22,
-            alignItems: "center",
-          }}
-        >
-          <div
-            aria-label={`${usedPercent}% salary advance used`}
-            style={{
-              width: 78,
-              height: 78,
-              borderRadius: 999,
-              background: `conic-gradient(${colors.ring} ${usedPercent > 0 ? Math.max(14, usedPercent * 3.6) : 0}deg, ${colors.ringTrack} 0deg)`,
-              padding: 6,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                borderRadius: 999,
-                background: PANEL,
-                border: `1px solid ${BORDER}`,
-                display: "grid",
-                placeItems: "center",
-                textAlign: "center",
-              }}
-            >
-              <span
-                style={{
-                  color: TEXT,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  lineHeight: 1,
-                }}
-              >
-                {usedPercent}%
-              </span>
-              <span
-                style={{
-                  color: MUTED,
-                  fontSize: 9,
-                  fontWeight: 500,
-                  letterSpacing: "0.22em",
-                  textTransform: "uppercase",
-                  marginTop: -12,
-                }}
-              >
-                Used
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <div
-              style={{
-                color: MUTED,
-                fontSize: 12,
-                fontWeight: 500,
-                letterSpacing: "0.26em",
-                textTransform: "uppercase",
-                marginBottom: 8,
-              }}
-            >
-              Salary on File
-            </div>
-            <div
-              style={{
-                color: TEXT,
-                
-                fontSize: 28,
-                fontWeight: 450,
-                letterSpacing: "-0.07em",
-                lineHeight: 1,
-              }}
-            >
-              {monthlySalary ? formatMoney(monthlySalary) : "—"}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                color: MUTED,
-                fontSize: 13,
-                fontWeight: 400,
-                marginTop: 14,
-              }}
-            >
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 99,
-                  background: GREEN,
-                }}
-              />
-              {dashboard ? "Updated today" : "Syncing salary data"}
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            height: 1,
-            background: BORDER,
-            margin: "24px 0 16px",
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+            pointerEvents: "none",
           }}
         />
 
-        <div
-          style={{
-            color: MUTED,
-            fontSize: 11,
-            fontWeight: 500,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            marginBottom: 10,
-          }}
-        >
-          Advance limit
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: 8,
-            alignItems: "stretch",
-          }}
-        >
-          {heroMetrics.map((metric) => (
-            <div
-              key={metric.label}
-              style={{
-                minWidth: 0,
-                padding: "12px 10px",
-                borderRadius: 16,
-                border: `1px solid ${theme === "light" ? colors.divider : "rgba(242,240,234,0.045)"}`,
-                background: theme === "light" ? "#F3F1FB" : "rgba(255,255,255,0.03)",
-              }}
-            >
-              <div
-                style={{
-                  color: MUTED,
-                  fontSize: 11,
-                  lineHeight: 1.2,
-                  fontWeight: 500,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  marginBottom: 9,
-                }}
-              >
-                {metric.label}
-              </div>
-              <div
-                style={{
-                  
-                  color: metric.tone,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  letterSpacing: "-0.02em",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {metric.value}
-              </div>
+        {/* ── Salary + paydate row ─────────────────────────────────────── */}
+        <div style={{ position: "relative" }}>
+          <div style={{ color: HERO_MUTED, fontSize: 11, fontWeight: 500, letterSpacing: "0.26em", textTransform: "uppercase", marginBottom: 8 }}>
+            Salary on file
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ color: HERO_TEXT, fontSize: 28, fontWeight: 450, letterSpacing: "-0.07em", lineHeight: 1 }}>
+              {salary ? formatMoney(salary) : "—"}
             </div>
-          ))}
+            {/* Paydate — displayed only when the backend provides a payroll day */}
+            {payrollDay != null && (
+              <div style={{ display: "flex", alignItems: "center", gap: 5, color: HERO_MUTED, fontSize: 12 }}>
+                <CalendarDays size={13} strokeWidth={1.8} />
+                <span>Pay day {payrollDay}</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, color: HERO_MUTED, fontSize: 13, marginTop: 12 }}>
+            <span style={{ width: 7, height: 7, borderRadius: 99, background: "#5BEBA0", flexShrink: 0 }} />
+            {dashboard ? "Synced" : "Syncing salary data"}
+          </div>
         </div>
 
-        <div style={{ marginTop: 14 }}>
+        {/* Divider */}
+        <div style={{ height: 1, background: HERO_BORDER, margin: "20px 0 16px", position: "relative" }} />
+
+        {/* ── Advance: limit + used (2 tiles, straight from backend) ───── */}
+        <div style={{ color: HERO_MUTED, fontSize: 11, fontWeight: 500, letterSpacing: "0.22em", textTransform: "uppercase", marginBottom: 10, position: "relative" }}>
+          Your advance
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, position: "relative" }}>
+          {/* Tile 1 — approved limit */}
+          <div style={{ padding: "12px 14px", borderRadius: 16, border: `1px solid ${HERO_BORDER}`, background: HERO_TILE_BG }}>
+            <div style={{ color: HERO_MUTED, fontSize: 11, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
+              Total limit
+            </div>
+            <div style={{ color: HERO_TEXT, fontSize: 16, fontWeight: 500, letterSpacing: "-0.03em" }}>
+              {formatMoney(limit)}
+            </div>
+          </div>
+          {/* Tile 2 — amount drawn (highlighted when non-zero) */}
+          <div style={{ padding: "12px 14px", borderRadius: 16, border: `1px solid ${HERO_BORDER}`, background: HERO_TILE_BG }}>
+            <div style={{ color: HERO_MUTED, fontSize: 11, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
+              Used
+            </div>
+            <div style={{ color: advanceTaken > 0 ? HERO_METRIC_USED : HERO_TEXT, fontSize: 16, fontWeight: 500, letterSpacing: "-0.03em" }}>
+              {formatMoney(advanceTaken)}
+            </div>
+          </div>
+        </div>
+
+        {/* ── CTA — clean full-width blue button, no slide/arrow box ────── */}
+        <div style={{ marginTop: 14, position: "relative" }}>
           <button
             type="button"
             onClick={() => onNavigate("advance")}
             style={{
               width: "100%",
-              height: 50,
-              borderRadius: 14,
-              background: colors.ctaBg,
-              color: colors.ctaText,
-              padding: "0 8px 0 18px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 14,
+              height: 48,
+              borderRadius: 12,
+              background: "#FFFFFF",
+              color: "#315eff",
+              border: 0,
               fontSize: 15,
               fontWeight: 500,
-              whiteSpace: "nowrap",
-              boxShadow: theme === "light" ? "0 12px 32px -8px rgba(30,22,54,0.14)" : "0 14px 32px rgba(0,0,0,0.26)",
+              cursor: "pointer",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.14)",
             }}
           >
-            {primaryActionCopy}
-            <span
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 11,
-                background: colors.ctaIconBg,
-                color: colors.ctaIconText,
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <ArrowRight size={18} />
-            </span>
+            {hasHistory ? "Manage advance" : "Access advance"}
           </button>
         </div>
       </section>
 
+      {/* ── Recent Activity ───────────────────────────────────────────────── */}
       <section style={{ marginTop: 30 }}>
-        <SectionLabel action={() => onNavigate("activity")} colors={colors}>Recent Activity</SectionLabel>
+        <SectionLabel action={() => onNavigate("activity")} colors={colors}>
+          Recent Activity
+        </SectionLabel>
 
-        {hasAdvanceHistory && recent ? (
+        {hasHistory && recent ? (
           <div
             style={{
-              border: `1px solid ${BORDER}`,
+              border: `1px solid ${colors.border}`,
               borderRadius: 22,
-              background: PANEL_2,
+              background: colors.panel2,
               overflow: "hidden",
             }}
           >
-            <button
-              type="button"
-              onClick={() => onNavigate("activity")}
-              style={{
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: "42px 1fr auto",
-                alignItems: "center",
-                gap: 14,
-                padding: "18px 18px",
-                background: "transparent",
-                color: TEXT,
-                textAlign: "left",
-                borderBottom: `1px solid ${BORDER}`,
-              }}
-            >
-              <span
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                    background: recentIsDisbursed ? "rgba(31,158,103,0.10)" : colors.iconTile,
-                    color: recentIsDisbursed ? GREEN : "#C9C7D0",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                {recentIsDisbursed ? <ArrowDownToLine size={18} /> : <CalendarDays size={18} />}
-              </span>
-              <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 15, fontWeight: 500 }}>
-                  {recentIsDisbursed ? "Advance credited" : "Advance requested"}
-                </span>
-                <small
+            {/* Latest advance row */}
+            {(() => {
+              const tone = statusTone(recent.status, recent.disbursalStatus ?? undefined);
+              const t = TONE_TOKEN[tone];
+              const statusLabel = formatRequestStatus(recent.status, recent.statusLabel);
+              const Icon = tone === "success" ? ArrowDownToLine
+                : tone === "error" ? XCircle
+                : tone === "warning" ? CalendarDays
+                : Clock;
+              return (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("activity")}
                   style={{
-                    display: "block",
-                    color: MUTED,
-                    fontSize: 12,
-                    fontWeight: 400,
-                    marginTop: 5,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    width: "100%",
+                    display: "grid",
+                    gridTemplateColumns: "42px 1fr auto",
+                    alignItems: "center",
+                    gap: 14,
+                    padding: "18px",
+                    background: "transparent",
+                    border: 0,
+                    color: colors.text,
+                    textAlign: "left",
+                    cursor: "pointer",
+                    borderBottom: showRepaymentRow ? `1px solid ${colors.border}` : undefined,
                   }}
                 >
-                  {recentIsDisbursed ? `To ${bankMeta}` : formatRequestStatus(recent.status, recent.statusLabel)} ·{" "}
-                  {formatShortDate(recent.disbursalDate || recent.requestDate)}
-                </small>
-              </span>
-              <span
-                style={{
-                  color: recentIsDisbursed ? GREEN : TEXT,
-                  
-                  fontSize: 15,
-                  fontWeight: 450,
-                  letterSpacing: "-0.05em",
-                }}
-              >
-                {recentIsDisbursed ? "+ " : ""}
-                {formatMoney(recent.approvedAmount || recent.requestedAmount)}
-              </span>
-            </button>
+                  {/* Icon tile */}
+                  <span style={{
+                    width: 36, height: 36, borderRadius: 12,
+                    background: t.bg, color: t.fg,
+                    display: "grid", placeItems: "center", flexShrink: 0,
+                  }}>
+                    <Icon size={17} strokeWidth={1.8} />
+                  </span>
 
+                  {/* Title + status pill */}
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 15, fontWeight: 450 }}>
+                      {recentDisbursed ? "Advance credited" : "Advance requested"}
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "2px 8px", borderRadius: 99,
+                        background: t.pill, border: `1px solid ${t.pillBorder}`,
+                        fontSize: 11, fontWeight: 500, color: t.fg,
+                        whiteSpace: "nowrap",
+                      }}>
+                        {statusLabel}
+                      </span>
+                      <span style={{ fontSize: 11, color: colors.muted }}>
+                        {formatShortDate(recent.disbursalDate || recent.requestDate)}
+                      </span>
+                    </span>
+                  </span>
+
+                  {/* Amount */}
+                  <span style={{
+                    color: tone === "success" ? t.fg : tone === "error" ? t.fg : colors.text,
+                    fontSize: 15, fontWeight: 450, letterSpacing: "-0.03em", flexShrink: 0,
+                  }}>
+                    {recentDisbursed ? "+ " : ""}{formatMoney(recent.approvedAmount || recent.requestedAmount)}
+                  </span>
+                </button>
+              );
+            })()}
+
+            {/* Repayment row — only when an active recovery is scheduled */}
             {showRepaymentRow && (
               <button
                 type="button"
@@ -552,10 +408,12 @@ export function DashboardScreen({
                   gridTemplateColumns: "42px 1fr auto",
                   alignItems: "center",
                   gap: 14,
-                  padding: "18px 18px",
+                  padding: "18px",
                   background: "transparent",
-                  color: TEXT,
+                  border: 0,
+                  color: colors.text,
                   textAlign: "left",
+                  cursor: "pointer",
                 }}
               >
                 <span
@@ -564,7 +422,7 @@ export function DashboardScreen({
                     height: 36,
                     borderRadius: 12,
                     background: "rgba(180,89,31,0.14)",
-                    color: WARM,
+                    color: colors.warm,
                     display: "grid",
                     placeItems: "center",
                   }}
@@ -572,36 +430,19 @@ export function DashboardScreen({
                   <CalendarDays size={18} />
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 15, fontWeight: 500 }}>
-                    Repayment scheduled
-                  </span>
-                  <small
-                    style={{
-                      display: "block",
-                      color: MUTED,
-                      fontSize: 12,
-                      fontWeight: 400,
-                      marginTop: 5,
-                    }}
-                  >
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 500 }}>Repayment scheduled</span>
+                  <small style={{ display: "block", color: colors.muted, fontSize: 12, fontWeight: 400, marginTop: 5 }}>
                     Auto-deduct · {repaymentDate}
                   </small>
                 </span>
-                <span
-                  style={{
-                    color: TEXT,
-                    
-                    fontSize: 15,
-                    fontWeight: 450,
-                    letterSpacing: "-0.05em",
-                  }}
-                >
+                <span style={{ color: colors.text, fontSize: 15, fontWeight: 450, letterSpacing: "-0.05em" }}>
                   {formatMoney(repaymentAmount)}
                 </span>
               </button>
             )}
           </div>
         ) : (
+          /* Empty state */
           <div
             style={{
               height: 116,
@@ -610,7 +451,7 @@ export function DashboardScreen({
               display: "grid",
               placeItems: "center",
               textAlign: "center",
-              color: DIM,
+              color: colors.dim,
               background: colors.emptyBg,
             }}
           >
@@ -620,7 +461,7 @@ export function DashboardScreen({
                   width: 38,
                   height: 38,
                   borderRadius: 999,
-                  border: `1px solid ${BORDER}`,
+                  border: `1px solid ${colors.border}`,
                   display: "inline-grid",
                   placeItems: "center",
                   marginBottom: 14,
@@ -628,133 +469,63 @@ export function DashboardScreen({
               >
                 <Archive size={17} />
               </span>
-              <div style={{ fontSize: 13, fontWeight: 450 }}>
-                Your first advance will show up here.
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 450 }}>Your first advance will show up here.</div>
             </div>
           </div>
         )}
       </section>
 
+      {/* ── Divider ───────────────────────────────────────────────────────── */}
       <div style={{ height: 1, background: colors.divider, margin: "28px 0 26px" }} />
 
-      <section>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 18,
-          }}
-        >
-          <span
-            style={{
-              color: MUTED,
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: "0.28em",
-              textTransform: "uppercase",
-            }}
-          >
+      {/* ── Peer activity (show only when backend returns data) ───────────── */}
+      {(peerInitials.length > 0 || peerCount > 0) && (
+        <section>
+          <span style={{ display: "block", marginBottom: 16, color: colors.muted, fontSize: 12, fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase" }}>
             Your colleagues
           </span>
-          {peerCount > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {peerInitials.length > 0 && (
               <div style={{ display: "flex" }}>
-                {peerRows.slice(0, 3).map((item, i) => {
-                  const initial = firstNameOnly(item.displayName)[0]?.toUpperCase() ?? "M";
+                {peerInitials.map((initials, i) => {
+                  const p = PEER_PALETTES[i % PEER_PALETTES.length];
                   return (
                     <span
-                      key={`${item.displayName}-${i}`}
+                      key={`${initials}-${i}`}
                       style={{
-                        width: 21,
-                        height: 21,
+                        width: 40,
+                        height: 40,
                         borderRadius: 999,
-                        marginLeft: i ? -6 : 0,
-                        background: theme === "light" ? "#F5F3FB" : "#25252B",
-                        border: `1px solid ${DARK}`,
-                        color: TEXT,
+                        marginLeft: i ? -10 : 0,
+                        background: p.bg,
+                        border: `2px solid ${theme === "light" ? "#FFFFFF" : "#0C0C0E"}`,
+                        color: p.fg,
                         display: "grid",
                         placeItems: "center",
-                        fontSize: 10,
-                        fontWeight: 500,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        letterSpacing: "0.02em",
+                        zIndex: peerInitials.length - i,
+                        position: "relative",
                       }}
                     >
-                      {initial}
+                      {initials}
                     </span>
                   );
                 })}
               </div>
-              <span style={{ color: TEXT, fontSize: 13, fontWeight: 500 }}>
-                {peerCount} on Advance
-              </span>
+            )}
+            <div>
+              <div style={{ color: colors.text, fontSize: 15, fontWeight: 500 }}>
+                {peerCount} colleague{peerCount !== 1 ? "s" : ""}
+              </div>
+              <div style={{ color: colors.muted, fontSize: 12, fontWeight: 400, marginTop: 2 }}>
+                using MobPae advances
+              </div>
             </div>
-          )}
-        </div>
-
-        {peerRows.length > 0 ? (
-          <div style={{ display: "grid", gap: 18 }}>
-            {peerRows.map((item, i) => {
-              const name = firstNameOnly(item.displayName);
-              return (
-                <div
-                  key={`${item.displayName}-${item.action}-${i}`}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "42px 1fr auto",
-                    gap: 14,
-                    alignItems: "center",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 999,
-                      border: `1px solid ${BORDER}`,
-                      background: PANEL_2,
-                      color: TEXT,
-                      display: "grid",
-                      placeItems: "center",
-                      fontSize: 15,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {name[0]?.toUpperCase() ?? "M"}
-                  </span>
-                  <span style={{ minWidth: 0, color: MUTED, fontSize: 13.5, fontWeight: 400 }}>
-                    <span style={{ color: TEXT, fontWeight: 500 }}>{name}</span>{" "}
-                    {item.action}
-                  </span>
-                  <span
-                    style={{
-                      color: DIM,
-                      
-                      fontSize: 11.5,
-                      fontWeight: 400,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {peerTime(item.daysAgo)}
-                  </span>
-                </div>
-              );
-            })}
           </div>
-        ) : (
-          <div
-            style={{
-              padding: "20px 0 4px",
-              color: DIM,
-              fontSize: 13,
-              fontWeight: 400,
-              textAlign: "center",
-            }}
-          >
-            Colleague activity will appear here once others join.
-          </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ArrowUpFromLine, CheckCircle2, Clock3 } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Clock, Clock3, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { AdvanceRequest, BankAccount } from "../types/app";
 import { formatMoney, formatRequestStatus } from "../utils/format";
@@ -22,7 +22,8 @@ type ActivityEvent = {
   date: string;
   monthKey: string;
   sortTs: number;
-  tone: "green" | "warm" | "default";
+  tone: "green" | "warm" | "error" | "warning" | "pending" | "default";
+  status?: string;
 };
 
 const DARK = "#0C0C0E";
@@ -102,10 +103,20 @@ function hasVisibleRepayment(request: AdvanceRequest) {
   );
 }
 
+function requestTone(status: string, disbursalStatus?: string | null): ActivityEvent["tone"] {
+  if (disbursalStatus === "Disbursed") return "green";
+  const s = status.toLowerCase();
+  if (s.includes("reject") || s.includes("cancelled") || s.includes("expired")) return "error";
+  if (s.includes("paid") || s.includes("recovered") || s.includes("repaid")) return "green";
+  if (s.includes("approved")) return "warning";
+  return "pending";
+}
+
 function expandRequest(request: AdvanceRequest, bankAccount?: BankAccount | null): ActivityEvent[] {
   const amount = requestAmount(request);
   const events: ActivityEvent[] = [];
   const requestTs = new Date(request.requestDate).getTime();
+  const tone = requestTone(request.status, request.disbursalStatus);
 
   events.push({
     id: `${request.id}-requested`,
@@ -117,7 +128,8 @@ function expandRequest(request: AdvanceRequest, bankAccount?: BankAccount | null
     date: formatDay(request.requestDate),
     monthKey: formatMonth(request.requestDate),
     sortTs: Number.isNaN(requestTs) ? 0 : requestTs,
-    tone: "default",
+    tone,
+    status: request.status,
   });
 
   if (request.disbursalStatus === "Disbursed") {
@@ -215,43 +227,37 @@ function EmptyActivity({ colors }: { colors: ReturnType<typeof activityPalette> 
   );
 }
 
+const TONE_STYLE: Record<ActivityEvent["tone"], { bg: string; fg: string; pillBg: string; pillBorder: string }> = {
+  green:   { bg: "rgba(16,185,129,0.12)",  fg: "#10b981", pillBg: "rgba(16,185,129,0.12)", pillBorder: "rgba(16,185,129,0.3)" },
+  error:   { bg: "rgba(239,68,68,0.10)",   fg: "#ef4444", pillBg: "rgba(239,68,68,0.12)",  pillBorder: "rgba(239,68,68,0.3)"  },
+  warning: { bg: "rgba(245,158,11,0.10)",  fg: "#f59e0b", pillBg: "rgba(245,158,11,0.12)", pillBorder: "rgba(245,158,11,0.3)" },
+  pending: { bg: "rgba(49,94,255,0.10)",   fg: "#315eff", pillBg: "rgba(49,94,255,0.10)",  pillBorder: "rgba(49,94,255,0.25)" },
+  warm:    { bg: "rgba(180,89,31,0.13)",   fg: "#B4591F", pillBg: "rgba(180,89,31,0.10)",  pillBorder: "rgba(180,89,31,0.3)"  },
+  default: { bg: "rgba(107,104,120,0.10)", fg: "#6B6878", pillBg: "rgba(107,104,120,0.10)",pillBorder: "rgba(107,104,120,0.2)"},
+};
+
 function ActivityIcon({
   tone,
   type,
-  colors,
 }: {
   tone: ActivityEvent["tone"];
   type: ActivityEvent["type"];
   colors: ReturnType<typeof activityPalette>;
 }) {
-  const color = tone === "green" ? colors.green : tone === "warm" ? colors.warm : colors.dim;
-  const background =
-    tone === "green"
-      ? "rgba(32,164,106,0.13)"
-      : tone === "warm"
-        ? "rgba(180,89,31,0.13)"
-        : colors.panelSoft;
+  const { bg, fg } = TONE_STYLE[tone];
+  const Icon =
+    type === "credit" ? ArrowDownToLine
+    : type === "repayment" ? ArrowUpFromLine
+    : tone === "error" ? XCircle
+    : Clock;
 
   return (
-    <span
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 13,
-        background,
-        color,
-        display: "grid",
-        placeItems: "center",
-        flexShrink: 0,
-      }}
-    >
-      {type === "credit" ? (
-        <ArrowDownToLine size={18} strokeWidth={2} />
-      ) : type === "repayment" ? (
-        <ArrowUpFromLine size={17} strokeWidth={2} />
-      ) : (
-        <CheckCircle2 size={17} strokeWidth={1.9} />
-      )}
+    <span style={{
+      width: 40, height: 40, borderRadius: 13,
+      background: bg, color: fg,
+      display: "grid", placeItems: "center", flexShrink: 0,
+    }}>
+      <Icon size={18} strokeWidth={1.8} />
     </span>
   );
 }
@@ -323,7 +329,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           <div
             style={{
               color: colors.text,
-              
+
               fontSize: 18,
               fontWeight: 450,
               letterSpacing: "-0.06em",
@@ -331,6 +337,11 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           >
             {formatMoney(totalAdvanced)}
           </div>
+          {totalAdvanced === 0 && (
+            <div style={{ color: colors.dim, fontSize: 11, fontWeight: 400, marginTop: 6 }}>
+              No advances yet
+            </div>
+          )}
         </div>
         <div
           style={{
@@ -347,7 +358,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           <div
             style={{
               color: colors.green,
-              
+
               fontSize: 18,
               fontWeight: 450,
               letterSpacing: "-0.06em",
@@ -355,6 +366,11 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
           >
             {formatMoney(totalRepaid)}
           </div>
+          {totalRepaid === 0 && (
+            <div style={{ color: colors.dim, fontSize: 11, fontWeight: 400, marginTop: 6 }}>
+              Nothing repaid yet
+            </div>
+          )}
         </div>
       </div>
 
@@ -368,7 +384,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
               onClick={() => setTab(item.id)}
               style={{
                 height: 38,
-                borderRadius: 8,
+                borderRadius: 16,
                 border: `1px solid ${active ? colors.activeBg : colors.border}`,
                 background: active ? colors.activeBg : "transparent",
                 color: active ? colors.activeText : colors.muted,
@@ -418,53 +434,53 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
             </div>
             <div>
               {events.map((event, index) => {
-                const amountColor = event.tone === "green" ? colors.green : event.tone === "warm" ? colors.text : colors.muted;
+                const ts = TONE_STYLE[event.tone];
+                const amountColor =
+                  event.tone === "green" ? ts.fg
+                  : event.tone === "error" ? ts.fg
+                  : event.tone === "warm" ? colors.text
+                  : colors.text;
+                const isRequest = event.type === "request";
 
                 return (
                   <div key={event.id}>
                     {index > 0 && <div style={{ height: 1, background: colors.rule, margin: "16px 0" }} />}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "48px 1fr auto",
-                        gap: 12,
-                        alignItems: "center",
-                      }}
-                    >
+                    <div style={{ display: "grid", gridTemplateColumns: "48px 1fr auto", gap: 12, alignItems: "center" }}>
                       <ActivityIcon tone={event.tone} type={event.type} colors={colors} />
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ color: colors.text, fontSize: 15, fontWeight: 500, lineHeight: 1.08 }}>
+                        <div style={{ color: colors.text, fontSize: 15, fontWeight: 450, lineHeight: 1.08 }}>
                           {event.title}
                         </div>
-                        <div
-                          style={{
-                            color: colors.muted,
-                            fontSize: 12,
-                            fontWeight: 400,
-                            marginTop: 7,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
+                        {isRequest ? (
+                          /* Coloured status pill for request events */
+                          <span style={{
+                            display: "inline-flex", alignItems: "center",
+                            marginTop: 6, padding: "2px 8px", borderRadius: 99,
+                            background: ts.pillBg, border: `1px solid ${ts.pillBorder}`,
+                            fontSize: 11, fontWeight: 500, color: ts.fg,
                             whiteSpace: "nowrap",
-                          }}
-                        >
-                          {event.subtitle}
-                        </div>
+                          }}>
+                            {event.subtitle}
+                          </span>
+                        ) : (
+                          <div style={{
+                            color: colors.muted, fontSize: 12, fontWeight: 400,
+                            marginTop: 6, overflow: "hidden",
+                            textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>
+                            {event.subtitle}
+                          </div>
+                        )}
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <div
-                          style={{
-                            color: amountColor,
-                            
-                            fontSize: 15,
-                            fontWeight: 450,
-                            letterSpacing: "-0.05em",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <div style={{
+                          color: amountColor, fontSize: 15, fontWeight: 450,
+                          letterSpacing: "-0.05em", whiteSpace: "nowrap",
+                        }}>
                           {event.prefix ? `${event.prefix} ` : ""}
                           {formatMoney(event.amount)}
                         </div>
-                        <div style={{ color: colors.dim,  fontSize: 11, fontWeight: 400, marginTop: 8 }}>
+                        <div style={{ color: colors.dim, fontSize: 11, fontWeight: 400, marginTop: 8 }}>
                           {event.date}
                         </div>
                       </div>

@@ -115,41 +115,7 @@ function fmtDate(iso?: string | null) {
     : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-const DEFAULT_PLANS: MembershipPlan[] = [
-  {
-    planType: "BIANNUAL",
-    planName: "6 Months",
-    amount: 499,
-    validityDays: 180,
-    billingLabel: "Billed every 6 months",
-    perMonthLabel: "= ₹83 / month",
-    preferred: true,
-    savingsVsMonthly: 551,
-    savingsPercent: 52,
-  },
-  {
-    planType: "ANNUAL",
-    planName: "Annual",
-    amount: 799,
-    validityDays: 365,
-    billingLabel: "Billed once a year",
-    perMonthLabel: "= ₹67 / month",
-    preferred: false,
-    savingsVsMonthly: 1301,
-    savingsPercent: 62,
-  },
-  {
-    planType: "MONTHLY",
-    planName: "Monthly",
-    amount: 175,
-    validityDays: 30,
-    billingLabel: "Billed every month",
-    perMonthLabel: null,
-    preferred: false,
-    savingsVsMonthly: null,
-    savingsPercent: null,
-  },
-];
+const DEFAULT_PLANS: MembershipPlan[] = [];
 
 function membershipVars(theme: Theme): CSSProperties {
   if (theme === "light") {
@@ -238,24 +204,23 @@ function Cta({ label, onClick, disabled, loading }: {
 }) {
   const on = !disabled && !loading;
   return (
-    <div style={{ padding: "12px 22px 28px" }}>
+    <div style={{ padding: "12px 22px 28px", display: "flex", justifyContent: "center" }}>
       <button type="button" onClick={onClick} disabled={!on} style={{
-        width: "100%", height: 60, background: on ? CTA_BG : DIM_BG, border: "none", borderRadius: 16,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 8px 0 22px", cursor: on ? "pointer" : "not-allowed",
-        boxShadow: on ? CTA_SHADOW : "none",
+        height: 40, padding: "0 24px", background: on ? BLUE : DIM_BG, border: "none", borderRadius: 99,
+        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+        cursor: on ? "pointer" : "not-allowed", fontFamily: "inherit",
+        boxShadow: on ? "0 4px 14px rgba(49,94,255,0.28)" : "none",
+        opacity: on ? 1 : 0.5,
       }}>
-        <span style={{ fontFamily: "inherit", fontSize: 15, fontWeight: 400, color: on ? CTA_LABEL : MUTED }}>
-          {loading ? "Please wait…" : label}
-        </span>
-        <span style={{
-          width: 44, height: 44, borderRadius: 8, background: on ? CTA_ICON_BG : DIS_ICON,
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-        }}>
-          {loading
-            ? <span className="spin" style={{ width: 18, height: 18, border: `2px solid ${MUTED}`, borderTopColor: "transparent", borderRadius: "50%", display: "block" }} />
-            : <ArrowRight size={20} strokeWidth={2.4} color={on ? CTA_ARROW : MUTED} />}
-        </span>
+        {loading
+          ? <span className="spin" style={{ width: 18, height: 18, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "block" }} />
+          : <>
+              <span style={{ fontSize: 15, fontWeight: 450, color: on ? "#fff" : MUTED, letterSpacing: "-0.01em" }}>
+                {label}
+              </span>
+              <ArrowRight size={16} strokeWidth={2} color={on ? "#fff" : MUTED} />
+            </>
+        }
       </button>
     </div>
   );
@@ -365,12 +330,18 @@ function PlanCard({
             <span style={{ fontFamily: "inherit", fontSize: 11, color: MUTED }}>
               {plan.billingLabel}
             </span>
-            {plan.savingsPercent != null && (
+            {plan.savingsPercent != null ? (
               <span style={{
                 fontFamily: "inherit", fontSize: 10, fontWeight: 400, color: GREEN,
                 background: GREEN_BG, padding: "2px 7px", borderRadius: 20,
               }}>
                 Save {plan.savingsPercent}%
+              </span>
+            ) : (
+              <span style={{
+                fontFamily: "inherit", fontSize: 10, fontWeight: 400, color: MUTED_DIM,
+              }}>
+                Most flexible
               </span>
             )}
           </div>
@@ -481,7 +452,7 @@ export function MembershipScreen({
   const [selectedPlanType, setSelectedPlanType] = useState<string>(() => {
     // Prefer the plan the backend says is preferred
     const preferred = plans.find(p => p.preferred);
-    return membershipConfig.planType || preferred?.planType || plans[0]?.planType || "BIANNUAL";
+    return membershipConfig.planType || preferred?.planType || plans[0]?.planType || "";
   });
 
   const selectedPlan = plans.find(p => p.planType === selectedPlanType) ?? plans[0];
@@ -497,6 +468,12 @@ export function MembershipScreen({
       setStep("active");
     }
   }, [membershipActive, step]);
+
+  useEffect(() => {
+    if (!selectedPlanType && plans[0]?.planType) {
+      setSelectedPlanType(plans[0].planType);
+    }
+  }, [plans, selectedPlanType]);
 
   useEffect(() => {
     rootRef.current?.closest<HTMLElement>(".screen-body")?.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -641,8 +618,8 @@ export function MembershipScreen({
             </div>
           </div>
           <BenefitsList benefits={benefits} />
+          <Cta label="Go to Home" onClick={() => onNavigate("home")} />
         </div>
-        <Cta label="Go to Home" onClick={() => onNavigate("home")} />
       </div>
     );
   }
@@ -779,16 +756,22 @@ export function MembershipScreen({
         </div>
 
         {/* Plan cards */}
-        <div style={{ margin: "0 22px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.planType}
-              plan={plan}
-              selected={selectedPlanType === plan.planType}
-              onSelect={() => setSelectedPlanType(plan.planType)}
-            />
-          ))}
-        </div>
+        {plans.length > 0 ? (
+          <div style={{ margin: "0 22px", display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+            {plans.map((plan) => (
+              <PlanCard
+                key={plan.planType}
+                plan={plan}
+                selected={selectedPlanType === plan.planType}
+                onSelect={() => setSelectedPlanType(plan.planType)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div style={{ margin: "0 22px 24px", padding: 16, borderRadius: 14, border: `1px solid ${BORDER}`, color: MUTED, fontSize: 13, lineHeight: 1.5 }}>
+            Membership plans are not available right now.
+          </div>
+        )}
 
         {/* Error */}
         {error && (

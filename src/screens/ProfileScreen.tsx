@@ -272,6 +272,7 @@ export function ProfileScreen({
   savingBank,
   editingBank,
   onStartBankEdit,
+  onCancelBankEdit,
   onSaveBank,
   onRefresh,
   refreshing,
@@ -284,6 +285,7 @@ export function ProfileScreen({
   const membershipStatus = (membershipConfig?.status || "").toUpperCase();
   const membershipPending =
     !membershipActive &&
+    Boolean(membershipConfig?.membershipId) &&
     (membershipStatus === "PENDING" ||
       membershipStatus === "UNDER_REVIEW" ||
       membershipStatus === "PAYMENT_PENDING");
@@ -297,20 +299,6 @@ export function ProfileScreen({
       : membershipPending
         ? "In Review"
         : "Free";
-  const membershipRowTitle = membershipActive
-    ? "Membership Active"
-    : membershipNeedsUpdate
-      ? "Payment Rejected"
-      : membershipPending
-        ? "Membership Review"
-        : "Activate Plan";
-  const membershipRowSubtitle = membershipActive
-    ? membershipConfig?.validityLabel || "Membership active"
-    : membershipNeedsUpdate
-      ? membershipConfig?.remarks || "Tap to retry payment via Razorpay"
-      : membershipPending
-        ? "Payment is under review"
-        : "Unlock instant salary advances";
   const membershipDaysText =
     typeof membershipConfig?.daysRemaining === "number"
       ? `${Math.max(0, membershipConfig.daysRemaining)} days to go`
@@ -393,7 +381,7 @@ export function ProfileScreen({
         <div className="prof-screen prof-screen--full-dark">
           <ProfileDarkHeader
             title="Bank Account"
-            onBack={() => onNavigate("profile")}
+            onBack={editingBank && hasBankAccount ? onCancelBankEdit : () => onNavigate("profile")}
             onNotifications={() => onNavigate("notifications")}
             onRefresh={onRefresh}
             refreshing={refreshing}
@@ -450,21 +438,20 @@ export function ProfileScreen({
               <span>{bank!.ifscCode || "—"}</span>
             </div>
           </div>
+
+          <div className="pbv2-line" />
+          <button type="button" className="pbv2-card-row" onClick={onStartBankEdit}>
+            <RefreshCw size={16} strokeWidth={1.8} />
+            <span>Link a different account</span>
+            <ChevronRight size={16} />
+          </button>
         </section>
 
         <section className="pbv2-note">
-          <Info size={17} strokeWidth={1.9} />
-          <span>Advances are credited here and auto-recovered from this account on payday.</span>
-        </section>
-
-        <SectionLabel>Manage</SectionLabel>
-        <section className="pbv2-manage">
-          <button type="button" onClick={onStartBankEdit}>
-            <span><Plus size={20} strokeWidth={1.8} /></span>
-            <span>Change bank account</span>
-            <small>Link a different account</small>
-            <ChevronRight size={19} />
-          </button>
+          <Info size={15} strokeWidth={1.9} />
+          <p className="pbv2-note-body">
+            Advances are credited to this account. Repayment is auto-deducted from your <strong>salary account</strong> on payday by your employer.
+          </p>
         </section>
 
         <div className="pbv2-security">
@@ -688,14 +675,10 @@ export function ProfileScreen({
       </div>
 
       {membershipActive && (
-        <section
+        <button
+          type="button"
           className="profile-membership-summary"
           onClick={() => onNavigate("profile-membership")}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") onNavigate("profile-membership");
-          }}
         >
           <span className="profile-membership-summary-icon">
             <Crown size={23} strokeWidth={1.9} />
@@ -714,7 +697,7 @@ export function ProfileScreen({
               {membershipDaysText}
             </p>
           </div>
-        </section>
+        </button>
       )}
 
       <SectionLabel>Account</SectionLabel>
@@ -731,13 +714,6 @@ export function ProfileScreen({
           subtitle={kycVerified ? "All verified" : "Upload PAN, Aadhaar and salary slip"}
           tone={kycVerified ? "green" : "default"}
           onClick={() => onNavigate("profile-kyc")}
-        />
-        <ProfileRow
-          icon={<Crown size={18} />}
-          title={membershipRowTitle}
-          subtitle={membershipRowSubtitle}
-          tone={membershipActive ? "green" : membershipNeedsUpdate ? "warm" : "default"}
-          onClick={() => onNavigate("profile-membership")}
         />
       </RowGroup>
 
@@ -820,7 +796,7 @@ export function ProfileScreen({
       <input
         ref={photoRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         style={{ display: "none" }}
         onChange={(event) => {
           if (event.target.files?.[0]) uploadProfilePhoto(event.target.files[0]);

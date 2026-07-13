@@ -75,18 +75,18 @@ function getHeaderTitle(view: View) {
   return titles[view] ?? "MobPae";
 }
 
+// Bare icon button — no background, no border pill.
+// Matches the ChangePasswordScreen icon button style for consistency.
 function iconButtonStyle(palette: (typeof themePalette)[Theme]): CSSProperties {
   return {
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    border: `1px solid ${palette.border}`,
-    background: palette.iconBg,
+    background: "transparent",
+    border: 0,
     color: palette.text,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: "grid",
+    placeItems: "center",
     flexShrink: 0,
+    padding: 4,
+    cursor: "pointer",
   };
 }
 
@@ -103,7 +103,6 @@ export function AppShell({
   const isFullscreenDark = FULLSCREEN_DARK_VIEWS.includes(activeView);
   const isTabView = HEADER_VIEWS.includes(activeView);
   const isHome = activeView === "home";
-  const homeHeaderSub = profile.employerEmail || profile.employer || "MobPae member";
   const palette = themePalette[theme];
   const themedIconButton = iconButtonStyle(palette);
   const rootClassName = `app-root app-root--${theme}`;
@@ -166,14 +165,22 @@ export function AppShell({
             }}
           >
             {isHome ? (
+              // Avatar: blue-tinted initials circle until user uploads a photo.
               <button
                 type="button"
                 onClick={openSheet}
                 aria-label="Open profile"
                 style={{
-                  ...themedIconButton,
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  border: 0,
+                  background: profilePhotoUrl ? "transparent" : "#315eff",
                   overflow: "hidden",
-                  borderColor: profilePhotoUrl ? palette.avatarBorder : palette.border,
+                  flexShrink: 0,
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
                 }}
               >
                 {profilePhotoUrl ? (
@@ -183,14 +190,7 @@ export function AppShell({
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
-                  <span
-                    style={{
-                      color: palette.text,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      letterSpacing: "-0.03em",
-                    }}
-                  >
+                  <span style={{ color: "#FFFFFF", fontSize: 13, fontWeight: 500, letterSpacing: "-0.02em" }}>
                     {getInitials(profile.name || "M")}
                   </span>
                 )}
@@ -206,39 +206,9 @@ export function AppShell({
               </button>
             )}
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {isHome ? (
-                <>
-                  <div
-                    style={{
-                      color: palette.text,
-                      fontSize: 17,
-                      lineHeight: 1,
-                      fontWeight: 600,
-                      letterSpacing: "-0.01em",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {`Hi, ${profile.name?.trim().split(" ")[0] || "there"}`}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 6,
-                      color: palette.dim,
-                      fontSize: 12,
-                      lineHeight: 1.15,
-                      fontWeight: 500,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {homeHeaderSub}
-                  </div>
-                </>
-              ) : (
+            {/* Screen title — only shown on non-home tab views */}
+            {!isHome && (
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     color: palette.muted,
@@ -254,8 +224,10 @@ export function AppShell({
                 >
                   {getHeaderTitle(activeView)}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+            {/* Spacer — pushes action icons to the right on home view */}
+            {isHome && <div style={{ flex: 1 }} />}
 
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               <button
@@ -269,14 +241,26 @@ export function AppShell({
                   <span
                     style={{
                       position: "absolute",
-                      top: 7,
-                      right: 8,
-                      width: 6,
-                      height: 6,
+                      top: -5,
+                      right: -5,
+                      minWidth: 17,
+                      height: 17,
+                      padding: "0 4px",
                       borderRadius: 99,
-                      background: palette.unread,
+                      background: "#E53935",
+                      border: `2px solid ${palette.bg}`,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: "#fff",
+                      lineHeight: 1,
+                      letterSpacing: 0,
                     }}
-                  />
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
                 )}
               </button>
               <button
@@ -379,7 +363,7 @@ export function AppShell({
           <input
             ref={photoInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             style={{ display: "none" }}
             onChange={(e) => {
               if (e.target.files?.[0]) uploadProfilePhoto(e.target.files[0]);

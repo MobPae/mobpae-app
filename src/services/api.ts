@@ -10,6 +10,8 @@ import type {
   KycDocument,
   KycDocumentType,
   PeerActivity,
+  PlatformFee,
+  PlatformFeeConfig,
   RecoveryPreview,
   RequestStatus,
 } from "../types/app";
@@ -46,6 +48,33 @@ type BackendKycDocument = {
   documentType?: string;
   status?: string;
   note?: string;
+  rejectionNote?: string;
+  originalFileName?: string;
+};
+
+type BackendPlatformFee = {
+  id?: string;
+  loanApplicationId?: string;
+  employeeId?: string;
+  employerId?: string;
+  feeType?: string;
+  amount?: number | string;
+  currency?: string;
+  status?: string;
+  providerOrderId?: string | null;
+  providerPaymentId?: string | null;
+  paidAt?: string | null;
+  waivedAt?: string | null;
+  remarks?: string | null;
+  paymentOrders?: Array<{
+    id?: string;
+    providerOrderId?: string;
+    status?: string;
+    amount?: number | string;
+    currency?: string;
+    createdAt?: string;
+    expiresAt?: string;
+  }>;
 };
 
 type BackendLoanApplication = {
@@ -92,6 +121,7 @@ type BackendLoanApplication = {
   nextActionLabel?: string;
   allowedActions?: { cancel: boolean };
   timeline?: Array<{ status: string; label: string; completed: boolean; completedAt: string | null }>;
+  platformFee?: BackendPlatformFee | null;
 };
 
 /** @deprecated alias kept for type-compat during migration */
@@ -120,6 +150,7 @@ type BackendRecoveryPreview = {
   total?: number;
   totalAmount?: number;
   dueDate?: string;
+  platformFee?: PlatformFeeConfig | null;
 };
 
 type BackendRepayment = {
@@ -416,7 +447,8 @@ const normalizeKycDocuments = (
       "Document",
     documentType: document.documentType as KycDocumentType | undefined,
     status: normalizeDocumentStatus(document.status),
-    note: document.note ?? "Document status synced from backend.",
+    note: document.rejectionNote || document.note || "",
+    originalFileName: document.originalFileName,
   }));
 
 
@@ -424,7 +456,8 @@ const normalizeRequestStatus = (status?: string): RequestStatus => {
   switch (status) {
     case "SUBMITTED":       return "Submitted";
     case "EMPLOYER_APPROVED": return "Employer Approved";
-    case "AWAITING_MEMBERSHIP_PAYMENT": return "Awaiting Membership";
+    case "AWAITING_MEMBERSHIP_PAYMENT":
+    case "AWAITING_PLATFORM_FEE_PAYMENT": return "Awaiting Platform Fee";
     case "READY_FOR_DISBURSAL": return "Admin Approved";
     case "DISBURSED":       return "Disbursed";
     case "REPAYMENT_SCHEDULED": return "Payment Scheduled";
@@ -437,6 +470,30 @@ const normalizeRequestStatus = (status?: string): RequestStatus => {
 };
 
 const toAmount = (value: unknown) => Number(value ?? 0);
+
+const normalizePlatformFee = (fee?: BackendPlatformFee | null): PlatformFee | null => {
+  if (!fee) return null;
+  return {
+    id: fee.id,
+    loanApplicationId: fee.loanApplicationId,
+    employeeId: fee.employeeId,
+    employerId: fee.employerId,
+    feeType: fee.feeType,
+    amount: toAmount(fee.amount),
+    currency: fee.currency ?? "INR",
+    status: fee.status ?? "PENDING_PAYMENT",
+    providerOrderId: fee.providerOrderId ?? null,
+    providerPaymentId: fee.providerPaymentId ?? null,
+    paidAt: fee.paidAt ?? null,
+    waivedAt: fee.waivedAt ?? null,
+    remarks: fee.remarks ?? null,
+    paymentOrders: fee.paymentOrders?.map((order) => ({
+      ...order,
+      amount: order.amount === undefined ? undefined : Number(order.amount),
+    })),
+  };
+};
+
 const todayIso = () => new Date().toISOString();
 const getRequestRepayment = (
   request: BackendLoanApplication,
@@ -515,13 +572,13 @@ const normalizeRequests = (
             status: "Employer Approved" as RequestStatus,
             timestamp: request.approvedAt ?? "",
             description: "Approved by your employer.",
-            done: ["EMPLOYER_APPROVED","AWAITING_MEMBERSHIP_PAYMENT","READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+            done: ["EMPLOYER_APPROVED","AWAITING_MEMBERSHIP_PAYMENT","AWAITING_PLATFORM_FEE_PAYMENT","READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
           },
           {
             status: "Admin Approved" as RequestStatus,
             timestamp: "",
-            description: request.status === "AWAITING_MEMBERSHIP_PAYMENT"
-              ? "Activate membership to unlock disbursal."
+            description: request.status === "AWAITING_MEMBERSHIP_PAYMENT" || request.status === "AWAITING_PLATFORM_FEE_PAYMENT"
+              ? "Pay the platform fee to move this request to MobPae review."
               : "Reviewed and approved by MobPae admin.",
             done: ["READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
           },
@@ -568,6 +625,7 @@ const normalizeRequests = (
       statusLabel: request.statusLabel,
       statusColor: request.statusColor,
       remarks: request.remarks ?? "",
+      platformFee: normalizePlatformFee(request.platformFee),
       principalAmount,
       interestAmount,
       totalRecoveryAmount,
@@ -750,9 +808,10 @@ export const employeeApi = {
   },
 
   async login(email: string, password: string) {
+    const normalizedEmail = email.trim().toLowerCase();
     const data = await request<LoginResponse>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
     });
     const token = data.accessToken ?? data.token;
     if (!token) {
@@ -774,17 +833,36 @@ export const employeeApi = {
     clearStoredSession();
   },
 
-  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    await request<{ success: boolean; message: string }>("/auth/change-password", {
+  // Returns new tokens when the backend detects a forced first-time change,
+  // so the app can establish a fresh session without re-login.
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ accessToken: string; refreshToken: string } | void> {
+    const data = await request<{
+      success: boolean;
+      accessToken?: string;
+      refreshToken?: string;
+      message?: string;
+    }>("/auth/change-password", {
       method: "POST",
       body: JSON.stringify({ currentPassword, newPassword }),
     });
+
+    if (data.accessToken && data.refreshToken) {
+      // First-time forced change — store the fresh session tokens.
+      localStorage.setItem(TOKEN_KEY, data.accessToken);
+      localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+      return { accessToken: data.accessToken, refreshToken: data.refreshToken };
+    }
+    // Voluntary change — caller handles logout.
   },
 
   async forgotPassword(email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
     await request<{ message: string }>("/auth/forgot-password", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: normalizedEmail }),
     });
   },
 
@@ -819,6 +897,7 @@ export const employeeApi = {
         notifications,
         membership,
         membershipConfig,
+        platformFeeConfig,
         peerActivityResult,
       ] = await Promise.allSettled([
         request<
@@ -868,6 +947,10 @@ export const employeeApi = {
         >("/membership/me", { suppressSessionExpiry: true }),
         request<BackendMembershipConfig | { data?: BackendMembershipConfig }>(
           "/membership/config",
+          { suppressSessionExpiry: true }
+        ),
+        request<PlatformFeeConfig | { data?: PlatformFeeConfig }>(
+          "/platform-fees/config",
           { suppressSessionExpiry: true }
         ),
         request<PeerActivity>("/employees/me/peer-activity", {
@@ -920,6 +1003,16 @@ export const employeeApi = {
               if (v && typeof v === "object" && ("membershipFee" in v || "plans" in v || "membershipBenefits" in v)) return v as BackendMembershipConfig;
               const wrapped = v as { data?: BackendMembershipConfig };
               return wrapped?.data ?? (v as BackendMembershipConfig);
+            })()
+          : null;
+      const platformFeeConfigData: PlatformFeeConfig | null =
+        platformFeeConfig.status === "fulfilled"
+          ? (() => {
+              const v = platformFeeConfig.value;
+              if (v && typeof v === "object" && ("amount" in v || "currency" in v)) {
+                return v as PlatformFeeConfig;
+              }
+              return (v as { data?: PlatformFeeConfig })?.data ?? null;
             })()
           : null;
       const bankAccountData =
@@ -1036,15 +1129,11 @@ export const employeeApi = {
             membershipSubtitle: membershipConfigData?.membershipSubtitle  ?? "",
             freeBenefits:       membershipConfigData?.freeBenefits        ?? [],
             membershipBenefits: membershipConfigData?.membershipBenefits  ?? [],
-            payment: {
-              ...membershipConfigData?.payment,
-              qrUrl:
-                membershipConfigData?.payment?.qrUrl ||
-                "uploads/payment/googlepay-membership-qr.png",
-            },
+            payment: membershipConfigData?.payment,
             remarks: nested?.remarks ?? undefined,
           };
         })(),
+        platformFeeConfig: platformFeeConfigData,
         documents: kycData.length ? normalizeKycDocuments(kycData) : [],
         // bankAccountStatus from /employees/me tells us definitively if there's an account
         bankAccount: bankAccountStatus === "NOT_ADDED" ? null : (bankAccountData ?? null),
@@ -1106,14 +1195,22 @@ export const employeeApi = {
   },
 
   async uploadKycDocument(documentType: KycDocumentType, file: File) {
-    // Step 1 — upload the file as multipart/form-data to /files/upload.
+    // Map KycDocumentType → UploadType query param expected by /files/upload
+    const uploadTypeMap: Record<KycDocumentType, string> = {
+      PAN: "kyc_pan",
+      AADHAR: "kyc_aadhar",
+      SALARY_SLIP: "kyc_salary_slip",
+    };
+    const uploadType = uploadTypeMap[documentType] ?? "kyc_other";
+
+    // Step 1 — upload the file as multipart/form-data to /files/upload?type=...
     // Do NOT set Content-Type manually; the browser sets the correct boundary.
     const formData = new FormData();
     formData.append("file", file);
 
     let uploadRes: Response;
     try {
-      uploadRes = await fetchWithAuth("/files/upload", {
+      uploadRes = await fetchWithAuth(`/files/upload?type=${uploadType}`, {
         method: "POST",
         body: formData,
       });
@@ -1137,14 +1234,15 @@ export const employeeApi = {
       throw new ApiError(msg, uploadRes.status);
     }
 
-    const uploaded = (await uploadRes.json()) as { filePath?: string; path?: string; url?: string };
-    const filePath = uploaded.filePath ?? uploaded.path ?? uploaded.url;
-    if (!filePath) throw new ApiError("Upload succeeded but server did not return a file path.");
+    // Backend returns { key, mimeType, size } — store the key as filePath
+    const uploaded = (await uploadRes.json()) as { key?: string };
+    const filePath = uploaded.key;
+    if (!filePath) throw new ApiError("Upload succeeded but server did not return a file key.");
 
-    // Step 2 — register the KYC document with only the filePath (no base64).
+    // Step 2 — register the KYC document with the R2 object key as filePath.
     const savedDocument = await request<BackendKycDocument>("/kyc-documents", {
       method: "POST",
-      body: JSON.stringify({ documentType, filePath }),
+      body: JSON.stringify({ documentType, filePath, originalFileName: file.name }),
     });
 
     return normalizeKycDocuments([savedDocument])[0];
@@ -1273,12 +1371,22 @@ export const employeeApi = {
     return res.json() as Promise<{ selfieUrl?: string; selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED" }>;
   },
 
-  async submitSalaryAdvance(employeeId: string, amount: number) {
+  async submitSalaryAdvance(
+    employeeId: string,
+    amount: number,
+    purposeCategory?: string,
+    purposeNote?: string,
+  ) {
+    const body: Record<string, unknown> = {
+      amount,
+      purposeCategory: purposeCategory ?? "OTHER", // always present — backend requires enum
+    };
+    if (purposeNote) body.purposeNote = purposeNote;
     const requestData = await request<BackendLoanApplication>(
       "/loan-applications",
       {
         method: "POST",
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify(body),
       }
     );
     return normalizeRequests([requestData], [])[0];
@@ -1337,6 +1445,7 @@ export const employeeApi = {
       isNextCycleRecovery: preview.isNextCycleRecovery,
       cycleMessage: preview.cycleMessage,
       nextEligibleAfter: preview.nextEligibleAfter,
+      platformFee: preview.platformFee ?? null,
     };
   },
 
@@ -1350,6 +1459,8 @@ export const employeeApi = {
       limits?: { salaryInHand: number; approvedLimit: number; usedLimit: number; availableAdvance: number; interestFreeThreshold?: number };
       payroll?: { payrollDate: number | null; payrollCutoffDate: number | null };
       membershipRequiredAfterEmployerApproval?: boolean;
+      platformFeeRequiredAfterEmployerApproval?: boolean;
+      platformFee?: PlatformFeeConfig | null;
       outstandingRepayment?: { id: string; status: string; dueDate: string; totalAmount: number } | null;
       activeRequest?: BackendLoanApplication | null;
     }>("/loan-applications/eligibility");
@@ -1368,9 +1479,44 @@ export const employeeApi = {
       },
       payroll: raw.payroll ?? { payrollDate: null, payrollCutoffDate: null },
       membershipRequiredAfterEmployerApproval: raw.membershipRequiredAfterEmployerApproval ?? false,
+      platformFeeRequiredAfterEmployerApproval: raw.platformFeeRequiredAfterEmployerApproval ?? false,
+      platformFee: raw.platformFee ?? null,
       outstandingRepayment: raw.outstandingRepayment ?? null,
       activeRequest: raw.activeRequest ? normalizeRequests([raw.activeRequest], [])[0] : null,
     };
+  },
+
+  async initiatePlatformFeePayment(loanApplicationId: string) {
+    return request<{
+      alreadyPaid?: boolean;
+      paymentOrderId?: string;
+      orderId?: string;
+      amount?: number;
+      amountRupees?: number;
+      currency?: string;
+      keyId?: string;
+      description?: string;
+      fee?: PlatformFee;
+      customer?: { name?: string; email?: string; contact?: string };
+    }>(`/platform-fees/loan-applications/${loanApplicationId}/initiate-payment`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  },
+
+  async verifyPlatformFeePayment(payload: {
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+  }) {
+    return request<{
+      success: boolean;
+      fee?: PlatformFee;
+      loanApplication?: BackendLoanApplication;
+    }>("/platform-fees/verify-payment", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   async cancelLoanApplication(id: string): Promise<void> {

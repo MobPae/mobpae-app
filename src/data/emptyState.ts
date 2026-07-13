@@ -34,6 +34,7 @@ export const emptyState: AppState = {
     freeBenefits: [],
     membershipBenefits: [],
   },
+  platformFeeConfig: null,
   requests: [],
   notifications: [],
   rawNotifications: [],

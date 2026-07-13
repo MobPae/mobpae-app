@@ -4,6 +4,12 @@ import { employeeApi } from "../services/api";
 import type { AppState, BankAccount, CouponValidation, EligibilityResult, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
+type RazorpayCheckoutResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+type RazorpayConstructor = new (options: Record<string, unknown>) => { open: () => void };
 
 const REFRESH_COOLDOWN_MS = 5 * 60_000; // 5 min between silent background refreshes
 const ACTIVE_VIEW_KEY = "mobpae_employee_active_view";
@@ -80,7 +86,7 @@ export function useEmployeeApp() {
   const [notice, setNotice] = useState("");
   const [bankForm, setBankForm] = useState<BankAccount>(emptyBankAccount);
   const [editingBank, setEditingBank] = useState(false);
-  const [advanceAmount, setAdvanceAmount] = useState(5000);
+  const [advanceAmount, setAdvanceAmount] = useState(0);
   const [preview, setPreview] = useState<RecoveryPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [submittingAdvance, setSubmittingAdvance] = useState(false);
@@ -90,10 +96,14 @@ export function useEmployeeApp() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
   const [activatingMembership, setActivatingMembership] = useState(false);
+  const [payingPlatformFee, setPayingPlatformFee] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [changePasswordError, setChangePasswordError] = useState("");
+  // True when backend reports passwordChanged===false on login.
+  // While true, the app renders only the ChangePasswordScreen — no other view is accessible.
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingSelfie, setUploadingSelfie] = useState(false);
   const [eligibility, setEligibility] = useState<EligibilityResult | null>(null);
@@ -106,12 +116,21 @@ export function useEmployeeApp() {
     setLoadState("loading");
     try {
       // Load app state and eligibility in parallel; eligibility is best-effort
-      const [nextState, eligResult] = await Promise.all([
+      const [rawState, eligResult] = await Promise.all([
         employeeApi.loadAppState(),
         employeeApi.getEligibility().catch(() => null),
       ]);
 
       lastRefreshAt.current = Date.now();
+
+      // Enrich dashboard.approvedLimit from eligibility result. The /employees/me
+      // endpoint reads from the stale `loanLimit` table and returns 0 when no row
+      // exists. The eligibility service always computes the correct limit from
+      // EmployerProductConfig overrides (percentage or absolute amount).
+      const nextState = eligResult?.limits.approvedLimit && rawState.dashboard
+        ? { ...rawState, dashboard: { ...rawState.dashboard, approvedLimit: eligResult.limits.approvedLimit } }
+        : rawState;
+
       setAppState(nextState);
       setEligibility(eligResult);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
@@ -184,7 +203,8 @@ export function useEmployeeApp() {
       const passwordChanged = await employeeApi.login(email, password);
       setIsLoggedIn(true);
       if (passwordChanged === false) {
-        setActiveView("change-password");
+        // First-time login: force the user to set a new password before accessing the app.
+        setMustChangePassword(true);
         setLoadState("ready");
       } else {
         await loadEmployee(true);
@@ -199,14 +219,23 @@ export function useEmployeeApp() {
     setChangingPassword(true);
     setChangePasswordError("");
     try {
-      await employeeApi.changePassword(currentPassword, newPassword);
-      // Backend invalidates all sessions on password change — clear tokens and force re-login
-      suppressNextSessionExpiredRef.current = true;
-      employeeApi.logout();
-      clearStoredActiveView();
-      setIsLoggedIn(false);
-      setActiveView("home");
-      setLoginError("Password changed successfully. Please sign in again.");
+      const result = await employeeApi.changePassword(currentPassword, newPassword);
+
+      if (result?.accessToken && result?.refreshToken) {
+        // First-time forced change — backend already stored fresh tokens in localStorage via api.ts.
+        // Clear the gate and load the employee profile directly, skipping re-login.
+        setMustChangePassword(false);
+        await loadEmployee(true);
+      } else {
+        // Voluntary change — backend invalidated all sessions; clear state and show login.
+        suppressNextSessionExpiredRef.current = true;
+        employeeApi.logout();
+        clearStoredActiveView();
+        setMustChangePassword(false);
+        setIsLoggedIn(false);
+        setActiveView("home");
+        setLoginError("Password changed successfully. Please sign in again.");
+      }
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Failed to change password.";
       const displayMessage = msg.toLowerCase().includes("incorrect") || msg.toLowerCase().includes("wrong")
@@ -222,6 +251,7 @@ export function useEmployeeApp() {
   const logout = () => {
     employeeApi.logout();
     clearStoredActiveView();
+    setMustChangePassword(false);
     setIsLoggedIn(false);
     setActiveView("home");
   };
@@ -265,8 +295,10 @@ export function useEmployeeApp() {
   const activeRecovery = Boolean(activeRequest);
   const membershipFee = appState.membershipConfig.fee;
 
-  // Available advance limit: eligibility is most accurate source
-  const advanceLimit = eligibility?.limits.availableAdvance ?? appState.profile.salaryLimit;
+  // Available advance limit: use approvedLimit (maximumEligibleAmount) — always computed
+  // correctly by eligibility service even when eligible=false. availableAdvance is 0
+  // when denied, which would hide the limit on the slider and the home screen.
+  const advanceLimit = eligibility?.limits.approvedLimit ?? eligibility?.limits.availableAdvance ?? appState.profile.salaryLimit;
 
   const onboardingSteps = useMemo(
     () => [
@@ -293,8 +325,12 @@ export function useEmployeeApp() {
 
   useEffect(() => {
     if (advanceLimit <= 0) return;
-    // Clamp current selection to [500, advanceLimit] when limit changes
-    setAdvanceAmount((cur) => Math.min(Math.max(cur, Math.min(500, advanceLimit)), advanceLimit));
+    setAdvanceAmount((cur) => {
+      // First load (cur === 0): default to max so interest card is visible immediately
+      if (cur === 0) return advanceLimit;
+      // Limit updated while user already has a selection: just clamp to new bounds
+      return Math.min(Math.max(cur, Math.min(500, advanceLimit)), advanceLimit);
+    });
   }, [advanceLimit]);
 
   useEffect(() => {
@@ -491,6 +527,64 @@ export function useEmployeeApp() {
     setCouponError("");
   };
 
+  const payPlatformFee = async (loanApplicationId: string) => {
+    setPayingPlatformFee(true);
+    try {
+      const order = await employeeApi.initiatePlatformFeePayment(loanApplicationId);
+      if (order.alreadyPaid) {
+        await loadEmployee();
+        setNotice("Platform fee already cleared.");
+        return;
+      }
+
+      const RazorpayCtor = (window as unknown as { Razorpay?: RazorpayConstructor }).Razorpay;
+      if (!RazorpayCtor || !order.orderId || !order.amount || !order.currency || !order.keyId) {
+        throw new Error("Payment service is still loading. Please try again.");
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        const checkout = new RazorpayCtor({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: "MobPae",
+          description: order.description ?? "Platform fee",
+          order_id: order.orderId,
+          prefill: {
+            name: order.customer?.name ?? appState.profile.name,
+            email: order.customer?.email ?? appState.profile.email,
+            contact: order.customer?.contact ?? appState.profile.phone,
+          },
+          theme: { color: "#5B3CE3" },
+          handler: async (response: RazorpayCheckoutResponse) => {
+            try {
+              await employeeApi.verifyPlatformFeePayment({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error("Payment cancelled.")),
+          },
+        });
+        checkout.open();
+      });
+
+      await loadEmployee();
+      setNotice("Platform fee paid. Your request is now with MobPae for review.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to process platform fee payment.";
+      if (message !== "Payment cancelled.") setNotice(message);
+    } finally {
+      setPayingPlatformFee(false);
+    }
+  };
+
   // Legacy alias kept so any callers in non-membership flows don't break
   const activateMembership = onPaymentVerified as unknown as (
     paymentScreenshot?: File,
@@ -498,15 +592,24 @@ export function useEmployeeApp() {
     planType?: 'MONTHLY' | 'BIANNUAL',
   ) => Promise<void>;
 
-  const submitSalaryAdvance = async () => {
+  const submitSalaryAdvance = async (
+    purposeCategory?: string,
+    purposeNote?: string,
+  ): Promise<string | null> => {
     setSubmittingAdvance(true);
     try {
-      await employeeApi.submitSalaryAdvance(appState.profile.id, advanceAmount);
-      // Refresh so eligibility + requests reflect the new submission
+      const submitted = await employeeApi.submitSalaryAdvance(
+        appState.profile.id,
+        advanceAmount,
+        purposeCategory,
+        purposeNote,
+      );
+      // Refresh in background — do NOT navigate; AdvanceScreen shows the submitted state
       void loadEmployee();
-      setActiveView("activity");
+      return submitted?.requestDate ?? null;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to submit salary advance request.");
+      return null;
     } finally {
       setSubmittingAdvance(false);
     }
@@ -583,6 +686,7 @@ export function useEmployeeApp() {
     membershipSubmitted,
     nextBlocker,
     notice,
+    payingPlatformFee,
     clearNotice,
     onboardingSteps,
     preview,
@@ -604,10 +708,12 @@ export function useEmployeeApp() {
     validatingCoupon,
     activateMembership,
     onPaymentVerified,
+    payPlatformFee,
     changePassword,
     changingPassword,
     changePasswordError,
     setChangePasswordError,
+    mustChangePassword,
     uploadProfilePhoto,
     uploadSelfie,
     uploadingPhoto,

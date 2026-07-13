@@ -63,7 +63,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
     setError("");
     setLoading(true);
     try {
-      await onForgotPassword(email);
+      await onForgotPassword(email.trim().toLowerCase());
     } catch {
       // Always show success to prevent email enumeration
     } finally {
@@ -138,9 +138,9 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com" required autoComplete="email"
                 style={{
-                  width: "100%", boxSizing: "border-box", padding: "13px 16px",
-                  fontSize: 13, color: p.INPUT_COLOR, background: p.INPUT_BG,
-                  border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 12, outline: "none",
+                  width: "100%", boxSizing: "border-box", height: 44, padding: "0 14px",
+                  fontSize: 15, color: p.INPUT_COLOR, background: p.INPUT_BG,
+                  border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 11, outline: "none",
                   
                 }}
                 onFocus={e => { e.target.style.borderColor = p.INPUT_FOCUS; }}
@@ -155,10 +155,10 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
             <button
               type="submit" disabled={loading}
               style={{
-                width: "100%", padding: "15px 0", marginTop: 8,
+                width: "100%", height: 48, marginTop: 8,
                 background: loading ? p.ACCENT_DIS : p.ACCENT,
-                color: "white", borderRadius: 8, border: "none",
-                fontSize: 13, fontWeight: 500,
+                color: "white", borderRadius: 12, border: "none",
+                fontSize: 15, fontWeight: 500,
                 cursor: loading ? "not-allowed" : "pointer",
                 
                 boxShadow: loading ? "none" : "0 4px 16px rgba(107,69,244,0.3)",

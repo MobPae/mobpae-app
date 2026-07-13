@@ -21,7 +21,7 @@ export type View =
   | "legal";
 export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
-export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered" | "Cancelled" | "Expired";
+export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Awaiting Platform Fee" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered" | "Cancelled" | "Expired";
 
 export type SelfieStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
@@ -68,6 +68,7 @@ export type KycDocument = {
   documentType?: KycDocumentType;
   status: DocumentStatus;
   note: string;
+  originalFileName?: string;
 };
 
 export type BankAccount = {
@@ -80,10 +81,53 @@ export type BankAccount = {
 };
 
 export type SetupItem = {
-  key: "KYC" | "BANK_ACCOUNT" | "MEMBERSHIP";
+  key: "KYC" | "BANK_ACCOUNT" | "MEMBERSHIP" | "PLATFORM_FEE" | string;
   label: string;
   status: string;
   completed: boolean;
+};
+
+export type PlatformFeeStatus =
+  | "PENDING_PAYMENT"
+  | "PAID"
+  | "FAILED"
+  | "EXPIRED"
+  | "REFUNDED"
+  | "WAIVED"
+  | string;
+
+export type PlatformFeeConfig = {
+  amount: number;
+  amountPaise?: number;
+  currency: string;
+  keyId?: string;
+  label?: string;
+  description?: string;
+};
+
+export type PlatformFee = {
+  id?: string;
+  loanApplicationId?: string;
+  employeeId?: string;
+  employerId?: string;
+  feeType?: string;
+  amount: number;
+  currency: string;
+  status: PlatformFeeStatus;
+  providerOrderId?: string | null;
+  providerPaymentId?: string | null;
+  paidAt?: string | null;
+  waivedAt?: string | null;
+  remarks?: string | null;
+  paymentOrders?: Array<{
+    id?: string;
+    providerOrderId?: string;
+    status?: string;
+    amount?: number;
+    currency?: string;
+    createdAt?: string;
+    expiresAt?: string;
+  }>;
 };
 
 export type AdvanceRequest = {
@@ -106,6 +150,7 @@ export type AdvanceRequest = {
   recoveryStatus: "Scheduled" | "Completed";
   disbursalDate?: string;
   disbursalStatus: "Pending" | "Disbursed";
+  platformFee?: PlatformFee | null;
   // Backend-driven lifecycle fields (from presentSalaryRequest)
   progress?: number;
   nextAction?: string;
@@ -134,6 +179,8 @@ export type EligibilityResult = {
   };
   payroll: { payrollDate: number | null; payrollCutoffDate: number | null };
   membershipRequiredAfterEmployerApproval: boolean;
+  platformFeeRequiredAfterEmployerApproval: boolean;
+  platformFee: PlatformFeeConfig | null;
   outstandingRepayment: {
     id: string;
     status: string;
@@ -212,19 +259,15 @@ export type RecoveryPreview = {
   isNextCycleRecovery?: boolean;
   cycleMessage?: string;
   nextEligibleAfter?: string;
-};
-
-export type PeerActivityItem = {
-  displayName: string; // "Rahul" — first name only (last initial stripped in UI)
-  action: string;
-  daysAgo: number;
+  platformFee?: PlatformFeeConfig | null;
 };
 
 export type PeerActivity = {
   totalEmployees: number;
   activeUsers: number;
   percentageActive: number;
-  recentActivity: PeerActivityItem[];
+  /** Up to 5 two-letter initials, e.g. ["JJ","PK","AJ"] — no names for privacy */
+  initials: string[];
 };
 
 export type AppState = {
@@ -234,6 +277,7 @@ export type AppState = {
   bankAccount: BankAccount | null;
   membershipActive: boolean;
   membershipConfig: MembershipConfig;
+  platformFeeConfig: PlatformFeeConfig | null;
   requests: AdvanceRequest[];
   notifications: string[];
   rawNotifications: AppNotification[];

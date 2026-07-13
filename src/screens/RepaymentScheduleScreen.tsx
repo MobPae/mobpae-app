@@ -1,4 +1,4 @@
-import { CheckCircle2, CreditCard, ShieldCheck } from "lucide-react";
+import { CheckCircle2, CreditCard, ShieldCheck, Landmark } from "lucide-react";
 import type { AdvanceRequest, BankAccount, View } from "../types/app";
 import { formatMoney } from "../utils/format";
 import type { Theme } from "../hooks/useTheme";
@@ -205,256 +205,154 @@ export function RepaymentScheduleScreen({
   const totalDays = request.interestDays || Math.max(left, 1);
   const progress = Math.min(100, Math.max(0, 100 - Math.round((left / totalDays) * 100)));
 
+  const blue = "#315eff";
+  const blueSoft = "rgba(49,94,255,0.08)";
+  const blueBorder = "rgba(49,94,255,0.18)";
+  const daysColor = left <= 3 ? "#ef4444" : left <= 7 ? WARM : blue;
+
   return (
-    <div
-      style={{
-        minHeight: "100%",
-        background: DARK,
-        color: TEXT,
-        
-        padding: "18px 22px 30px",
-      }}
-    >
-      <section
-        style={{
-          border: `1px solid ${BORDER}`,
-          borderRadius: 22,
-          background: PANEL,
-          padding: "26px 22px 24px",
-          boxShadow: colors.shadow,
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "start" }}>
-          <div>
-            <div
-              style={{
-                color: MUTED,
-                fontSize: 12,
-                fontWeight: 500,
-                letterSpacing: "0.28em",
-                textTransform: "uppercase",
-                marginBottom: 22,
-              }}
-            >
+    <div style={{ minHeight: "100%", background: DARK, color: TEXT, padding: "16px 18px 32px" }}>
+
+      {/* ── Card 1: Summary + auto-deduct ── */}
+      <section style={{ borderRadius: 18, border: `1px solid ${blueBorder}`, background: PANEL, overflow: "hidden", marginBottom: 12 }}>
+
+        {/* Colored hero area */}
+        <div style={{ background: blueSoft, padding: "16px 16px 14px", borderBottom: `1px solid ${blueBorder}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: blue, fontWeight: 450 }}>
               Outstanding
-            </div>
-            <div
-              style={{
-                color: TEXT,
-                
-                fontSize: 33,
-                fontWeight: 450,
-                letterSpacing: "-0.08em",
-                lineHeight: 1,
-              }}
-            >
-              {formatMoney(total)}
-            </div>
-            <div style={{ color: MUTED, fontSize: 13, fontWeight: 400, marginTop: 14 }}>
-              {activeRepaymentCount === 1
-                ? "1 active advance · recovers this cycle"
-                : `${activeRepaymentCount} active advances · recovers this cycle`}
-            </div>
+            </span>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "4px 10px", borderRadius: 99,
+              border: "1px solid rgba(180,89,31,0.35)", background: "rgba(180,89,31,0.1)",
+              color: WARM, fontSize: 11, fontWeight: 450,
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: WARM }} />
+              Active
+            </span>
           </div>
-          <span
-            style={{
-              height: 34,
-              borderRadius: 999,
-              border: "1px solid rgba(180,89,31,0.52)",
-              background: "rgba(180,89,31,0.14)",
-              color: WARM,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "0 14px",
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
-            <span style={{ width: 7, height: 7, borderRadius: 99, background: WARM }} />
-            Active
-          </span>
-        </div>
 
-        <div style={{ height: 1, background: colors.rule, margin: "24px 0 22px" }} />
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 20 }}>
-          <div>
-            <div style={{ color: MUTED, fontSize: 12, fontWeight: 450, marginBottom: 10 }}>
-              Auto-deducts on
-            </div>
-            <div style={{  fontSize: 16, fontWeight: 450 }}>
-              {formatDate(dueDate)}
-            </div>
+          <div style={{ fontSize: 34, fontWeight: 300, letterSpacing: "-0.06em", color: blue, lineHeight: 1, marginBottom: 5 }}>
+            {formatMoney(total)}
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ color: MUTED, fontSize: 12, fontWeight: 450, marginBottom: 10 }}>
-              Days left
-            </div>
-            <div style={{  fontSize: 16, fontWeight: 450 }}>
-              {left}
-            </div>
+          <div style={{ fontSize: 12, color: "rgba(49,94,255,0.6)" }}>
+            {activeRepaymentCount === 1
+              ? "1 active advance · recovers this cycle"
+              : `${activeRepaymentCount} active advances · recovers this cycle`}
           </div>
         </div>
 
-        <div style={{ height: 6, borderRadius: 999, background: colors.progressTrack, marginTop: 22, overflow: "hidden" }}>
-          <div style={{ width: `${progress}%`, height: "100%", borderRadius: 999, background: colors.progressFill }} />
-        </div>
-        <div style={{ color: DIM, fontSize: 12, fontWeight: 400, marginTop: 12 }}>
-          Salary cycle · resets on payday
-        </div>
-      </section>
+        {/* Details area */}
+        <div style={{ padding: "14px 16px 14px" }}>
 
-      <section
-        style={{
-          border: `1px solid ${BORDER}`,
-          borderRadius: 18,
-          background: PANEL,
-          minHeight: 62,
-          display: "grid",
-          gridTemplateColumns: "42px 1fr auto",
-          alignItems: "center",
-          gap: 14,
-          padding: "15px 18px",
-          marginTop: 18,
-        }}
-      >
-        <span
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 14,
-            border: `1px solid ${BORDER}`,
-            display: "grid",
-            placeItems: "center",
-            color: theme === "light" ? "#315eff" : "#C9C7D0",
-            background: theme === "light" ? "#F5F3FB" : "transparent",
-          }}
-        >
-          <CreditCard size={18} strokeWidth={1.9} />
-        </span>
-        <span style={{ minWidth: 0 }}>
-          <span style={{ display: "block", color: TEXT, fontSize: 15, fontWeight: 500 }}>
-            Auto-deduct from salary
-          </span>
-          <small
-            style={{
-              display: "block",
-              color: MUTED,
-              fontSize: 12,
-              fontWeight: 400,
-              marginTop: 6,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {maskBank(bankAccount)}
-          </small>
-        </span>
-        <span style={{ color: GREEN, fontSize: 12, fontWeight: 500 }}>On</span>
-      </section>
-
-      <section
-        style={{
-          position: "relative",
-          borderRadius: 22,
-          background: colors.paperBg,
-          color: colors.paperInk,
-          padding: "22px 22px 24px",
-          marginTop: 18,
-          overflow: "visible",
-          
-        }}
-      >
-        <span
-          style={{
-            position: "absolute",
-            left: -10,
-            top: "52%",
-            width: 20,
-            height: 28,
-            borderRadius: "0 999px 999px 0",
-            background: DARK,
-          }}
-        />
-        <span
-          style={{
-            position: "absolute",
-            right: -10,
-            top: "52%",
-            width: 20,
-            height: 28,
-            borderRadius: "999px 0 0 999px",
-            background: DARK,
-          }}
-        />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
-          <div
-            style={{
-              color: colors.paperMuted,
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: "0.28em",
-              textTransform: "uppercase",
-            }}
-          >
-            Breakdown
+          {/* Due date + Days left */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Auto-deducts on</div>
+              <div style={{ fontSize: 15, fontWeight: 450, color: TEXT }}>{formatDate(dueDate)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Days left</div>
+              <div style={{ fontSize: 15, fontWeight: 450, color: daysColor }}>{left}</div>
+            </div>
           </div>
-          <div style={{ color: colors.paperMuted,  fontSize: 12, fontWeight: 400 }}>
-            {request.interestDays || left} days @ {request.interestRate || 36}%
-          </div>
-        </div>
 
-        {[
-          { label: "Principal", value: formatMoney(principal), color: colors.paperInk },
-          { label: "Interest accrued", value: `+ ${formatMoney(interest)}`, color: WARM },
-        ].map((row, index) => (
-          <div key={row.label}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-              <span style={{ color: colors.paperMuted, fontSize: 14, fontWeight: 450 }}>{row.label}</span>
-              <span
-                style={{
-                  color: row.color,
-                  
-                  fontSize: 16,
-                  fontWeight: 450,
-                  letterSpacing: "-0.05em",
-                }}
-              >
-                {row.value}
+          {/* Progress */}
+          <div style={{ height: 4, borderRadius: 999, background: colors.progressTrack, overflow: "hidden", marginBottom: 6 }}>
+            <div style={{ width: `${Math.max(progress, 2)}%`, height: "100%", borderRadius: 999, background: `linear-gradient(90deg, ${blue} 0%, rgba(49,94,255,0.6) 100%)` }} />
+          </div>
+          <div style={{ fontSize: 11, color: DIM, marginBottom: 14 }}>
+            {progress}% elapsed · {left} days remaining
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: colors.rule, marginBottom: 12 }} />
+
+          {/* Auto-deduct row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+              display: "grid", placeItems: "center",
+              background: blueSoft, color: blue,
+            }}>
+              <Landmark size={16} strokeWidth={1.9} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 13, color: TEXT }}>Auto-deduct from salary</span>
+              <span style={{ display: "block", fontSize: 11, color: MUTED, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {maskBank(bankAccount)}
               </span>
-            </div>
-            {index === 0 && <div style={{ borderTop: `1px dashed ${colors.paperRule}`, margin: "20px 0" }} />}
+            </span>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "3px 9px", borderRadius: 99,
+              background: "rgba(32,164,106,0.1)", border: "1px solid rgba(32,164,106,0.25)",
+              color: GREEN, fontSize: 11, fontWeight: 450,
+            }}>
+              <span style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN }} />
+              On
+            </span>
           </div>
-        ))}
+        </div>
 
-        <div style={{ borderTop: `1px dashed ${colors.paperRule}`, margin: "20px 0 18px" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end" }}>
-          <span>
-            <small style={{ display: "block", color: colors.paperMuted, fontSize: 12, fontWeight: 450, marginBottom: 7 }}>
-              Due {formatDate(dueDate)}
-            </small>
-            <span style={{ color: colors.paperMuted, fontSize: 15, fontWeight: 500 }}>Total repayment</span>
+      </section>
+
+      {/* ── Card 2: Breakdown ── */}
+      <section style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: PANEL, padding: "16px 16px 14px" }}>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <span style={{ fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTED, fontWeight: 450 }}>
+            Breakdown
           </span>
-          <span
-            style={{
-              color: colors.paperInk,
-              
-              fontSize: 23,
-              fontWeight: 450,
-              letterSpacing: "-0.08em",
-            }}
-          >
+          <span style={{ fontSize: 11, color: MUTED }}>
+            {request.interestDays || left} days{request.interestRate ? ` @ ${request.interestRate}%` : ""}
+          </span>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span style={{ fontSize: 13, color: MUTED }}>Principal</span>
+          <span style={{ fontSize: 14, fontWeight: 450, color: TEXT, letterSpacing: "-0.03em" }}>{formatMoney(principal)}</span>
+        </div>
+
+        <div style={{ borderTop: `1px dashed ${BORDER}`, margin: "0 0 12px" }} />
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span style={{ fontSize: 13, color: MUTED }}>Interest accrued</span>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "3px 9px", borderRadius: 99,
+            background: "rgba(180,89,31,0.08)", border: "1px solid rgba(180,89,31,0.22)",
+            fontSize: 13, fontWeight: 450, color: WARM, letterSpacing: "-0.02em",
+          }}>
+            + {formatMoney(interest)}
+          </span>
+        </div>
+
+        <div style={{ borderTop: `1px dashed ${BORDER}`, margin: "0 0 14px" }} />
+
+        {/* Total — blue tinted row */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          background: blueSoft, border: `1px solid ${blueBorder}`,
+          borderRadius: 12, padding: "12px 14px",
+        }}>
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(49,94,255,0.55)", marginBottom: 3 }}>Due {formatDate(dueDate)}</div>
+            <div style={{ fontSize: 13, color: blue }}>Total repayment</div>
+          </div>
+          <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "-0.06em", color: blue }}>
             {formatMoney(total)}
           </span>
         </div>
+
       </section>
 
-      <div style={{ display: "flex", alignItems: "start", gap: 10, color: MUTED, fontSize: 12, fontWeight: 400, lineHeight: 1.35, marginTop: 20 }}>
-        <ShieldCheck size={14} strokeWidth={1.8} color={DIM} />
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, color: MUTED, fontSize: 12, lineHeight: 1.4, marginTop: 16 }}>
+        <ShieldCheck size={13} strokeWidth={1.8} color={DIM} style={{ flexShrink: 0, marginTop: 1 }} />
         Auto-recovered from salary on payday · no action needed
       </div>
+
     </div>
   );
 }

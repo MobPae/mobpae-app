@@ -1,5 +1,15 @@
+// ── LoginScreen.tsx ──────────────────────────────────────────────────────────
+// Sign-in form. Supports light/dark themes via loginPalette().
+// Props:
+//   error   — API-level error or success message surfaced by the parent hook
+//   loading — true while onLogin() is in-flight
+//   onLogin — async callback; parent owns the API call
+//   onForgotPassword — optional; hides the link when omitted
+
 import { useState } from "react";
-import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type Theme = "dark" | "light";
 
@@ -11,59 +21,49 @@ type LoginScreenProps = {
   theme?: Theme;
 };
 
+// ── Palette ───────────────────────────────────────────────────────────────────
+// Two complete color sets — swap by passing theme="dark" or theme="light".
+
 function loginPalette(theme: Theme) {
   if (theme === "light") {
     return {
-      SURFACE:    "#FFFFFF",
       PANEL:      "#F8F8FA",
-      PANEL_SOFT: "#FAFAFA",
       BORDER:     "#E9E6F1",
-      BORDER_FOC: "#C4BBE8",
+      BORDER_FOC: "#315eff",
+      BORDER_ERR: "#EF4444",
       TEXT:       "#17151F",
       MUTED:      "#6B6878",
       DIM:        "#9A97A8",
-      CREAM:      "#315eff",
-      CREAM_DIS:  "rgba(49,94,255,0.32)",
-      CTA_TEXT:   "#FFFFFF",
-      CTA_ICON_BG:"#FFFFFF",
-      CTA_ICON_C: "#315eff",
+      ERR_TEXT:   "#DC2626",
       GREEN:      "#1F9E67",
-      WARM:       "#B4591F",
       GLOW:       "radial-gradient(circle at 50% 4%, rgba(49,94,255,0.08), transparent 42%), #F6F4FF",
-      CARD_BG:    "linear-gradient(180deg, rgba(49,94,255,0.04), rgba(49,94,255,0.015))",
-      CARD_BORDER:"rgba(49,94,255,0.1)",
       DIVIDER:    "linear-gradient(90deg, transparent, #DDD9F0, transparent)",
     };
   }
   return {
-    SURFACE:    "#0C0C0E",
     PANEL:      "#141418",
-    PANEL_SOFT: "#17171B",
     BORDER:     "#29292F",
-    BORDER_FOC: "#3C3C42",
+    BORDER_FOC: "#315eff",
+    BORDER_ERR: "#EF4444",
     TEXT:       "#F2F0EA",
     MUTED:      "#8A8892",
     DIM:        "#5C5C64",
-    CREAM:      "#F4F1E8",
-    CREAM_DIS:  "rgba(242,240,234,0.42)",
-    CTA_TEXT:   "#0C0C0E",
-    CTA_ICON_BG:"#0C0C0E",
-    CTA_ICON_C: "#F4F1E8",
+    ERR_TEXT:   "#F87171",
     GREEN:      "#20A46A",
-    WARM:       "#B4591F",
     GLOW:       "radial-gradient(circle at 50% 4%, rgba(242,240,234,0.055), transparent 38%), #0C0C0E",
-    CARD_BG:    "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012))",
-    CARD_BORDER:"rgba(255,255,255,0.035)",
     DIVIDER:    "linear-gradient(90deg, transparent, #1E1E22, transparent)",
   };
 }
+
+// ── LogoMark ──────────────────────────────────────────────────────────────────
+// Circular badge containing the MobPae icon.
 
 function LogoMark({ bg, shadow }: { bg: string; shadow: string }) {
   return (
     <div
       style={{
-        width: 82,
-        height: 82,
+        width: 80,
+        height: 80,
         borderRadius: "50%",
         background: bg,
         display: "grid",
@@ -74,11 +74,16 @@ function LogoMark({ bg, shadow }: { bg: string; shadow: string }) {
       <img
         src="/logo-icon.svg"
         alt="MobPae"
-        style={{ width: 56, height: 40, objectFit: "contain" }}
+        style={{ width: 44, height: 44, objectFit: "contain" }}
       />
     </div>
   );
 }
+
+// ── AuthField ─────────────────────────────────────────────────────────────────
+// Reusable labelled input row.
+// - Shows a red border + inline error message when `error` is non-empty.
+// - Clears the error state when the parent calls onChange (handled upstream).
 
 function AuthField({
   label,
@@ -89,6 +94,7 @@ function AuthField({
   placeholder,
   icon,
   rightSlot,
+  error,
   p,
 }: {
   label: string;
@@ -99,50 +105,54 @@ function AuthField({
   placeholder?: string;
   icon: React.ReactNode;
   rightSlot?: React.ReactNode;
+  error?: string;
   p: ReturnType<typeof loginPalette>;
 }) {
   const [focused, setFocused] = useState(false);
+  const hasError = Boolean(error);
 
   return (
-    <label style={{ display: "block", marginBottom: 20 }}>
+    <div style={{ marginBottom: 16 }}>
+      {/* Label */}
       <span
         style={{
           display: "block",
-          marginBottom: 10,
+          marginBottom: 7,
           color: p.MUTED,
-          fontSize: 12,
+          fontSize: 11.5,
           fontWeight: 500,
-          letterSpacing: "0.28em",
+          letterSpacing: "0.22em",
           textTransform: "uppercase",
         }}
       >
         {label}
       </span>
+
+      {/* Input row */}
       <div
         style={{
-          minHeight: 62,
-          border: `1px solid ${focused ? p.BORDER_FOC : p.BORDER}`,
-          borderRadius: 16,
+          height: 44,
+          border: `1.5px solid ${hasError ? p.BORDER_ERR : focused ? p.BORDER_FOC : p.BORDER}`,
+          borderRadius: 11,
           background: p.PANEL,
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          padding: "0 16px",
-          transition: "border-color 0.18s ease, background 0.18s ease",
+          gap: 10,
+          padding: "0 12px",
+          transition: "border-color 0.15s ease",
         }}
       >
-        <span style={{ color: focused ? p.TEXT : p.MUTED, display: "grid", placeItems: "center" }}>
+        <span style={{ color: focused ? p.TEXT : p.MUTED, display: "grid", placeItems: "center", flexShrink: 0 }}>
           {icon}
         </span>
         <input
           type={type}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
           placeholder={placeholder}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          required
           style={{
             flex: 1,
             minWidth: 0,
@@ -151,28 +161,76 @@ function AuthField({
             color: p.TEXT,
             background: "transparent",
             fontSize: 15,
-            fontWeight: 450,
-            letterSpacing: "0.06em",
+            fontWeight: 400,
           }}
         />
         {rightSlot}
       </div>
-    </label>
+
+      {/* Inline validation error */}
+      {hasError && (
+        <p style={{ margin: "5px 0 0", fontSize: 12, color: p.ERR_TEXT, fontWeight: 400 }}>
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
-export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme = "dark" }: LoginScreenProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+// ── LoginScreen ───────────────────────────────────────────────────────────────
+
+export function LoginScreen({
+  error,
+  loading,
+  onLogin,
+  onForgotPassword,
+  theme = "dark",
+}: LoginScreenProps) {
+  const [email, setEmail]               = useState("");
+  const [password, setPassword]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const isSuccessMessage = error.toLowerCase().includes("successfully");
-  const canSubmit = Boolean(email && password && !loading);
+
+  // Field-level errors — set on empty submit, cleared on each keystroke.
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+
   const p = loginPalette(theme);
 
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (canSubmit) void onLogin(email, password);
+  // API error from parent can also be a success message (e.g. after reset).
+  const isSuccessMessage = error.toLowerCase().includes("successfully");
+
+  // ── Field change handlers ──────────────────────────────────────────────────
+  // Clear the field's own error as soon as the user starts typing.
+
+  const onEmailChange = (val: string) => {
+    setEmail(val);
+    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
   };
+
+  const onPasswordChange = (val: string) => {
+    setPassword(val);
+    if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: "" }));
+  };
+
+  // ── Submit handler ─────────────────────────────────────────────────────────
+  // Validates locally first; only calls the parent if both fields are filled.
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+
+    const errors = { email: "", password: "" };
+    if (!email.trim()) errors.email = "Email is required";
+    if (!password)     errors.password = "Password is required";
+
+    if (errors.email || errors.password) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    void onLogin(email.trim().toLowerCase(), password);
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div
@@ -187,202 +245,185 @@ export function LoginScreen({ error, loading, onLogin, onForgotPassword, theme =
         padding: "28px 24px",
       }}
     >
-        <div style={{ display: "grid", placeItems: "center", gap: 14, marginBottom: 34 }}>
-          <LogoMark
-            bg={theme === "light" ? "#EEF1FF" : p.CREAM}
-            shadow={theme === "light"
+      {/* Logo + brand name */}
+      <div style={{ display: "grid", placeItems: "center", gap: 14, marginBottom: 34 }}>
+        <LogoMark
+          bg={theme === "light" ? "#EEF1FF" : "#1E1E26"}
+          shadow={
+            theme === "light"
               ? "0 8px 28px rgba(49,94,255,0.18), 0 0 0 1.5px rgba(49,94,255,0.12)"
-              : "0 14px 40px rgba(242,240,234,0.12)"}
-          />
-          <div
+              : "0 8px 28px rgba(49,94,255,0.25)"
+          }
+        />
+        <div
+          style={{
+            color: p.TEXT,
+            fontSize: 13,
+            fontWeight: 500,
+            letterSpacing: "0.20em",
+            textTransform: "uppercase",
+          }}
+        >
+          MobPae
+        </div>
+      </div>
+
+      <form onSubmit={submit} style={{ paddingBottom: 28 }}>
+
+        {/* Heading */}
+        <div style={{ marginBottom: 24 }}>
+          <h1
             style={{
+              margin: 0,
               color: p.TEXT,
-              fontSize: 13,
+              fontSize: 28,
+              lineHeight: 1.08,
               fontWeight: 500,
-              letterSpacing: "0.20em",
-              textTransform: "uppercase",
+              letterSpacing: "-0.04em",
             }}
           >
-            MobPae
-          </div>
+            Welcome back
+          </h1>
+          <p
+            style={{
+              margin: "10px 0 0",
+              color: p.MUTED,
+              fontSize: 14,
+              lineHeight: 1.45,
+              fontWeight: 400,
+            }}
+          >
+            Sign in to access your salary advances.
+          </p>
         </div>
 
-        <form onSubmit={submit} style={{ padding: "0 0 28px" }}>
-          <div style={{ marginBottom: 26 }}>
-            <h1
+        {/* Email input */}
+        <AuthField
+          label="Email ID"
+          type="email"
+          value={email}
+          onChange={onEmailChange}
+          autoComplete="email"
+          placeholder="you@company.com"
+          icon={<Mail size={17} strokeWidth={1.9} />}
+          error={fieldErrors.email}
+          p={p}
+        />
+
+        {/* Password input */}
+        <AuthField
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          value={password}
+          onChange={onPasswordChange}
+          autoComplete="current-password"
+          placeholder="Password"
+          icon={<Lock size={17} strokeWidth={1.9} />}
+          error={fieldErrors.password}
+          p={p}
+          rightSlot={
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               style={{
-                margin: 0,
-                color: p.TEXT,
-                fontSize: 28,
-                lineHeight: 1.08,
-                fontWeight: 500,
-                letterSpacing: "-0.04em",
-              }}
-            >
-              Welcome back
-            </h1>
-            <p
-              style={{
-                margin: "10px 0 0",
+                width: 32,
+                height: 32,
+                border: 0,
+                borderRadius: "50%",
+                background: "transparent",
                 color: p.MUTED,
-                fontSize: 14,
-                lineHeight: 1.45,
-                fontWeight: 500,
-              }}
-            >
-              Sign in to access your salary advances.
-            </p>
-          </div>
-
-          <AuthField
-            label="Email ID"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            autoComplete="email"
-            placeholder="you@company.com"
-            icon={<Mail size={17} strokeWidth={1.9} />}
-            p={p}
-          />
-
-          <AuthField
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={setPassword}
-            autoComplete="current-password"
-            placeholder="Password"
-            icon={<Lock size={17} strokeWidth={1.9} />}
-            p={p}
-            rightSlot={
-              <button
-                type="button"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                style={{
-                  width: 32,
-                  height: 32,
-                  border: 0,
-                  borderRadius: "50%",
-                  background: "transparent",
-                  color: p.MUTED,
-                  display: "grid",
-                  placeItems: "center",
-                  cursor: "pointer",
-                }}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            }
-          />
-          {onForgotPassword && (
-            <div style={{ textAlign: "right", marginTop: -14, marginBottom: 20 }}>
-              <button
-                type="button"
-                onClick={onForgotPassword}
-                style={{
-                  border: 0,
-                  background: "transparent",
-                  color: theme === "light" ? "#315eff" : p.MUTED,
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  padding: "4px 0",
-                }}
-              >
-                Forgot password?
-              </button>
-            </div>
-          )}
-
-          {error && (
-            <div
-              style={{
-                margin: "2px 0 18px",
-                border: `1px solid ${isSuccessMessage ? "rgba(31,158,103,0.35)" : "rgba(180,89,31,0.4)"}`,
-                background: isSuccessMessage ? "rgba(31,158,103,0.1)" : "rgba(180,89,31,0.12)",
-                color: isSuccessMessage ? p.GREEN : "#D9905A",
-                borderRadius: 14,
-                padding: "12px 14px",
-                fontSize: 13,
-                lineHeight: 1.35,
-                fontWeight: 400,
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            style={{
-              width: "100%",
-              height: 64,
-              border: 0,
-              borderRadius: 16,
-              background: canSubmit ? p.CREAM : p.CREAM_DIS,
-              color: p.CTA_TEXT,
-              fontSize: 16,
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 8px 0 26px",
-              cursor: canSubmit ? "pointer" : "default",
-              boxShadow: canSubmit
-                ? (theme === "light"
-                  ? "0 16px 42px rgba(49,94,255,0.22)"
-                  : "0 16px 42px rgba(242,240,234,0.12)")
-                : "none",
-            }}
-          >
-            <span>{loading ? "Signing in..." : "Sign in"}</span>
-            <span
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 10,
-                background: p.CTA_ICON_BG,
-                color: p.CTA_ICON_C,
                 display: "grid",
                 placeItems: "center",
+                cursor: "pointer",
+                flexShrink: 0,
               }}
             >
-              {loading ? <span className="cta-spinner" /> : <ArrowRight size={24} strokeWidth={2.2} />}
-            </span>
-          </button>
-          {!canSubmit && !loading && !error && (
-            <p style={{ margin: "10px 0 0", color: p.DIM, fontSize: 12, textAlign: "center", fontWeight: 400 }}>
-              Enter your email and password to continue
-            </p>
-          )}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          }
+        />
 
+        {/* Forgot password */}
+        {onForgotPassword && (
+          <div style={{ textAlign: "right", marginTop: -8, marginBottom: 20 }}>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              style={{
+                border: 0,
+                background: "transparent",
+                color: "#315eff",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                padding: "4px 0",
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
+
+        {/* API-level error / success banner */}
+        {error && (
           <div
             style={{
-              marginTop: 34,
-              height: 1,
-              background: p.DIVIDER,
-            }}
-          />
-
-          <div
-            style={{
-              marginTop: 28,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              color: p.DIM,
-              fontSize: 12,
-              fontWeight: 500,
-              textAlign: "center",
+              margin: "0 0 16px",
+              border: `1px solid ${isSuccessMessage ? "rgba(31,158,103,0.35)" : "rgba(239,68,68,0.3)"}`,
+              background: isSuccessMessage ? "rgba(31,158,103,0.1)" : "rgba(239,68,68,0.08)",
+              color: isSuccessMessage ? p.GREEN : p.ERR_TEXT,
+              borderRadius: 12,
+              padding: "11px 14px",
+              fontSize: 13,
+              lineHeight: 1.4,
             }}
           >
-            <ShieldCheck size={14} strokeWidth={1.8} />
-            <span>Bank-grade encryption. Your data stays private.</span>
+            {error}
           </div>
-        </form>
+        )}
+
+        {/* Submit button — always blue; dims slightly while loading */}
+        <button
+          type="submit"
+          style={{
+            width: "100%",
+            height: 48,
+            border: 0,
+            borderRadius: 12,
+            background: "#315eff",
+            color: "#FFFFFF",
+            fontSize: 15,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+            cursor: loading ? "default" : "pointer",
+            opacity: loading ? 0.7 : 1,
+            transition: "opacity 0.15s ease",
+          }}
+        >
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
+
+        {/* Divider */}
+        <div style={{ marginTop: 32, height: 1, background: p.DIVIDER }} />
+
+        {/* Trust badge */}
+        <div
+          style={{
+            marginTop: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            color: p.DIM,
+            fontSize: 12,
+            fontWeight: 400,
+          }}
+        >
+          <ShieldCheck size={14} strokeWidth={1.8} />
+          <span>Bank-grade encryption. Your data stays private.</span>
+        </div>
+      </form>
     </div>
   );
 }
