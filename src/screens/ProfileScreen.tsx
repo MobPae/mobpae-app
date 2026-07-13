@@ -91,7 +91,6 @@ function RowGroup({ children }: { children: ReactNode }) {
       style={{
         border: "1px solid var(--profile-border, #29292F)",
         borderRadius: 20,
-        background: "var(--profile-panel, rgba(20,20,24,0.62))",
         overflow: "hidden",
       }}
       className="profile-v2-row-group"
@@ -450,7 +449,7 @@ export function ProfileScreen({
         <section className="pbv2-note">
           <Info size={15} strokeWidth={1.9} />
           <p className="pbv2-note-body">
-            Advances are credited to this account. Repayment is auto-deducted from your <strong>salary account</strong> on payday by your employer.
+            Advances are credited to this account. Repayment is auto-deducted from your salary account on payday by your employer.
           </p>
         </section>
 
@@ -770,7 +769,7 @@ export function ProfileScreen({
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          
+          cursor: "pointer",
           fontSize: 15,
           fontWeight: 500,
         }}
@@ -782,8 +781,7 @@ export function ProfileScreen({
       <div
         style={{
           textAlign: "center",
-          color: "#3F3F46",
-          
+          color: "var(--profile-dim, #5C5C64)",
           fontSize: 12,
           fontWeight: 400,
           marginTop: 24,

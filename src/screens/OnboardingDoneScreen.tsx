@@ -70,7 +70,7 @@ export function OnboardingDoneScreen({
             <div style={{ color: item.tone === "done" ? "#16A34A" : item.tone === "submitted" ? "#D97706" : "#9CA3AF", display: "flex" }}>
               {item.tone === "done" ? <BadgeCheck size={16} /> : <Clock size={16} />}
             </div>
-            <span style={{ flex: 1, fontSize: 13, color: item.tone === "done" ? "#0F0A3C" : "#6B7280", fontWeight: item.tone === "done" ? 600 : 400 }}>
+            <span style={{ flex: 1, fontSize: 13, color: item.tone === "done" ? "#0F0A3C" : "#6B7280", fontWeight: item.tone === "done" ? 500 : 400 }}>
               {item.label}
             </span>
             <span style={{

@@ -1996,9 +1996,8 @@ export function AdvanceScreen({
           <div
             style={{
               border: `1px solid ${colors.border}`,
-              borderRadius: 14,
+              borderRadius: 12,
               overflow: "hidden",
-              background: colors.panelSoft,
               marginBottom: 16,
             }}
           >

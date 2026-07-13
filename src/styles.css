@@ -15089,8 +15089,6 @@ html[data-theme="light"] body {
   box-shadow: 0 12px 40px rgba(49, 94, 255, 0.32) !important;
 }
 
-/* The dot pattern and sheen are rendered as child divs so no override needed */
-
 .phone-shell--light .profile-hero-card h1 {
   color: #FFFFFF !important;
 }
@@ -15103,7 +15101,12 @@ html[data-theme="light"] body {
   border-right-color: rgba(255, 255, 255, 0.14) !important;
 }
 
-.phone-shell--light .profile-v2-row-group,
+.phone-shell--light .profile-v2-row-group {
+  border-color: #E9E6F1 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 .phone-shell--light .pbv2-card,
 .phone-shell--light .pbv2-note,
 .phone-shell--light .pbv2-manage,

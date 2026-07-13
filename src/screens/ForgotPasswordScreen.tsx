@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 
 type Theme = "dark" | "light";
@@ -16,18 +17,18 @@ function recoveryPalette(theme: Theme) {
       TITLE:        "#191A2E",
       SUB:          "#62657A",
       STRONG:       "#191A2E",
-      ICON_BG:      "#ECEBFF",
-      ICON_BORDER:  "#A5A7FF",
-      ICON_STROKE:  "#7679FF",
-      LABEL:        "#191A2E",
+      ICON_BG:      "rgba(49,94,255,0.10)",
+      ICON_BORDER:  "rgba(49,94,255,0.22)",
+      ICON_STROKE:  "#315eff",
+      LABEL:        "#6B6878",
       INPUT_BG:     "#FFFFFF",
       INPUT_COLOR:  "#191A2E",
       INPUT_BORDER: "#E4E4EF",
-      INPUT_FOCUS:  "#7679FF",
-      ACCENT:       "#7679FF",
-      ACCENT_DIS:   "#A5A7FF",
+      INPUT_FOCUS:  "#315eff",
+      ACCENT:       "#315eff",
+      ACCENT_DIS:   "rgba(49,94,255,0.45)",
       ERROR:        "#EF4444",
-      BACK_LINK:    "#7679FF",
+      BACK_LINK:    "#315eff",
     };
   }
   return {
@@ -36,18 +37,18 @@ function recoveryPalette(theme: Theme) {
     TITLE:        "#F2F0EA",
     SUB:          "#7C7C85",
     STRONG:       "#F2F0EA",
-    ICON_BG:      "rgba(107,69,244,0.15)",
-    ICON_BORDER:  "rgba(107,69,244,0.4)",
-    ICON_STROKE:  "#9A7DF5",
-    LABEL:        "#C8C5D0",
+    ICON_BG:      "rgba(49,94,255,0.14)",
+    ICON_BORDER:  "rgba(49,94,255,0.32)",
+    ICON_STROKE:  "#7B9FFF",
+    LABEL:        "#8A8892",
     INPUT_BG:     "#141418",
     INPUT_COLOR:  "#F2F0EA",
     INPUT_BORDER: "#29292F",
-    INPUT_FOCUS:  "#6B45F4",
-    ACCENT:       "#6B45F4",
-    ACCENT_DIS:   "rgba(107,69,244,0.45)",
+    INPUT_FOCUS:  "#315eff",
+    ACCENT:       "#315eff",
+    ACCENT_DIS:   "rgba(49,94,255,0.45)",
     ERROR:        "#EF4444",
-    BACK_LINK:    "#9A7DF5",
+    BACK_LINK:    "#7B9FFF",
   };
 }
 
@@ -78,7 +79,6 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
         minHeight: "100%",
         display: "flex",
         flexDirection: "column",
-        
       }}
     >
       {/* Header */}
@@ -122,15 +122,24 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
             </p>
             <button
               onClick={onBack}
-              style={{ fontSize: 13, fontWeight: 400, color: p.BACK_LINK, background: "none", border: "none", cursor: "pointer" }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontSize: 13, fontWeight: 500, color: p.BACK_LINK,
+                background: "none", border: "none", cursor: "pointer",
+              }}
             >
-              ← Back to sign in
+              <ArrowLeft size={14} strokeWidth={2} />
+              Back to sign in
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 400, color: p.LABEL, marginBottom: 8 }}>
+              <label style={{
+                display: "block", marginBottom: 6,
+                fontSize: 11, fontWeight: 500, color: p.LABEL,
+                letterSpacing: "0.20em", textTransform: "uppercase",
+              }}>
                 Email address
               </label>
               <input
@@ -141,7 +150,6 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                   width: "100%", boxSizing: "border-box", height: 44, padding: "0 14px",
                   fontSize: 15, color: p.INPUT_COLOR, background: p.INPUT_BG,
                   border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 11, outline: "none",
-                  
                 }}
                 onFocus={e => { e.target.style.borderColor = p.INPUT_FOCUS; }}
                 onBlur={e  => { e.target.style.borderColor = p.INPUT_BORDER; }}
@@ -160,8 +168,7 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                 color: "white", borderRadius: 12, border: "none",
                 fontSize: 15, fontWeight: 500,
                 cursor: loading ? "not-allowed" : "pointer",
-                
-                boxShadow: loading ? "none" : "0 4px 16px rgba(107,69,244,0.3)",
+                boxShadow: loading ? "none" : "0 4px 16px rgba(49,94,255,0.28)",
               }}
             >
               {loading ? "Sending…" : "Send reset link"}

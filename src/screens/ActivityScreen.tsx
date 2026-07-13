@@ -389,7 +389,7 @@ export function ActivityScreen({ requests, bankAccount, theme = "dark" }: Activi
                 background: active ? colors.activeBg : "transparent",
                 color: active ? colors.activeText : colors.muted,
                 padding: "0 15px",
-                
+                cursor: "pointer",
                 fontSize: 13,
                 fontWeight: 500,
               }}

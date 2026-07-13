@@ -430,7 +430,7 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
                   <CalendarDays size={18} />
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 15, fontWeight: 500 }}>Repayment scheduled</span>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 450 }}>Repayment scheduled</span>
                   <small style={{ display: "block", color: colors.muted, fontSize: 12, fontWeight: 400, marginTop: 5 }}>
                     Auto-deduct · {repaymentDate}
                   </small>
@@ -503,7 +503,7 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
                         display: "grid",
                         placeItems: "center",
                         fontSize: 12,
-                        fontWeight: 600,
+                        fontWeight: 500,
                         letterSpacing: "0.02em",
                         zIndex: peerInitials.length - i,
                         position: "relative",
