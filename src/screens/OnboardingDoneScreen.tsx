@@ -5,8 +5,6 @@ type Props = {
   kycSubmitted: boolean;
   kycVerified: boolean;
   bankConnected: boolean;
-  membershipActive: boolean;
-  membershipSubmitted: boolean;
   onExplore: () => void;
 };
 

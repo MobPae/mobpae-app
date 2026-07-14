@@ -147,12 +147,13 @@ export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light"
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com" required autoComplete="email"
                 style={{
-                  width: "100%", boxSizing: "border-box", height: 44, padding: "0 14px",
+                  width: "100%", boxSizing: "border-box", height: 48, padding: "0 14px",
                   fontSize: 15, color: p.INPUT_COLOR, background: p.INPUT_BG,
-                  border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 11, outline: "none",
+                  border: `1.5px solid ${p.INPUT_BORDER}`, borderRadius: 12, outline: "none",
+                  transition: "border-color 0.15s, box-shadow 0.15s",
                 }}
-                onFocus={e => { e.target.style.borderColor = p.INPUT_FOCUS; }}
-                onBlur={e  => { e.target.style.borderColor = p.INPUT_BORDER; }}
+                onFocus={e => { e.target.style.borderColor = p.INPUT_FOCUS; e.target.style.boxShadow = "0 0 0 4px rgba(49,94,255,0.12)"; }}
+                onBlur={e  => { e.target.style.borderColor = p.INPUT_BORDER; e.target.style.boxShadow = "none"; }}
               />
             </div>
 

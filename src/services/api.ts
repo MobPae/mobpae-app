@@ -3,7 +3,6 @@ import type {
   AdvanceRequest,
   AppState,
   BankAccount,
-  CouponValidation,
   DocumentStatus,
   EligibilityResult,
   EmployeeDashboard,
@@ -105,22 +104,34 @@ type BackendLoanApplication = {
   statusColor?: string;
   remarks?: string | null;
   // nested objects
-  repayment?: (BackendRepayment & {
-    principalAmount?: number | string;
-    interestAmount?: number | string;
-    totalAmount?: number | string;
-    interestRate?: number | string;
-    interestDays?: number | string;
-    dueDate?: string;
-    status?: string;
-  }) | null;
-  disbursal?: { id?: string | null; status?: string | null; disbursedAt?: string | null; disbursedAmount?: number | string | null } | null;
+  repayment?:
+    | (BackendRepayment & {
+        principalAmount?: number | string;
+        interestAmount?: number | string;
+        totalAmount?: number | string;
+        interestRate?: number | string;
+        interestDays?: number | string;
+        dueDate?: string;
+        status?: string;
+      })
+    | null;
+  disbursal?: {
+    id?: string | null;
+    status?: string | null;
+    disbursedAt?: string | null;
+    disbursedAmount?: number | string | null;
+  } | null;
   // lifecycle fields
   progress?: number;
   nextAction?: string;
   nextActionLabel?: string;
   allowedActions?: { cancel: boolean };
-  timeline?: Array<{ status: string; label: string; completed: boolean; completedAt: string | null }>;
+  timeline?: Array<{
+    status: string;
+    label: string;
+    completed: boolean;
+    completedAt: string | null;
+  }>;
   platformFee?: BackendPlatformFee | null;
 };
 
@@ -135,7 +146,7 @@ type BackendRecoveryPreview = {
   interestRate?: number;
   interestDays?: number;
   interestAmount?: number;
-  totalRecovery?: number;   // primary total field
+  totalRecovery?: number; // primary total field
   recoveryDate?: string;
   payrollDate?: number;
   payrollCutoffDate?: number;
@@ -193,81 +204,6 @@ export type AppNotification = {
   type: string | null;
 };
 
-type BackendMembershipNested = {
-  id?: string;
-  planType?: string;
-  planName?: string;
-  amount?: string | number;
-  amountPaid?: string | number;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-  couponCode?: string;
-  discountAmount?: string | number;
-  paymentOrderId?: string | null;
-  remarks?: string | null;
-};
-
-type BackendMembership = {
-  active?: boolean;
-  status?: string;
-  planType?: string;
-  planName?: string;
-  amountPaid?: number;
-  membershipFee?: number;
-  membershipValidityDays?: number;
-  fee?: number;              // legacy compat
-  amountPayable?: number;   // legacy compat
-  couponCode?: string;
-  couponDiscount?: number;
-  discountAmount?: string | number;
-  validityLabel?: string;
-  daysRemaining?: number;
-  benefits?: string[];
-  memberSince?: string | null;
-  validTill?: string | null;
-  membership?: BackendMembershipNested;  // nested detail object in /membership/me
-};
-
-type BackendMembershipRequestResult = {
-  success?: boolean;
-  message?: string;
-  membership?: BackendMembershipNested;
-};
-
-type BackendMembershipPlan = {
-  planType: string;
-  planName: string;
-  amount: number;
-  validityDays: number;
-  billingLabel: string;
-  perMonthLabel?: string | null;
-  preferred?: boolean;
-  savingsVsMonthly?: number | null;
-  savingsPercent?: number | null;
-};
-
-type BackendMembershipConfig = {
-  plans?: BackendMembershipPlan[];
-  membershipFee?: number;
-  membershipValidityDays?: number;
-  freePlanTitle?: string;
-  freePlanSubtitle?: string;
-  membershipTitle?: string;
-  membershipSubtitle?: string;
-  freeBenefits?: string[];
-  membershipBenefits?: string[];
-  payment?: {
-    provider?: string;
-    keyId?: string;
-    // Legacy UPI fields (kept for graceful degradation, no longer populated)
-    upiId?: string;
-    qrUrl?: string;
-    beneficiaryName?: string;
-    instructions?: string;
-  };
-};
-
 type BackendEmployeeMe = EmployeeDashboard & {
   id?: string;
   employeeId?: string;
@@ -289,11 +225,10 @@ type BackendEmployeeMe = EmployeeDashboard & {
   appActivated?: boolean;
   employmentStatus?: string;
   salaryLimit?: number;
-  payrollDate?: number;         // backend field name (maps to payrollDay)
-  membershipActive?: boolean;   // flat field from /employees/me
-  kycStatus?: string;           // e.g. "NOT_SUBMITTED", "SUBMITTED", "VERIFIED"
-  bankAccountStatus?: string;   // e.g. "NOT_ADDED", "PENDING", "VERIFIED"
-  selfieStatus?: string;        // "PENDING" | "VERIFIED" | "REJECTED"
+  payrollDate?: number; // backend field name (maps to payrollDay)
+  kycStatus?: string; // e.g. "NOT_SUBMITTED", "SUBMITTED", "VERIFIED"
+  bankAccountStatus?: string; // e.g. "NOT_ADDED", "PENDING", "VERIFIED"
+  selfieStatus?: string; // "PENDING" | "VERIFIED" | "REJECTED"
   selfieUrl?: string;
   profilePhotoUrl?: string;
   dashboard?: EmployeeDashboard;
@@ -322,7 +257,9 @@ const notifySessionExpired = () => {
   window.dispatchEvent(new CustomEvent("mobpae:session:expired"));
 };
 
-const decodeJwtPayload = (token: string): { exp?: number; role?: string } | null => {
+const decodeJwtPayload = (
+  token: string
+): { exp?: number; role?: string } | null => {
   try {
     const [, payload] = token.split(".");
     if (!payload) return null;
@@ -451,27 +388,38 @@ const normalizeKycDocuments = (
     originalFileName: document.originalFileName,
   }));
 
-
 const normalizeRequestStatus = (status?: string): RequestStatus => {
   switch (status) {
-    case "SUBMITTED":       return "Submitted";
-    case "EMPLOYER_APPROVED": return "Employer Approved";
-    case "AWAITING_MEMBERSHIP_PAYMENT":
-    case "AWAITING_PLATFORM_FEE_PAYMENT": return "Awaiting Platform Fee";
-    case "READY_FOR_DISBURSAL": return "Admin Approved";
-    case "DISBURSED":       return "Disbursed";
-    case "REPAYMENT_SCHEDULED": return "Payment Scheduled";
-    case "REPAID":          return "Paid";
-    case "EMPLOYER_REJECTED": return "Rejected";
-    case "CANCELLED":       return "Cancelled";
-    case "EXPIRED":         return "Expired";
-    default:                return "Submitted";
+    case "SUBMITTED":
+      return "Submitted";
+    case "EMPLOYER_APPROVED":
+      return "Employer Approved";
+    case "AWAITING_PLATFORM_FEE_PAYMENT":
+      return "Awaiting Platform Fee";
+    case "READY_FOR_DISBURSAL":
+      return "Admin Approved";
+    case "DISBURSED":
+      return "Disbursed";
+    case "REPAYMENT_SCHEDULED":
+      return "Payment Scheduled";
+    case "REPAID":
+      return "Paid";
+    case "EMPLOYER_REJECTED":
+      return "Rejected";
+    case "CANCELLED":
+      return "Cancelled";
+    case "EXPIRED":
+      return "Expired";
+    default:
+      return "Submitted";
   }
 };
 
 const toAmount = (value: unknown) => Number(value ?? 0);
 
-const normalizePlatformFee = (fee?: BackendPlatformFee | null): PlatformFee | null => {
+const normalizePlatformFee = (
+  fee?: BackendPlatformFee | null
+): PlatformFee | null => {
   if (!fee) return null;
   return {
     id: fee.id,
@@ -515,15 +463,24 @@ const normalizeRequests = (
   requests.map((request) => {
     // v3.1: backend returns nested repayment/disbursal objects with renamed fields.
     const nestedRepayment = request.repayment ?? null;
-    const legacyRepayment = getRequestRepayment(request, repayments, requests.length);
+    const legacyRepayment = getRequestRepayment(
+      request,
+      repayments,
+      requests.length
+    );
     const repayment = nestedRepayment ?? legacyRepayment;
 
     const requestedAmount = toAmount(request.requestedAmount);
-    const approvedAmount = toAmount(request.adminApprovedAmount ?? request.employerApprovedAmount ?? request.requestedAmount);
+    const approvedAmount = toAmount(
+      request.adminApprovedAmount ??
+        request.employerApprovedAmount ??
+        request.requestedAmount
+    );
     const requestDate = request.submittedAt ?? request.createdAt ?? todayIso();
 
     // disbursedAt: prefer disbursal object (v3.1: disbursal.disbursedAt), then flat field
-    const disbursedAt = request.disbursal?.disbursedAt ?? request.disbursedAt ?? null;
+    const disbursedAt =
+      request.disbursal?.disbursedAt ?? request.disbursedAt ?? null;
 
     // Recovery date: nested repayment.dueDate > repaymentDate > dueDate
     const recoveryDate =
@@ -538,19 +495,35 @@ const normalizeRequests = (
 
     // Principal/interest/total: prefer nested repayment, then flat fields
     const principalAmount = toAmount(
-      nestedRepayment?.principalAmount ?? repayment?.principalAmount ?? request.principalAmount ?? approvedAmount
+      nestedRepayment?.principalAmount ??
+        repayment?.principalAmount ??
+        request.principalAmount ??
+        approvedAmount
     );
     const interestAmount = toAmount(
-      nestedRepayment?.interestAmount ?? repayment?.interestAmount ?? request.interestAmount
+      nestedRepayment?.interestAmount ??
+        repayment?.interestAmount ??
+        request.interestAmount
     );
     const totalRecoveryAmount = toAmount(
-      nestedRepayment?.totalAmount ?? repayment?.totalAmount ?? request.totalAmount ?? request.totalRecoveryAmount
+      nestedRepayment?.totalAmount ??
+        repayment?.totalAmount ??
+        request.totalAmount ??
+        request.totalRecoveryAmount
     );
-    const rawInterestDays = nestedRepayment?.interestDays ?? repayment?.interestDays ?? request.interestDays;
-    const rawInterestRate = nestedRepayment?.interestRate ?? repayment?.interestRate ?? request.interestRate;
+    const rawInterestDays =
+      nestedRepayment?.interestDays ??
+      repayment?.interestDays ??
+      request.interestDays;
+    const rawInterestRate =
+      nestedRepayment?.interestRate ??
+      repayment?.interestRate ??
+      request.interestRate;
     const repaymentStatus = nestedRepayment?.status ?? repayment?.status;
 
-    const isDisbursed = ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(request.status ?? "");
+    const isDisbursed = ["DISBURSED", "REPAYMENT_SCHEDULED", "REPAID"].includes(
+      request.status ?? ""
+    );
 
     // Prefer backend-provided timeline (from history) if available
     const backendTimeline = request.timeline;
@@ -572,15 +545,28 @@ const normalizeRequests = (
             status: "Employer Approved" as RequestStatus,
             timestamp: request.approvedAt ?? "",
             description: "Approved by your employer.",
-            done: ["EMPLOYER_APPROVED","AWAITING_MEMBERSHIP_PAYMENT","AWAITING_PLATFORM_FEE_PAYMENT","READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+            done: [
+              "EMPLOYER_APPROVED",
+              "AWAITING_PLATFORM_FEE_PAYMENT",
+              "READY_FOR_DISBURSAL",
+              "DISBURSED",
+              "REPAYMENT_SCHEDULED",
+              "REPAID",
+            ].includes(request.status ?? ""),
           },
           {
             status: "Admin Approved" as RequestStatus,
             timestamp: "",
-            description: request.status === "AWAITING_MEMBERSHIP_PAYMENT" || request.status === "AWAITING_PLATFORM_FEE_PAYMENT"
-              ? "Pay the platform fee to move this request to MobPae review."
-              : "Reviewed and approved by MobPae admin.",
-            done: ["READY_FOR_DISBURSAL","DISBURSED","REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+            description:
+              request.status === "AWAITING_PLATFORM_FEE_PAYMENT"
+                ? "Pay the platform fee to move this request to MobPae review."
+                : "Reviewed and approved by MobPae admin.",
+            done: [
+              "READY_FOR_DISBURSAL",
+              "DISBURSED",
+              "REPAYMENT_SCHEDULED",
+              "REPAID",
+            ].includes(request.status ?? ""),
           },
           {
             status: "Disbursed" as RequestStatus,
@@ -592,19 +578,25 @@ const normalizeRequests = (
             status: "Payment Scheduled" as RequestStatus,
             timestamp: recoveryDate,
             description: "Repayment scheduled from your salary.",
-            done: ["REPAYMENT_SCHEDULED","REPAID"].includes(request.status ?? ""),
+            done: ["REPAYMENT_SCHEDULED", "REPAID"].includes(
+              request.status ?? ""
+            ),
           },
           {
-            status: (request.status === "EMPLOYER_REJECTED" || request.status === "CANCELLED" || request.status === "EXPIRED"
-              ? "Rejected" : "Paid") as RequestStatus,
+            status: (request.status === "EMPLOYER_REJECTED" ||
+            request.status === "CANCELLED" ||
+            request.status === "EXPIRED"
+              ? "Rejected"
+              : "Paid") as RequestStatus,
             timestamp: recoveryDate,
-            description: request.status === "EMPLOYER_REJECTED"
-              ? "Request rejected by employer."
-              : request.status === "CANCELLED"
+            description:
+              request.status === "EMPLOYER_REJECTED"
+                ? "Request rejected by employer."
+                : request.status === "CANCELLED"
                 ? "Request cancelled."
                 : request.status === "EXPIRED"
-                  ? "Request expired after 3 days."
-                  : "Salary deduction completed.",
+                ? "Request expired after 3 days."
+                : "Salary deduction completed.",
             done:
               repaymentStatus === "PAID" ||
               request.status === "REPAID" ||
@@ -629,8 +621,10 @@ const normalizeRequests = (
       principalAmount,
       interestAmount,
       totalRecoveryAmount,
-      interestDays: rawInterestDays === undefined ? undefined : Number(rawInterestDays),
-      interestRate: rawInterestRate === undefined ? undefined : Number(rawInterestRate),
+      interestDays:
+        rawInterestDays === undefined ? undefined : Number(rawInterestDays),
+      interestRate:
+        rawInterestRate === undefined ? undefined : Number(rawInterestRate),
       recoveryDate,
       recoveryStatus: repaymentStatus === "PAID" ? "Completed" : "Scheduled",
       disbursalStatus: isDisbursed ? "Disbursed" : "Pending",
@@ -685,12 +679,8 @@ const unwrapArray = <T>(
 };
 
 const unwrapObject = <T>(
-  value:
-    | T
-    | { data?: T; membership?: T; bankAccount?: T; account?: T }
-    | null
-    | undefined,
-  keys: Array<"membership" | "bankAccount" | "account">
+  value: T | { data?: T; bankAccount?: T; account?: T } | null | undefined,
+  keys: Array<"bankAccount" | "account">
 ): T | null => {
   if (!value) return null;
   if (typeof value !== "object") return value as T;
@@ -716,21 +706,31 @@ const normalizeEmployeeMe = (employeeMe: BackendEmployeeMe) => {
   // Backend sends `payrollDate`, we use `payrollDay` internally.
   const dashboard: EmployeeDashboard = {
     ...rawDashboard,
-    payrollDay: rawDashboard.payrollDay ?? employeeMe.payrollDate ?? (employee as BackendEmployeeMe).payrollDate,
+    payrollDay:
+      rawDashboard.payrollDay ??
+      employeeMe.payrollDate ??
+      (employee as BackendEmployeeMe).payrollDate,
   };
 
   return {
     employee,
     dashboard,
     employeeId,
-    // Flat membership/kyc/bank flags from /employees/me — use as supplementary signals
-    membershipActiveFromEmployee: employeeMe.membershipActive,
+    // Flat kyc/bank flags from /employees/me — use as supplementary signals
     kycStatus: employeeMe.kycStatus,
     bankAccountStatus: employeeMe.bankAccountStatus,
     appActivated: employeeMe.appActivated,
-    selfieStatus: (employeeMe.selfieStatus ?? (employee as BackendEmployeeMe).selfieStatus) as "PENDING" | "VERIFIED" | "REJECTED" | undefined,
-    selfieUrl: employeeMe.selfieUrl ?? (employee as BackendEmployeeMe).selfieUrl,
-    profilePhotoUrl: employeeMe.profilePhotoUrl ?? (employee as BackendEmployeeMe).profilePhotoUrl,
+    selfieStatus: (employeeMe.selfieStatus ??
+      (employee as BackendEmployeeMe).selfieStatus) as
+      | "PENDING"
+      | "VERIFIED"
+      | "REJECTED"
+      | undefined,
+    selfieUrl:
+      employeeMe.selfieUrl ?? (employee as BackendEmployeeMe).selfieUrl,
+    profilePhotoUrl:
+      employeeMe.profilePhotoUrl ??
+      (employee as BackendEmployeeMe).profilePhotoUrl,
   };
 };
 
@@ -745,11 +745,15 @@ const getEmployerName = (employee: Partial<BackendEmployeeMe>) => {
 };
 
 const getEmployerEmail = (employee: Partial<BackendEmployeeMe>) => {
-  if (typeof employee.employer === "object") return employee.employer?.email ?? "";
+  if (typeof employee.employer === "object")
+    return employee.employer?.email ?? "";
   return "";
 };
 
-async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: ApiRequestOptions = {}
+): Promise<T> {
   const { suppressSessionExpiry = false, ...requestOptions } = options;
   const headers = new Headers(requestOptions.headers);
   headers.set("Content-Type", "application/json");
@@ -782,7 +786,11 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
     }
 
     // Session expired after refresh retry — clear both tokens and show login.
-    if (response.status === 401 && !suppressSessionExpiry && !path.includes("/auth/login")) {
+    if (
+      response.status === 401 &&
+      !suppressSessionExpiry &&
+      !path.includes("/auth/login")
+    ) {
       notifySessionExpired();
     }
 
@@ -837,7 +845,7 @@ export const employeeApi = {
   // so the app can establish a fresh session without re-login.
   async changePassword(
     currentPassword: string,
-    newPassword: string,
+    newPassword: string
   ): Promise<{ accessToken: string; refreshToken: string } | void> {
     const data = await request<{
       success: boolean;
@@ -880,7 +888,6 @@ export const employeeApi = {
         employee,
         dashboard,
         employeeId,
-        membershipActiveFromEmployee,
         kycStatus,
         bankAccountStatus,
         appActivated,
@@ -895,8 +902,6 @@ export const employeeApi = {
         salaryRequests,
         repayments,
         notifications,
-        membership,
-        membershipConfig,
         platformFeeConfig,
         peerActivityResult,
       ] = await Promise.allSettled([
@@ -941,14 +946,6 @@ export const employeeApi = {
               items?: BackendNotification[];
             }
         >("/notifications/me", { suppressSessionExpiry: true }),
-        request<
-          | BackendMembership
-          | { membership?: BackendMembership; data?: BackendMembership }
-        >("/membership/me", { suppressSessionExpiry: true }),
-        request<BackendMembershipConfig | { data?: BackendMembershipConfig }>(
-          "/membership/config",
-          { suppressSessionExpiry: true }
-        ),
         request<PlatformFeeConfig | { data?: PlatformFeeConfig }>(
           "/platform-fees/config",
           { suppressSessionExpiry: true }
@@ -967,7 +964,16 @@ export const employeeApi = {
       );
       const requestData =
         salaryRequests.status === "fulfilled"
-          ? unwrapArray(salaryRequests.value as BackendLoanApplication[] | { requests?: BackendLoanApplication[]; data?: BackendLoanApplication[]; items?: BackendLoanApplication[] }, "requests")
+          ? unwrapArray(
+              salaryRequests.value as
+                | BackendLoanApplication[]
+                | {
+                    requests?: BackendLoanApplication[];
+                    data?: BackendLoanApplication[];
+                    items?: BackendLoanApplication[];
+                  },
+              "requests"
+            )
           : [];
       const repaymentData =
         repayments.status === "fulfilled"
@@ -981,35 +987,15 @@ export const employeeApi = {
         notifications.status === "fulfilled"
           ? unwrapArray(notifications.value, "notifications")
           : [];
-      // /membership/me returns top-level fields (active, memberSince, validTill, …)
-      // plus a nested `membership` sub-object for detail fields.
-      // unwrapObject must NOT follow the "membership" key or it will discard the
-      // top-level fields and return only the nested sub-object.
-      const membershipData: BackendMembership | null =
-        membership.status === "fulfilled"
-          ? (() => {
-              const v = membership.value as Record<string, unknown> | null | undefined;
-              if (!v) return null;
-              // Unwrap only if response is wrapped in { data: … }
-              if (!("active" in v) && "data" in v && v.data) return v.data as BackendMembership;
-              return v as BackendMembership;
-            })()
-          : null;
-      const membershipConfigData: BackendMembershipConfig | null =
-        membershipConfig.status === "fulfilled"
-          ? (() => {
-              const v = membershipConfig.value;
-              // Could be the object directly or wrapped in { data: ... }
-              if (v && typeof v === "object" && ("membershipFee" in v || "plans" in v || "membershipBenefits" in v)) return v as BackendMembershipConfig;
-              const wrapped = v as { data?: BackendMembershipConfig };
-              return wrapped?.data ?? (v as BackendMembershipConfig);
-            })()
-          : null;
       const platformFeeConfigData: PlatformFeeConfig | null =
         platformFeeConfig.status === "fulfilled"
           ? (() => {
               const v = platformFeeConfig.value;
-              if (v && typeof v === "object" && ("amount" in v || "currency" in v)) {
+              if (
+                v &&
+                typeof v === "object" &&
+                ("amount" in v || "currency" in v)
+              ) {
                 return v as PlatformFeeConfig;
               }
               return (v as { data?: PlatformFeeConfig })?.data ?? null;
@@ -1044,99 +1030,11 @@ export const employeeApi = {
           profilePhotoUrl,
         },
         dashboard: dashboardData,
-        // Prefer the flag from /employees/me; fall back to /membership/me response
-        membershipActive: membershipActiveFromEmployee ?? membershipData?.active ?? false,
-        membershipConfig: (() => {
-          const nested = membershipData?.membership;
-
-          // Plans from config (new multi-plan shape)
-          const plans = (membershipConfigData?.plans ?? []).map((p) => ({
-            planType: p.planType as 'MONTHLY' | 'BIANNUAL',
-            planName: p.planName,
-            amount: Number(p.amount),
-            validityDays: Number(p.validityDays),
-            billingLabel: p.billingLabel,
-            perMonthLabel: p.perMonthLabel ?? null,
-            preferred: p.preferred ?? false,
-            savingsVsMonthly: p.savingsVsMonthly ?? null,
-            savingsPercent: p.savingsPercent ?? null,
-          }));
-
-          // Plan fee (list price) — from /membership/config, then /membership/me top-level
-          const planFee = Number(
-            membershipConfigData?.membershipFee ??
-            membershipData?.membershipFee ??
-            membershipData?.fee ??
-            0
-          );
-          // Amount actually paid (may differ if coupon was used)
-          const amountPaid = Number(
-            nested?.amount ??
-            (membershipData?.active ? membershipData?.amountPaid : undefined) ??
-            planFee
-          );
-          const validityDays = Number(
-            membershipConfigData?.membershipValidityDays ??
-            membershipData?.membershipValidityDays ??
-            365
-          );
-          const daysRemaining = membershipData?.daysRemaining ?? 0;
-          // Coupon fields live in the nested membership object
-          const couponCode =
-            nested?.couponCode ??
-            membershipData?.couponCode ??
-            "";
-          const couponDiscount = Number(
-            nested?.discountAmount ??
-            membershipData?.discountAmount ??
-            membershipData?.couponDiscount ??
-            0
-          );
-          // memberSince/validTill: top-level or nested startDate/endDate
-          const memberSince =
-            membershipData?.memberSince ??
-            nested?.startDate ??
-            undefined;
-          const validTill =
-            membershipData?.validTill ??
-            nested?.endDate ??
-            undefined;
-          const validityLabel = membershipData?.validityLabel
-            ?? (daysRemaining > 0
-                ? `${daysRemaining} days remaining`
-                : validTill
-                  ? `Valid till ${new Date(validTill).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
-                  : "—");
-          return {
-            plans,
-            membershipId: nested?.id ?? undefined,
-            planType: (nested?.planType ?? membershipData?.planType) as 'MONTHLY' | 'BIANNUAL' | undefined,
-            planName: membershipData?.planName ?? nested?.planName ?? membershipConfigData?.membershipTitle ?? "",
-            status: nested?.status ?? membershipData?.status,
-            fee: planFee,
-            couponCode,
-            couponDiscount,
-            amountPayable: amountPaid,
-            validityLabel,
-            daysRemaining,
-            membershipValidityDays: validityDays,
-            memberSince,
-            validTill,
-            // Plan comparison content comes from /membership/config.
-            freePlanTitle:      membershipConfigData?.freePlanTitle      ?? "",
-            freePlanSubtitle:   membershipConfigData?.freePlanSubtitle   ?? "",
-            membershipTitle:    membershipConfigData?.membershipTitle     ?? "",
-            membershipSubtitle: membershipConfigData?.membershipSubtitle  ?? "",
-            freeBenefits:       membershipConfigData?.freeBenefits        ?? [],
-            membershipBenefits: membershipConfigData?.membershipBenefits  ?? [],
-            payment: membershipConfigData?.payment,
-            remarks: nested?.remarks ?? undefined,
-          };
-        })(),
         platformFeeConfig: platformFeeConfigData,
         documents: kycData.length ? normalizeKycDocuments(kycData) : [],
         // bankAccountStatus from /employees/me tells us definitively if there's an account
-        bankAccount: bankAccountStatus === "NOT_ADDED" ? null : (bankAccountData ?? null),
+        bankAccount:
+          bankAccountStatus === "NOT_ADDED" ? null : bankAccountData ?? null,
         requests: normalizedRequests,
         notifications: buildActivity(
           notificationData,
@@ -1144,12 +1042,12 @@ export const employeeApi = {
           repaymentData
         ),
         rawNotifications: notificationData.map((n) => ({
-          id:        n.id,
-          title:     n.title   ?? "Notification",
-          message:   n.message ?? "",
+          id: n.id,
+          title: n.title ?? "Notification",
+          message: n.message ?? "",
           createdAt: n.createdAt ?? new Date().toISOString(),
-          isRead:    n.isRead   ?? false,
-          type:      n.type     ?? null,
+          isRead: n.isRead ?? false,
+          type: n.type ?? null,
         })),
         peerActivity:
           peerActivityResult.status === "fulfilled"
@@ -1168,10 +1066,10 @@ export const employeeApi = {
       method: "POST",
       body: JSON.stringify({
         accountHolderName: bankAccount.accountHolderName,
-        accountNumber:     bankAccount.accountNumber,
-        bankName:          bankAccount.bankName,
-        ifscCode:          bankAccount.ifscCode.toUpperCase(),
-        upiId:             bankAccount.upiId ?? "",
+        accountNumber: bankAccount.accountNumber,
+        bankName: bankAccount.bankName,
+        ifscCode: bankAccount.ifscCode.toUpperCase(),
+        upiId: bankAccount.upiId ?? "",
       }),
     });
     // Refetch the saved record so we get the server-side state (verified flag, id, etc.)
@@ -1179,16 +1077,23 @@ export const employeeApi = {
   },
 
   async updateUpiId(employeeId: string, upiId: string) {
-    return await request<BankAccount>(`/bank-accounts/employee/${employeeId}/upi`, {
-      method: "POST",
-      body: JSON.stringify({ upiId }),
-    });
+    return await request<BankAccount>(
+      `/bank-accounts/employee/${employeeId}/upi`,
+      {
+        method: "POST",
+        body: JSON.stringify({ upiId }),
+      }
+    );
   },
 
   async fetchKycDocuments(): Promise<KycDocument[]> {
     const result = await request<
       | BackendKycDocument[]
-      | { documents?: BackendKycDocument[]; data?: BackendKycDocument[]; items?: BackendKycDocument[] }
+      | {
+          documents?: BackendKycDocument[];
+          data?: BackendKycDocument[];
+          items?: BackendKycDocument[];
+        }
     >("/kyc-documents/my");
     const docs = unwrapArray(result, "documents");
     return docs.length ? normalizeKycDocuments(docs) : [];
@@ -1215,18 +1120,26 @@ export const employeeApi = {
         body: formData,
       });
     } catch {
-      throw new ApiError("Could not reach the server. Please check your connection and try again.");
+      throw new ApiError(
+        "Could not reach the server. Please check your connection and try again."
+      );
     }
 
     if (!uploadRes.ok) {
       let msg = `File upload failed (${uploadRes.status}).`;
       try {
-        const body = (await uploadRes.json()) as { message?: string | string[] };
+        const body = (await uploadRes.json()) as {
+          message?: string | string[];
+        };
         if (Array.isArray(body.message)) msg = body.message.join(" ");
         else if (body.message) msg = body.message;
-      } catch { /* ignore */ }
-      if (uploadRes.status === 413) msg = "File is too large. Please upload a file under 5 MB.";
-      if (uploadRes.status === 415) msg = "Unsupported file type. Please upload a PDF, JPG, or PNG.";
+      } catch {
+        /* ignore */
+      }
+      if (uploadRes.status === 413)
+        msg = "File is too large. Please upload a file under 5 MB.";
+      if (uploadRes.status === 415)
+        msg = "Unsupported file type. Please upload a PDF, JPG, or PNG.";
       if (uploadRes.status === 401) {
         notifySessionExpired();
         msg = "Your session has expired. Please log in again.";
@@ -1237,66 +1150,22 @@ export const employeeApi = {
     // Backend returns { key, mimeType, size } — store the key as filePath
     const uploaded = (await uploadRes.json()) as { key?: string };
     const filePath = uploaded.key;
-    if (!filePath) throw new ApiError("Upload succeeded but server did not return a file key.");
+    if (!filePath)
+      throw new ApiError(
+        "Upload succeeded but server did not return a file key."
+      );
 
     // Step 2 — register the KYC document with the R2 object key as filePath.
     const savedDocument = await request<BackendKycDocument>("/kyc-documents", {
       method: "POST",
-      body: JSON.stringify({ documentType, filePath, originalFileName: file.name }),
+      body: JSON.stringify({
+        documentType,
+        filePath,
+        originalFileName: file.name,
+      }),
     });
 
     return normalizeKycDocuments([savedDocument])[0];
-  },
-
-  async validateMembershipCoupon(couponCode: string): Promise<CouponValidation> {
-    return request<CouponValidation>("/membership/coupons/validate", {
-      method: "POST",
-      body: JSON.stringify({ couponCode }),
-    });
-  },
-
-  /**
-   * Step 1: Create a Razorpay order on the backend.
-   * Returns the order details needed to open the Razorpay checkout modal.
-   */
-  async initiatePayment(payload: {
-    planKey: string;
-    couponCode?: string;
-  }) {
-    return request<{
-      orderId: string;
-      paymentOrderId: string;
-      amount: number; // in paise
-      currency: string;
-      keyId: string;
-      planName: string;
-      description: string;
-      employeeName: string;
-      employeeEmail: string;
-      employeePhone: string;
-    }>("/membership/initiate-payment", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
-
-  /**
-   * Step 2: Verify the Razorpay payment signature.
-   * Called after the Razorpay checkout handler fires successfully.
-   * Activates the membership immediately on success.
-   */
-  async verifyPayment(payload: {
-    razorpayOrderId: string;
-    razorpayPaymentId: string;
-    razorpaySignature: string;
-  }) {
-    return request<BackendMembershipRequestResult & {
-      success: boolean;
-      alreadyActivated?: boolean;
-    }>("/membership/verify-payment", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
   },
 
   async uploadProfilePhoto(file: File): Promise<string> {
@@ -1312,7 +1181,9 @@ export const employeeApi = {
         body: formData,
       });
     } catch {
-      throw new ApiError("Could not reach the server. Please check your connection.");
+      throw new ApiError(
+        "Could not reach the server. Please check your connection."
+      );
     }
 
     if (!res.ok) {
@@ -1321,9 +1192,13 @@ export const employeeApi = {
         const body = (await res.json()) as { message?: string | string[] };
         if (Array.isArray(body.message)) msg = body.message.join(" ");
         else if (body.message) msg = body.message;
-      } catch { /* ignore */ }
-      if (res.status === 413) msg = "Photo is too large. Please choose a smaller image.";
-      if (res.status === 415) msg = "Unsupported file type. Please upload a JPG or PNG.";
+      } catch {
+        /* ignore */
+      }
+      if (res.status === 413)
+        msg = "Photo is too large. Please choose a smaller image.";
+      if (res.status === 415)
+        msg = "Unsupported file type. Please upload a JPG or PNG.";
       if (res.status === 401) {
         notifySessionExpired();
         msg = "Your session has expired. Please log in again.";
@@ -1333,12 +1208,18 @@ export const employeeApi = {
 
     const employee = (await res.json()) as { profilePhotoUrl?: string };
     const filePath = employee.profilePhotoUrl;
-    if (!filePath) throw new ApiError("Upload succeeded but server did not return a photo URL.");
+    if (!filePath)
+      throw new ApiError(
+        "Upload succeeded but server did not return a photo URL."
+      );
 
     return filePath;
   },
 
-  async uploadSelfie(file: File): Promise<{ selfieUrl?: string; selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED" }> {
+  async uploadSelfie(file: File): Promise<{
+    selfieUrl?: string;
+    selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED";
+  }> {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -1349,7 +1230,9 @@ export const employeeApi = {
         body: formData,
       });
     } catch {
-      throw new ApiError("Could not reach the server. Please check your connection.");
+      throw new ApiError(
+        "Could not reach the server. Please check your connection."
+      );
     }
 
     if (!res.ok) {
@@ -1358,9 +1241,14 @@ export const employeeApi = {
         const body = (await res.json()) as { message?: string | string[] };
         if (Array.isArray(body.message)) msg = body.message.join(" ");
         else if (body.message) msg = body.message;
-      } catch { /* ignore */ }
-      if (res.status === 413) msg = "Selfie is too large. Please capture again or choose a smaller image.";
-      if (res.status === 415) msg = "Unsupported file type. Please upload a JPG, PNG or WebP image.";
+      } catch {
+        /* ignore */
+      }
+      if (res.status === 413)
+        msg =
+          "Selfie is too large. Please capture again or choose a smaller image.";
+      if (res.status === 415)
+        msg = "Unsupported file type. Please upload a JPG, PNG or WebP image.";
       if (res.status === 401) {
         notifySessionExpired();
         msg = "Your session has expired. Please log in again.";
@@ -1368,14 +1256,17 @@ export const employeeApi = {
       throw new ApiError(msg, res.status);
     }
 
-    return res.json() as Promise<{ selfieUrl?: string; selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED" }>;
+    return res.json() as Promise<{
+      selfieUrl?: string;
+      selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED";
+    }>;
   },
 
   async submitSalaryAdvance(
     employeeId: string,
     amount: number,
     purposeCategory?: string,
-    purposeNote?: string,
+    purposeNote?: string
   ) {
     const body: Record<string, unknown> = {
       amount,
@@ -1395,18 +1286,22 @@ export const employeeApi = {
   async getNotifications(): Promise<AppNotification[]> {
     const raw = await request<
       | BackendNotification[]
-      | { notifications?: BackendNotification[]; data?: BackendNotification[]; items?: BackendNotification[] }
+      | {
+          notifications?: BackendNotification[];
+          data?: BackendNotification[];
+          items?: BackendNotification[];
+        }
     >("/notifications/me");
     const list: BackendNotification[] = Array.isArray(raw)
       ? raw
-      : (raw.notifications ?? raw.data ?? raw.items ?? []);
+      : raw.notifications ?? raw.data ?? raw.items ?? [];
     return list.map((n) => ({
-      id:        n.id,
-      title:     n.title   ?? "Notification",
-      message:   n.message ?? "",
+      id: n.id,
+      title: n.title ?? "Notification",
+      message: n.message ?? "",
       createdAt: n.createdAt ?? new Date().toISOString(),
-      isRead:    n.isRead   ?? false,
-      type:      n.type     ?? null,
+      isRead: n.isRead ?? false,
+      type: n.type ?? null,
     }));
   },
 
@@ -1416,12 +1311,15 @@ export const employeeApi = {
 
   async getAppInformation(): Promise<AppInfoItem[]> {
     try {
-      const data = await request<AppInfoItem[] | { data?: AppInfoItem[]; items?: AppInfoItem[] }>(
-        "/app-information"
-      );
+      const data = await request<
+        AppInfoItem[] | { data?: AppInfoItem[]; items?: AppInfoItem[] }
+      >("/app-information");
       if (Array.isArray(data)) return data;
-      return (data as { data?: AppInfoItem[]; items?: AppInfoItem[] }).data ??
-        (data as { data?: AppInfoItem[]; items?: AppInfoItem[] }).items ?? [];
+      return (
+        (data as { data?: AppInfoItem[]; items?: AppInfoItem[] }).data ??
+        (data as { data?: AppInfoItem[]; items?: AppInfoItem[] }).items ??
+        []
+      );
     } catch {
       return [];
     }
@@ -1429,17 +1327,18 @@ export const employeeApi = {
 
   async previewSalaryAdvance(amount: number): Promise<RecoveryPreview> {
     const preview = await request<BackendRecoveryPreview>(
-      `/loan-applications/preview?amount=${encodeURIComponent(amount)}`,
+      `/loan-applications/preview?amount=${encodeURIComponent(amount)}`
     );
     return {
-      principal:     preview.principalAmount  ?? preview.principal     ?? amount,
-      interest:      preview.interestAmount   ?? preview.interest      ?? 0,
-      processingFee: preview.processingFee    ?? 0,
-      youReceive:    preview.youReceive       ?? amount,
-      total:         preview.totalRecovery    ?? preview.total         ?? preview.totalAmount ?? amount,
-      interestDays:  preview.interestDays     ?? 0,
-      interestRate:  preview.interestRate,
-      recoveryDate:  preview.recoveryDate     ?? preview.dueDate       ?? "",
+      principal: preview.principalAmount ?? preview.principal ?? amount,
+      interest: preview.interestAmount ?? preview.interest ?? 0,
+      processingFee: preview.processingFee ?? 0,
+      youReceive: preview.youReceive ?? amount,
+      total:
+        preview.totalRecovery ?? preview.total ?? preview.totalAmount ?? amount,
+      interestDays: preview.interestDays ?? 0,
+      interestRate: preview.interestRate,
+      recoveryDate: preview.recoveryDate ?? preview.dueDate ?? "",
       payrollDate: preview.payrollDate,
       payrollCutoffDate: preview.payrollCutoffDate,
       isNextCycleRecovery: preview.isNextCycleRecovery,
@@ -1455,13 +1354,31 @@ export const employeeApi = {
       reasons?: Array<{ code: string; message: string }>;
       nextAction?: string;
       nextActionLabel?: string;
-      setup?: Array<{ key: string; label: string; status: string; completed: boolean }>;
-      limits?: { salaryInHand: number; approvedLimit: number; usedLimit: number; availableAdvance: number; interestFreeThreshold?: number };
-      payroll?: { payrollDate: number | null; payrollCutoffDate: number | null };
-      membershipRequiredAfterEmployerApproval?: boolean;
+      setup?: Array<{
+        key: string;
+        label: string;
+        status: string;
+        completed: boolean;
+      }>;
+      limits?: {
+        salaryInHand: number;
+        approvedLimit: number;
+        usedLimit: number;
+        availableAdvance: number;
+        interestFreeThreshold?: number;
+      };
+      payroll?: {
+        payrollDate: number | null;
+        payrollCutoffDate: number | null;
+      };
       platformFeeRequiredAfterEmployerApproval?: boolean;
       platformFee?: PlatformFeeConfig | null;
-      outstandingRepayment?: { id: string; status: string; dueDate: string; totalAmount: number } | null;
+      outstandingRepayment?: {
+        id: string;
+        status: string;
+        dueDate: string;
+        totalAmount: number;
+      } | null;
       activeRequest?: BackendLoanApplication | null;
     }>("/loan-applications/eligibility");
     return {
@@ -1478,11 +1395,13 @@ export const employeeApi = {
         interestFreeThreshold: raw.limits?.interestFreeThreshold ?? 0,
       },
       payroll: raw.payroll ?? { payrollDate: null, payrollCutoffDate: null },
-      membershipRequiredAfterEmployerApproval: raw.membershipRequiredAfterEmployerApproval ?? false,
-      platformFeeRequiredAfterEmployerApproval: raw.platformFeeRequiredAfterEmployerApproval ?? false,
+      platformFeeRequiredAfterEmployerApproval:
+        raw.platformFeeRequiredAfterEmployerApproval ?? false,
       platformFee: raw.platformFee ?? null,
       outstandingRepayment: raw.outstandingRepayment ?? null,
-      activeRequest: raw.activeRequest ? normalizeRequests([raw.activeRequest], [])[0] : null,
+      activeRequest: raw.activeRequest
+        ? normalizeRequests([raw.activeRequest], [])[0]
+        : null,
     };
   },
 
@@ -1498,10 +1417,13 @@ export const employeeApi = {
       description?: string;
       fee?: PlatformFee;
       customer?: { name?: string; email?: string; contact?: string };
-    }>(`/platform-fees/loan-applications/${loanApplicationId}/initiate-payment`, {
-      method: "POST",
-      body: JSON.stringify({}),
-    });
+    }>(
+      `/platform-fees/loan-applications/${loanApplicationId}/initiate-payment`,
+      {
+        method: "POST",
+        body: JSON.stringify({}),
+      }
+    );
   },
 
   async verifyPlatformFeePayment(payload: {
@@ -1520,6 +1442,9 @@ export const employeeApi = {
   },
 
   async cancelLoanApplication(id: string): Promise<void> {
-    await request(`/loan-applications/my/${id}/cancel`, { method: "POST", body: JSON.stringify({}) });
+    await request(`/loan-applications/my/${id}/cancel`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
   },
 };

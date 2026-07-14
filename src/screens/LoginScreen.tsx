@@ -22,11 +22,17 @@ type LoginScreenProps = {
 };
 
 // ── Palette ───────────────────────────────────────────────────────────────────
-// Two complete color sets — swap by passing theme="dark" or theme="light".
+// The hero band reuses the app's signature blue gradient (same one used on the
+// Dashboard/Advance hero cards) so the very first screen already feels on-brand
+// instead of a generic centered form on a near-invisible tint.
+
+const HERO_BG = "linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%)";
 
 function loginPalette(theme: Theme) {
   if (theme === "light") {
     return {
+      PAGE_BG:    "#F5F6FA",
+      CARD_BG:    "#FFFFFF",
       PANEL:      "#F8F8FA",
       BORDER:     "#E9E6F1",
       BORDER_FOC: "#315eff",
@@ -36,12 +42,13 @@ function loginPalette(theme: Theme) {
       DIM:        "#9A97A8",
       ERR_TEXT:   "#DC2626",
       GREEN:      "#1F9E67",
-      GLOW:       "radial-gradient(circle at 50% 4%, rgba(49,94,255,0.08), transparent 42%), #F6F4FF",
       DIVIDER:    "linear-gradient(90deg, transparent, #DDD9F0, transparent)",
     };
   }
   return {
-    PANEL:      "#141418",
+    PAGE_BG:    "#0C0C0E",
+    CARD_BG:    "#141418",
+    PANEL:      "#1A1A1F",
     BORDER:     "#29292F",
     BORDER_FOC: "#315eff",
     BORDER_ERR: "#EF4444",
@@ -50,34 +57,8 @@ function loginPalette(theme: Theme) {
     DIM:        "#5C5C64",
     ERR_TEXT:   "#F87171",
     GREEN:      "#20A46A",
-    GLOW:       "radial-gradient(circle at 50% 4%, rgba(242,240,234,0.055), transparent 38%), #0C0C0E",
     DIVIDER:    "linear-gradient(90deg, transparent, #1E1E22, transparent)",
   };
-}
-
-// ── LogoMark ──────────────────────────────────────────────────────────────────
-// Circular badge containing the MobPae icon.
-
-function LogoMark({ bg, shadow }: { bg: string; shadow: string }) {
-  return (
-    <div
-      style={{
-        width: 80,
-        height: 80,
-        borderRadius: "50%",
-        background: bg,
-        display: "grid",
-        placeItems: "center",
-        boxShadow: shadow,
-      }}
-    >
-      <img
-        src="/logo-icon.svg"
-        alt="MobPae"
-        style={{ width: 44, height: 44, objectFit: "contain" }}
-      />
-    </div>
-  );
 }
 
 // ── AuthField ─────────────────────────────────────────────────────────────────
@@ -131,15 +112,16 @@ function AuthField({
       {/* Input row */}
       <div
         style={{
-          height: 44,
+          height: 48,
           border: `1.5px solid ${hasError ? p.BORDER_ERR : focused ? p.BORDER_FOC : p.BORDER}`,
-          borderRadius: 11,
+          borderRadius: 12,
           background: p.PANEL,
           display: "flex",
           alignItems: "center",
           gap: 10,
           padding: "0 12px",
-          transition: "border-color 0.15s ease",
+          boxShadow: focused ? "0 0 0 4px rgba(49,94,255,0.12)" : "none",
+          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
         }}
       >
         <span style={{ color: focused ? p.TEXT : p.MUTED, display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -237,193 +219,238 @@ export function LoginScreen({
       style={{
         minHeight: "100%",
         flex: 1,
-        background: p.GLOW,
+        background: p.PAGE_BG,
         color: p.TEXT,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        padding: "28px 24px",
       }}
     >
-      {/* Logo + brand name */}
-      <div style={{ display: "grid", placeItems: "center", gap: 14, marginBottom: 34 }}>
-        <LogoMark
-          bg={theme === "light" ? "#EEF1FF" : "#1E1E26"}
-          shadow={
-            theme === "light"
-              ? "0 8px 28px rgba(49,94,255,0.18), 0 0 0 1.5px rgba(49,94,255,0.12)"
-              : "0 8px 28px rgba(49,94,255,0.25)"
-          }
-        />
+      {/* ── Hero band — signature blue gradient, matches Dashboard/Advance ─── */}
+      <div
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          background: HERO_BG,
+          padding: "max(72px, env(safe-area-inset-top)) 24px 64px",
+          flexShrink: 0,
+        }}
+      >
+        {/* Subtle dot pattern, same texture as the other hero cards */}
         <div
           style={{
-            color: p.TEXT,
-            fontSize: 13,
-            fontWeight: 500,
-            letterSpacing: "0.20em",
-            textTransform: "uppercase",
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.11) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+            pointerEvents: "none",
           }}
-        >
-          MobPae
+        />
+        <div style={{ position: "relative", display: "grid", placeItems: "center", gap: 14 }}>
+          <div
+            style={{
+              width: 68,
+              height: 68,
+              borderRadius: "50%",
+              background: "#FFFFFF",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <img
+              src="/logo-icon.svg"
+              alt="MobPae"
+              style={{ width: 38, height: 38, objectFit: "contain" }}
+            />
+          </div>
+          <div
+            style={{
+              color: "#FFFFFF",
+              fontSize: 13,
+              fontWeight: 500,
+              letterSpacing: "0.24em",
+              textTransform: "uppercase",
+            }}
+          >
+            MobPae
+          </div>
         </div>
       </div>
 
-      <form onSubmit={submit} style={{ paddingBottom: 28 }}>
+      {/* ── Form card — rounded top corners, lifts off the hero band ───────── */}
+      <div
+        style={{
+          flex: 1,
+          background: p.CARD_BG,
+          borderRadius: "24px 24px 0 0",
+          marginTop: -20,
+          position: "relative",
+          padding: "40px 24px 28px",
+          boxShadow: theme === "light"
+            ? "0 -8px 32px rgba(30,22,54,0.06)"
+            : "0 -8px 32px rgba(0,0,0,0.24)",
+        }}
+      >
+        <form onSubmit={submit}>
 
-        {/* Heading */}
-        <div style={{ marginBottom: 24 }}>
-          <h1
-            style={{
-              margin: 0,
-              color: p.TEXT,
-              fontSize: 28,
-              lineHeight: 1.08,
-              fontWeight: 500,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            Welcome back
-          </h1>
-          <p
-            style={{
-              margin: "10px 0 0",
-              color: p.MUTED,
-              fontSize: 14,
-              lineHeight: 1.45,
-              fontWeight: 400,
-            }}
-          >
-            Sign in to access your salary advances.
-          </p>
-        </div>
-
-        {/* Email input */}
-        <AuthField
-          label="Email ID"
-          type="email"
-          value={email}
-          onChange={onEmailChange}
-          autoComplete="email"
-          placeholder="you@company.com"
-          icon={<Mail size={17} strokeWidth={1.9} />}
-          error={fieldErrors.email}
-          p={p}
-        />
-
-        {/* Password input */}
-        <AuthField
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={onPasswordChange}
-          autoComplete="current-password"
-          placeholder="Password"
-          icon={<Lock size={17} strokeWidth={1.9} />}
-          error={fieldErrors.password}
-          p={p}
-          rightSlot={
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+          {/* Heading */}
+          <div style={{ marginBottom: 24 }}>
+            <h1
               style={{
-                width: 32,
-                height: 32,
-                border: 0,
-                borderRadius: "50%",
-                background: "transparent",
-                color: p.MUTED,
-                display: "grid",
-                placeItems: "center",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          }
-        />
-
-        {/* Forgot password */}
-        {onForgotPassword && (
-          <div style={{ textAlign: "right", marginTop: -8, marginBottom: 20 }}>
-            <button
-              type="button"
-              onClick={onForgotPassword}
-              style={{
-                border: 0,
-                background: "transparent",
-                color: "#315eff",
-                fontSize: 12,
+                margin: 0,
+                color: p.TEXT,
+                fontSize: 24,
+                lineHeight: 1.12,
                 fontWeight: 500,
-                cursor: "pointer",
-                padding: "4px 0",
+                letterSpacing: "-0.04em",
               }}
             >
-              Forgot password?
-            </button>
+              Welcome back
+            </h1>
+            <p
+              style={{
+                margin: "8px 0 0",
+                color: p.MUTED,
+                fontSize: 14,
+                lineHeight: 1.45,
+                fontWeight: 400,
+              }}
+            >
+              Sign in to access your salary advances.
+            </p>
           </div>
-        )}
 
-        {/* API-level error / success banner */}
-        {error && (
+          {/* Email input */}
+          <AuthField
+            label="Email ID"
+            type="email"
+            value={email}
+            onChange={onEmailChange}
+            autoComplete="email"
+            placeholder="you@company.com"
+            icon={<Mail size={17} strokeWidth={1.9} />}
+            error={fieldErrors.email}
+            p={p}
+          />
+
+          {/* Password input */}
+          <AuthField
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={onPasswordChange}
+            autoComplete="current-password"
+            placeholder="Password"
+            icon={<Lock size={17} strokeWidth={1.9} />}
+            error={fieldErrors.password}
+            p={p}
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: 0,
+                  borderRadius: "50%",
+                  background: "transparent",
+                  color: p.MUTED,
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            }
+          />
+
+          {/* Forgot password */}
+          {onForgotPassword && (
+            <div style={{ textAlign: "right", marginTop: -8, marginBottom: 20 }}>
+              <button
+                type="button"
+                onClick={onForgotPassword}
+                style={{
+                  border: 0,
+                  background: "transparent",
+                  color: "#315eff",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  padding: "4px 0",
+                }}
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          {/* API-level error / success banner */}
+          {error && (
+            <div
+              className="banner-pop-in"
+              style={{
+                margin: "0 0 16px",
+                border: `1px solid ${isSuccessMessage ? "rgba(31,158,103,0.35)" : "rgba(239,68,68,0.3)"}`,
+                background: isSuccessMessage ? "rgba(31,158,103,0.1)" : "rgba(239,68,68,0.08)",
+                color: isSuccessMessage ? p.GREEN : p.ERR_TEXT,
+                borderRadius: 12,
+                padding: "11px 14px",
+                fontSize: 13,
+                lineHeight: 1.4,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {/* Submit button — always blue; dims slightly while loading */}
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              height: 48,
+              border: 0,
+              borderRadius: 12,
+              background: "#315eff",
+              color: "#FFFFFF",
+              fontSize: 15,
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+              cursor: loading ? "default" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              boxShadow: "0 8px 24px rgba(49,94,255,0.28)",
+              transition: "opacity 0.15s ease",
+            }}
+          >
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+
+          {/* Divider */}
+          <div style={{ marginTop: 28, height: 1, background: p.DIVIDER }} />
+
+          {/* Trust badge */}
           <div
             style={{
-              margin: "0 0 16px",
-              border: `1px solid ${isSuccessMessage ? "rgba(31,158,103,0.35)" : "rgba(239,68,68,0.3)"}`,
-              background: isSuccessMessage ? "rgba(31,158,103,0.1)" : "rgba(239,68,68,0.08)",
-              color: isSuccessMessage ? p.GREEN : p.ERR_TEXT,
-              borderRadius: 12,
-              padding: "11px 14px",
-              fontSize: 13,
-              lineHeight: 1.4,
+              marginTop: 20,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              color: p.DIM,
+              fontSize: 12,
+              fontWeight: 400,
+              paddingBottom: "max(4px, env(safe-area-inset-bottom))",
             }}
           >
-            {error}
+            <ShieldCheck size={13} strokeWidth={1.8} />
+            <span>Bank-grade encryption. Your data stays private.</span>
           </div>
-        )}
-
-        {/* Submit button — always blue; dims slightly while loading */}
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            height: 48,
-            border: 0,
-            borderRadius: 12,
-            background: "#315eff",
-            color: "#FFFFFF",
-            fontSize: 15,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-            cursor: loading ? "default" : "pointer",
-            opacity: loading ? 0.7 : 1,
-            transition: "opacity 0.15s ease",
-          }}
-        >
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-
-        {/* Divider */}
-        <div style={{ marginTop: 32, height: 1, background: p.DIVIDER }} />
-
-        {/* Trust badge */}
-        <div
-          style={{
-            marginTop: 24,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            color: p.DIM,
-            fontSize: 12,
-            fontWeight: 400,
-          }}
-        >
-          <ShieldCheck size={14} strokeWidth={1.8} />
-          <span>Bank-grade encryption. Your data stays private.</span>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

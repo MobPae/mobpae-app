@@ -21,7 +21,6 @@ type AppShellProps = {
 const TAB_VIEWS: View[] = ["home", "advance", "repayments", "activity", "profile"];
 const ONBOARDING_VIEWS: View[] = ["onboarding-kyc", "onboarding-bank", "onboarding-done"];
 const FULLSCREEN_DARK_VIEWS: View[] = [
-  "profile-membership",
   "profile-bank",
   "profile-kyc",
   "change-password",
@@ -202,7 +201,7 @@ export function AppShell({
                 aria-label="Back"
                 style={themedIconButton}
               >
-                <ChevronLeft size={24} strokeWidth={2.2} />
+                <ChevronLeft size={20} strokeWidth={2.2} />
               </button>
             )}
 
@@ -236,7 +235,7 @@ export function AppShell({
                 onClick={() => onNavigate("notifications")}
                 aria-label="Notifications"
               >
-                <Bell size={20} strokeWidth={1.95} />
+                <Bell size={18} strokeWidth={1.95} />
                 {unreadCount > 0 && (
                   <span
                     style={{
@@ -270,7 +269,7 @@ export function AppShell({
                 aria-label="Refresh"
               >
                 <RefreshCw
-                  size={21}
+                  size={18}
                   color={palette.text}
                   className={refreshing ? "spin" : ""}
                   strokeWidth={2.05}

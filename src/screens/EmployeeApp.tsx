@@ -7,7 +7,6 @@ import { RepaymentScheduleScreen } from "./RepaymentScheduleScreen";
 import { DashboardScreen } from "./DashboardScreen";
 import { LoginScreen } from "./LoginScreen";
 import { ChangePasswordScreen } from "./ChangePasswordScreen";
-import { MembershipScreen } from "./MembershipScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { OnboardingKycScreen } from "./OnboardingKycScreen";
 import { OnboardingBankScreen } from "./OnboardingBankScreen";
@@ -19,6 +18,7 @@ import { HelpScreen } from "./HelpScreen";
 import { LegalScreen } from "./LegalScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
 import { useTheme } from "../hooks/useTheme";
+import { DashboardSkeleton } from "../components/ui/DashboardSkeleton";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
@@ -124,10 +124,8 @@ export function EmployeeApp() {
     return (
       <div className={rootClassName}>
         <div className={shellClassName}>
-          <div className="boot-screen">
-            <div className="boot-loader" aria-label="Loading MobPae">
-              <span /><span /><span />
-            </div>
+          <div className="boot-screen" aria-label="Loading MobPae">
+            <DashboardSkeleton />
           </div>
         </div>
       </div>
@@ -209,8 +207,6 @@ export function EmployeeApp() {
           kycSubmitted={app.kycSubmitted}
           kycVerified={app.kycComplete}
           bankConnected={app.bankSubmitted}
-          membershipActive={app.appState.membershipActive}
-          membershipSubmitted={app.membershipSubmitted}
           onExplore={() => app.setActiveView("home")}
         />
       )}
@@ -221,22 +217,6 @@ export function EmployeeApp() {
           appState={app.appState}
           notice={app.notice}
           onNavigate={navigate}
-          theme={theme.theme}
-        />
-      )}
-
-      {app.activeView === "profile-membership" && (
-        <MembershipScreen
-          appState={app.appState}
-          couponValidation={app.couponValidation}
-          couponError={app.couponError}
-          validatingCoupon={app.validatingCoupon}
-          onPaymentVerified={app.onPaymentVerified}
-          onValidateCoupon={app.validateCoupon}
-          onClearCoupon={app.clearCoupon}
-          onNavigate={navigate}
-          onRefresh={app.refresh}
-          refreshing={app.refreshing}
           theme={theme.theme}
         />
       )}

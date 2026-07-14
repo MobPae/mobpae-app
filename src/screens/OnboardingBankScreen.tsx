@@ -1,6 +1,6 @@
 // ── OnboardingBankScreen.tsx ──────────────────────────────────────────────────
 // Bank account linking — compact redesign.
-// Colors: bank card = deep emerald · membership card (elsewhere) = deep violet
+// Colors: bank card = deep emerald
 
 import { useMemo, useState } from "react";
 import {
@@ -245,7 +245,7 @@ export function OnboardingBankScreen({
         </button>
         {ctaError && <p className="kycv2-cta-error">{ctaError}</p>}
         <div className="bnk2-secure">
-          <ShieldCheck size={12} strokeWidth={1.8} />
+          <ShieldCheck size={13} strokeWidth={1.8} />
           Bank details are encrypted and stored securely
         </div>
       </div>

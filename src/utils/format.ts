@@ -2,7 +2,7 @@ export const formatMoney = (amount: number) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: amount % 1 === 0 ? 0 : 2
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
   }).format(amount);
 
 export const formatDate = (date?: string) => {
@@ -14,7 +14,7 @@ export const formatDate = (date?: string) => {
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   }).format(parsedDate);
 };
 
@@ -22,11 +22,12 @@ export const formatShortDate = (date?: string) => {
   if (!date || date === "Pending") return "Pending";
 
   const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) return date.split(",")[0] || "Pending";
+  if (Number.isNaN(parsedDate.getTime()))
+    return date.split(",")[0] || "Pending";
 
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
-    month: "short"
+    month: "short",
   }).format(parsedDate);
 };
 
@@ -34,12 +35,13 @@ export const formatFullDate = (date?: string) => {
   if (!date || date === "Pending") return "Pending";
 
   const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) return date.split(",")[0] || "Pending";
+  if (Number.isNaN(parsedDate.getTime()))
+    return date.split(",")[0] || "Pending";
 
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "long",
-    year: "numeric"
+    year: "numeric",
   }).format(parsedDate);
 };
 
@@ -47,16 +49,18 @@ export const formatReadableDate = (date?: string) => {
   if (!date || date === "Pending") return "Pending";
 
   const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) return date.split(",")[0] || "Pending";
+  if (Number.isNaN(parsedDate.getTime()))
+    return date.split(",")[0] || "Pending";
 
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   }).format(parsedDate);
 };
 
-export const maskAccountNumber = (accountNumber: string) => (accountNumber ? `**** ${accountNumber.slice(-4)}` : "");
+export const maskAccountNumber = (accountNumber: string) =>
+  accountNumber ? `**** ${accountNumber.slice(-4)}` : "";
 
 export const formatRequestStatus = (status?: string, label?: string) => {
   const value = (label || status || "Pending").trim();
@@ -66,7 +70,6 @@ export const formatRequestStatus = (status?: string, label?: string) => {
     PENDING_APPROVAL: "Pending approval",
     UNDER_REVIEW: "Under review",
     EMPLOYER_APPROVED: "Employer approved",
-    AWAITING_MEMBERSHIP_PAYMENT: "Platform fee pending",
     AWAITING_PLATFORM_FEE_PAYMENT: "Platform fee pending",
     ADMIN_APPROVED: "Admin approved",
     READY_FOR_DISBURSAL: "Ready for payout",
@@ -79,5 +82,7 @@ export const formatRequestStatus = (status?: string, label?: string) => {
     EMPLOYER_REJECTED: "Rejected",
     REJECTED: "Rejected",
   };
-  return labels[key] ?? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  return (
+    labels[key] ?? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+  );
 };

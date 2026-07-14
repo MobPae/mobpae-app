@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { emptyBankAccount, emptyState } from "../data/emptyState";
 import { employeeApi } from "../services/api";
-import type { AppState, BankAccount, CouponValidation, EligibilityResult, KycDocumentType, RecoveryPreview, View } from "../types/app";
+import type { AppState, BankAccount, EligibilityResult, KycDocumentType, RecoveryPreview, View } from "../types/app";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 type RazorpayCheckoutResponse = {
@@ -24,7 +24,6 @@ const RESTORABLE_VIEWS = new Set<View>([
   "profile",
   "profile-kyc",
   "profile-bank",
-  "profile-membership",
   "change-password",
   "onboarding-kyc",
   "onboarding-bank",
@@ -92,10 +91,6 @@ export function useEmployeeApp() {
   const [submittingAdvance, setSubmittingAdvance] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [uploadingKycType, setUploadingKycType] = useState<KycDocumentType | null>(null);
-  const [couponValidation, setCouponValidation] = useState<CouponValidation | null>(null);
-  const [validatingCoupon, setValidatingCoupon] = useState(false);
-  const [couponError, setCouponError] = useState("");
-  const [activatingMembership, setActivatingMembership] = useState(false);
   const [payingPlatformFee, setPayingPlatformFee] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -135,8 +130,6 @@ export function useEmployeeApp() {
       setEligibility(eligResult);
       setBankForm(nextState.bankAccount ?? emptyBankAccount);
       setEditingBank(false);
-      setCouponValidation(null);
-      setCouponError("");
       setNotice((current) =>
         current.toLowerCase().includes("backend is unavailable") ? "" : current
       );
@@ -284,16 +277,11 @@ export function useEmployeeApp() {
   // bankSubmitted = bank is at least submitted (PENDING or VERIFIED), not NOT_ADDED
   const bankSubmitted = bankSetup ? bankSetup.status !== "NOT_ADDED" : Boolean(appState.bankAccount);
 
-  const membershipSubmitted =
-    appState.membershipActive ||
-    appState.membershipConfig.status === "ACTIVE";
-
   // Prefer eligibility.activeRequest (richest, from presentSalaryRequest) over local state
   const activeRequest = eligibility?.activeRequest ?? appState.requests.find(
     (request) => !["Paid", "Recovered", "Rejected", "Cancelled", "Expired"].includes(request.status)
   );
   const activeRecovery = Boolean(activeRequest);
-  const membershipFee = appState.membershipConfig.fee;
 
   // Available advance limit: use approvedLimit (maximumEligibleAmount) — always computed
   // correctly by eligibility service even when eligible=false. availableAdvance is 0
@@ -471,62 +459,6 @@ export function useEmployeeApp() {
     }
   };
 
-  const validateCoupon = async (code: string) => {
-    const trimmed = code.trim().toUpperCase();
-    if (!trimmed) return;
-    setCouponError("");
-    setValidatingCoupon(true);
-    try {
-      const result = await employeeApi.validateMembershipCoupon(trimmed);
-      if (result.valid) {
-        setCouponValidation(result);
-      } else {
-        setCouponValidation(null);
-        setCouponError("Invalid coupon code. Please try again.");
-      }
-    } catch (error) {
-      setCouponValidation(null);
-      setCouponError(error instanceof Error ? error.message : "Unable to validate coupon.");
-    } finally {
-      setValidatingCoupon(false);
-    }
-  };
-
-  const clearCoupon = () => {
-    setCouponValidation(null);
-    setCouponError("");
-  };
-
-  /**
-   * Razorpay membership flow — two steps:
-   *
-   * 1. initiatePayment(planKey) → opens Razorpay checkout modal
-   * 2. verifyPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature) → activates membership
-   *
-   * MembershipScreen.tsx drives the flow directly using the employeeApi helpers.
-   * This hook exposes a thin wrapper used after verify succeeds to update app state.
-   */
-  const onPaymentVerified = (membership: { id?: string; planType?: string; planName?: string; status?: string; amount?: string | number; amountPaid?: string | number }) => {
-    setAppState((current) => ({
-      ...current,
-      membershipActive: membership?.status === "ACTIVE",
-      membershipConfig: {
-        ...current.membershipConfig,
-        status: membership?.status ?? "ACTIVE",
-        planType: (membership?.planType as 'MONTHLY' | 'BIANNUAL') ?? current.membershipConfig.planType,
-        membershipId: membership?.id ?? current.membershipConfig.membershipId,
-        planName: membership?.planName ?? current.membershipConfig.planName,
-        amountPayable: membership?.amountPaid
-          ? Number(membership.amountPaid)
-          : membership?.amount
-            ? Number(membership.amount)
-            : current.membershipConfig.amountPayable,
-      },
-    }));
-    setCouponValidation(null);
-    setCouponError("");
-  };
-
   const payPlatformFee = async (loanApplicationId: string) => {
     setPayingPlatformFee(true);
     try {
@@ -584,13 +516,6 @@ export function useEmployeeApp() {
       setPayingPlatformFee(false);
     }
   };
-
-  // Legacy alias kept so any callers in non-membership flows don't break
-  const activateMembership = onPaymentVerified as unknown as (
-    paymentScreenshot?: File,
-    paymentReference?: string,
-    planType?: 'MONTHLY' | 'BIANNUAL',
-  ) => Promise<void>;
 
   const submitSalaryAdvance = async (
     purposeCategory?: string,
@@ -656,7 +581,6 @@ export function useEmployeeApp() {
     activeRecovery,
     activeRequest,
     activeView,
-    activatingMembership,
     advanceAmount,
     advanceLimit,
     appState,
@@ -666,9 +590,6 @@ export function useEmployeeApp() {
     cancelBankEdit,
     cancelAdvanceRequest,
     cancellingAdvance,
-    couponError,
-    couponValidation,
-    clearCoupon,
     editingBank,
     eligibility,
     eligibleForAdvance,
@@ -682,8 +603,6 @@ export function useEmployeeApp() {
     logout,
     forgotPassword,
     resetPassword,
-    membershipFee,
-    membershipSubmitted,
     nextBlocker,
     notice,
     payingPlatformFee,
@@ -704,10 +623,6 @@ export function useEmployeeApp() {
     updateUpiId,
     uploadKycDocument,
     uploadingKycType,
-    validateCoupon,
-    validatingCoupon,
-    activateMembership,
-    onPaymentVerified,
     payPlatformFee,
     changePassword,
     changingPassword,

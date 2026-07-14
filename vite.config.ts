@@ -2,8 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import pkg from "./package.json";
 
+import { reticle } from '@reticlehq/vite-plugin';
 export default defineConfig({
-  plugins: [react()],
+  plugins: [reticle({ port: 3000 }), react()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

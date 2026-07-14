@@ -211,7 +211,7 @@ export function ChangePasswordScreen({
 
         {/* ── Page heading ──────────────────────────────────────────────────── */}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ margin: 0, color: TEXT, fontSize: 24, lineHeight: 1.12, fontWeight: 500, letterSpacing: "-0.035em" }}>
+          <h1 style={{ margin: 0, color: TEXT, fontSize: 26, lineHeight: 1.12, fontWeight: 500, letterSpacing: "-0.035em" }}>
             {forced ? "Create your password" : "Update your password"}
           </h1>
           <p style={{ margin: "10px 0 0", color: MUTED, fontSize: 14, lineHeight: 1.45, fontWeight: 400 }}>
@@ -392,15 +392,16 @@ function PasswordField({
       {/* Input row */}
       <div
         style={{
-          height: 44,
+          height: 48,
           border: `1.5px solid ${focused ? "#315eff" : BORDER}`,
-          borderRadius: 11,
+          borderRadius: 12,
           background: PANEL,
           display: "flex",
           alignItems: "center",
           gap: 10,
           padding: "0 12px",
-          transition: "border-color 0.15s ease",
+          boxShadow: focused ? "0 0 0 4px rgba(49,94,255,0.12)" : "none",
+          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
         }}
       >
         <Lock size={17} strokeWidth={1.9} color={focused ? TEXT : MUTED} style={{ flexShrink: 0 }} />

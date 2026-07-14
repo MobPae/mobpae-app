@@ -10,10 +10,56 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AdvanceRequest, AppState, View } from "../types/app";
 import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
 import type { Theme } from "../hooks/useTheme";
+import { useCountUp } from "../hooks/useCountUp";
+
+// ── Payday countdown ring — display-only date math on a backend-provided
+// payroll day; no financial figures are derived here. ─────────────────────
+function getPaydayInfo(payrollDay: number) {
+  const now = new Date();
+  const today = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  let daysLeft = payrollDay - today;
+  if (daysLeft < 0) daysLeft += daysInMonth;
+  const cycleLength = 30;
+  const progress = Math.min(Math.max((cycleLength - daysLeft) / cycleLength, 0), 1);
+  return { daysLeft, progress };
+}
+
+function PaydayRing({ payrollDay }: { payrollDay: number }) {
+  const { progress } = useMemo(() => getPaydayInfo(payrollDay), [payrollDay]);
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setAnimatedProgress(progress));
+    return () => cancelAnimationFrame(frame);
+  }, [progress]);
+
+  const size = 28;
+  const stroke = 3;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - animatedProgress);
+
+  return (
+    <span className="dash-payday-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth={stroke} />
+        <circle
+          className="dash-payday-ring-progress"
+          cx={size / 2} cy={size / 2} r={radius} fill="none"
+          stroke="#FFFFFF" strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+    </span>
+  );
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -27,7 +73,6 @@ type DashboardScreenProps = {
 // ── Hero card constants (blue gradient, same in both themes) ──────────────────
 
 const HERO_BG         = "linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%)";
-const HERO_SHADOW     = "0 16px 48px rgba(49,94,255,0.30)";
 const HERO_TEXT       = "#FFFFFF";
 const HERO_MUTED      = "rgba(255,255,255,0.65)";
 const HERO_BORDER     = "rgba(255,255,255,0.16)";
@@ -167,6 +212,7 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
   const repaymentDate    = recent?.recoveryDate ? formatShortDate(recent.recoveryDate) : "Payday";
   const showRepaymentRow = hasVisibleRepayment(recent) && repaymentAmount > 0;
   const firstName        = (profile.name || "").split(" ")[0] || "there";
+  const animatedSalary   = useCountUp(salary);
 
   // ── Peer activity ─────────────────────────────────────────────────────────
   const peerInitials = peerActivity?.initials ?? [];
@@ -193,6 +239,7 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
       {/* ── Notice banner (admin-set messages) ───────────────────────────── */}
       {notice && (
         <div
+          className="banner-pop-in"
           style={{
             marginBottom: 14,
             padding: "12px 14px",
@@ -224,7 +271,6 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
           borderRadius: 22,
           background: HERO_BG,
           padding: "22px 20px 20px",
-          boxShadow: HERO_SHADOW,
           overflow: "hidden",
         }}
       >
@@ -244,21 +290,20 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
           <div style={{ color: HERO_MUTED, fontSize: 11, fontWeight: 500, letterSpacing: "0.26em", textTransform: "uppercase", marginBottom: 8 }}>
             Salary on file
           </div>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ color: HERO_TEXT, fontSize: 28, fontWeight: 450, letterSpacing: "-0.07em", lineHeight: 1 }}>
-              {salary ? formatMoney(salary) : "—"}
+          <div style={{ color: HERO_TEXT, fontSize: 28, fontWeight: 450, letterSpacing: "-0.07em", lineHeight: 1 }}>
+            {salary ? formatMoney(animatedSalary) : "—"}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, color: HERO_MUTED, fontSize: 13 }}>
+              <span className={dashboard ? "dash-sync-dot" : undefined} style={{ width: 7, height: 7, borderRadius: 99, background: "#5BEBA0", flexShrink: 0, position: "relative" }} />
+              {dashboard ? "Synced" : "Syncing salary data"}
             </div>
-            {/* Paydate — displayed only when the backend provides a payroll day */}
             {payrollDay != null && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5, color: HERO_MUTED, fontSize: 12 }}>
-                <CalendarDays size={13} strokeWidth={1.8} />
-                <span>Pay day {payrollDay}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: HERO_MUTED, fontSize: 12 }}>
+                <PaydayRing payrollDay={payrollDay} />
+                <span>{getPaydayInfo(payrollDay).daysLeft}d to payday</span>
               </div>
             )}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, color: HERO_MUTED, fontSize: 13, marginTop: 12 }}>
-            <span style={{ width: 7, height: 7, borderRadius: 99, background: "#5BEBA0", flexShrink: 0 }} />
-            {dashboard ? "Synced" : "Syncing salary data"}
           </div>
         </div>
 

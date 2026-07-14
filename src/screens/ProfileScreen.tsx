@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  Crown,
   FileText,
   HelpCircle,
   Info,
@@ -44,7 +43,7 @@ type ProfileScreenProps = {
   onRefresh?: () => void;
   refreshing?: boolean;
   onBankFormChange: (field: keyof BankAccount, value: string) => void;
-  initialSection?: "kyc" | "bank" | "membership";
+  initialSection?: "kyc" | "bank";
   theme?: Theme;
   onThemeChange?: (theme: Theme) => void;
 };
@@ -280,44 +279,7 @@ export function ProfileScreen({
   theme = "dark",
   onThemeChange,
 }: ProfileScreenProps) {
-  const { profile, membershipActive, membershipConfig } = appState;
-  const membershipStatus = (membershipConfig?.status || "").toUpperCase();
-  const membershipPending =
-    !membershipActive &&
-    Boolean(membershipConfig?.membershipId) &&
-    (membershipStatus === "PENDING" ||
-      membershipStatus === "UNDER_REVIEW" ||
-      membershipStatus === "PAYMENT_PENDING");
-  const membershipRejected = !membershipActive && membershipStatus === "REJECTED";
-  const membershipNeedsUpdate =
-    membershipRejected || (!membershipActive && membershipPending && Boolean(membershipConfig?.remarks?.trim()));
-  const membershipPillLabel = membershipActive
-    ? membershipConfig?.planName || "Member"
-    : membershipNeedsUpdate
-      ? "Rejected"
-      : membershipPending
-        ? "In Review"
-        : "Free";
-  const membershipDaysText =
-    typeof membershipConfig?.daysRemaining === "number"
-      ? `${Math.max(0, membershipConfig.daysRemaining)} days to go`
-      : membershipConfig?.validTill
-        ? `${Math.max(
-            0,
-            Math.ceil((new Date(membershipConfig.validTill).getTime() - Date.now()) / 86_400_000),
-          )} days to go`
-        : membershipConfig?.validityLabel || "Active plan";
-  const membershipDurationLabel =
-    membershipConfig?.planName ||
-    (membershipConfig?.planType === "MONTHLY"
-      ? "Monthly"
-      : membershipConfig?.planType === "BIANNUAL"
-        ? "6 Months"
-        : "Member");
-  // Short value for the hero stat cell — first word of plan name (e.g. "Annual" not "Annual Membership")
-  const membershipStatValue = membershipActive
-    ? (membershipConfig?.planName?.split(" ")[0] || "Active")
-    : membershipPillLabel;
+  const { profile } = appState;
   const photoRef = useRef<HTMLInputElement>(null);
   const profilePhotoUrl = useSignedUrl(profile.profilePhotoUrl);
 
@@ -333,9 +295,9 @@ export function ProfileScreen({
   const profileThemeVars = {
     "--profile-bg": theme === "light" ? "#FFFFFF" : DARK,
     "--profile-panel": theme === "light" ? "#FFFFFF" : "rgba(20,20,24,0.62)",
-    "--profile-panel-soft": theme === "light" ? "#F5F3FB" : PANEL_SOFT,
-    "--profile-border": theme === "light" ? "#E9E6F1" : BORDER,
-    "--profile-rule": theme === "light" ? "#F1EEF7" : BORDER,
+    "--profile-panel-soft": theme === "light" ? "#F4F4F6" : PANEL_SOFT,
+    "--profile-border": theme === "light" ? "#EBEBEB" : BORDER,
+    "--profile-rule": theme === "light" ? "#F0F0F0" : BORDER,
     "--profile-text": theme === "light" ? "#17151F" : TEXT,
     "--profile-muted": theme === "light" ? "#6B6878" : MUTED,
     "--profile-dim": theme === "light" ? "#9A97A8" : DIM,
@@ -343,7 +305,7 @@ export function ProfileScreen({
     "--profile-green": theme === "light" ? "#1F9E67" : GREEN,
     "--profile-warm": WARM,
     "--profile-chip-bg": theme === "light" ? "rgba(49,94,255,0.08)" : "rgba(20,20,24,0.86)",
-    "--profile-avatar-border": theme === "light" ? "#E2DEEE" : "#2E2E34",
+    "--profile-avatar-border": theme === "light" ? "#E0E0E0" : "#2E2E34",
     "--profile-camera-bg": theme === "light" ? "#315eff" : "#F4F1E8",
     "--profile-camera-text": theme === "light" ? "#FFFFFF" : "#11100D",
   } as CSSProperties;
@@ -483,7 +445,6 @@ export function ProfileScreen({
           overflow: "hidden",
           position: "relative",
           marginBottom: 6,
-          boxShadow: "0 12px 40px rgba(49,94,255,0.32)",
         }}
       >
         {/* Subtle dot pattern */}
@@ -627,15 +588,9 @@ export function ProfileScreen({
           </div>
         </div>
 
-        {/* 3-column status stats row */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.14)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+        {/* 2-column status stats row */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.14)", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
           {([
-            {
-              icon: <Crown size={15} strokeWidth={1.8} />,
-              label: "Plan",
-              value: membershipStatValue,
-              tone: membershipActive ? "green" : membershipNeedsUpdate ? "warm" : "default",
-            },
             {
               icon: <ShieldCheck size={15} strokeWidth={1.8} />,
               label: "KYC",
@@ -649,7 +604,7 @@ export function ProfileScreen({
               tone: bankVerified ? "green" : "default",
             },
           ] as const).map(({ icon, label, value, tone }, i) => {
-            const toneColor = tone === "green" ? "#5BEBA0" : tone === "warm" ? "#FFB47A" : "rgba(255,255,255,0.55)";
+            const toneColor = tone === "green" ? "#5BEBA0" : "rgba(255,255,255,0.55)";
             return (
               <div
                 key={label}
@@ -659,7 +614,7 @@ export function ProfileScreen({
                   flexDirection: "column",
                   alignItems: "center",
                   gap: 5,
-                  borderRight: i < 2 ? "1px solid rgba(255,255,255,0.14)" : "none",
+                  borderRight: i < 1 ? "1px solid rgba(255,255,255,0.14)" : "none",
                   overflow: "hidden",
                   minWidth: 0,
                 }}
@@ -672,32 +627,6 @@ export function ProfileScreen({
           })}
         </div>
       </div>
-
-      {membershipActive && (
-        <button
-          type="button"
-          className="profile-membership-summary"
-          onClick={() => onNavigate("profile-membership")}
-        >
-          <span className="profile-membership-summary-icon">
-            <Crown size={23} strokeWidth={1.9} />
-          </span>
-          <div className="profile-membership-summary-main">
-            <div className="profile-membership-summary-title">
-              <span>Membership</span>
-              <span className="profile-membership-summary-status">
-                <i /> Active
-              </span>
-              <span className="profile-membership-summary-term">
-                {membershipDurationLabel}
-              </span>
-            </div>
-            <p>
-              {membershipDaysText}
-            </p>
-          </div>
-        </button>
-      )}
 
       <SectionLabel>Account</SectionLabel>
       <RowGroup>

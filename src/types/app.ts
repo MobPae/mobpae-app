@@ -9,7 +9,6 @@ export type View =
   | "profile"
   | "profile-kyc"
   | "profile-bank"
-  | "profile-membership"
   | "change-password"
   | "onboarding-kyc"
   | "onboarding-bank"
@@ -19,9 +18,27 @@ export type View =
   | "notifications"
   | "help"
   | "legal";
-export type DocumentStatus = "Not Uploaded" | "Under Review" | "Verified" | "Rejected";
+export type DocumentStatus =
+  | "Not Uploaded"
+  | "Under Review"
+  | "Verified"
+  | "Rejected";
 export type KycDocumentType = "PAN" | "AADHAR" | "SALARY_SLIP";
-export type RequestStatus = "Submitted" | "Employer Approved" | "Awaiting Membership" | "Awaiting Platform Fee" | "Admin Approved" | "Under Review" | "Approved" | "Rejected" | "Disbursed" | "Payment Scheduled" | "Paid" | "Recovery Scheduled" | "Recovered" | "Cancelled" | "Expired";
+export type RequestStatus =
+  | "Submitted"
+  | "Employer Approved"
+  | "Awaiting Platform Fee"
+  | "Admin Approved"
+  | "Under Review"
+  | "Approved"
+  | "Rejected"
+  | "Disbursed"
+  | "Payment Scheduled"
+  | "Paid"
+  | "Recovery Scheduled"
+  | "Recovered"
+  | "Cancelled"
+  | "Expired";
 
 export type SelfieStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
@@ -81,7 +98,7 @@ export type BankAccount = {
 };
 
 export type SetupItem = {
-  key: "KYC" | "BANK_ACCOUNT" | "MEMBERSHIP" | "PLATFORM_FEE" | string;
+  key: "KYC" | "BANK_ACCOUNT" | "PLATFORM_FEE" | string;
   label: string;
   status: string;
   completed: boolean;
@@ -137,9 +154,9 @@ export type AdvanceRequest = {
   approvedAmount: number;
   requestDate: string;
   status: RequestStatus;
-  rawStatus?: string;       // backend raw status string (e.g. "SUBMITTED")
-  statusLabel?: string;     // backend-provided human-readable label
-  statusColor?: string;     // backend-provided hex/CSS color
+  rawStatus?: string; // backend raw status string (e.g. "SUBMITTED")
+  statusLabel?: string; // backend-provided human-readable label
+  statusColor?: string; // backend-provided hex/CSS color
   remarks: string;
   principalAmount: number;
   interestAmount: number;
@@ -178,7 +195,6 @@ export type EligibilityResult = {
     interestFreeThreshold: number;
   };
   payroll: { payrollDate: number | null; payrollCutoffDate: number | null };
-  membershipRequiredAfterEmployerApproval: boolean;
   platformFeeRequiredAfterEmployerApproval: boolean;
   platformFee: PlatformFeeConfig | null;
   outstandingRepayment: {
@@ -190,61 +206,6 @@ export type EligibilityResult = {
   activeRequest: AdvanceRequest | null;
 };
 
-export type MembershipPlan = {
-  planType: 'MONTHLY' | 'BIANNUAL' | 'ANNUAL';
-  planName: string;
-  amount: number;
-  validityDays: number;
-  billingLabel: string;
-  perMonthLabel: string | null;
-  preferred: boolean;
-  savingsVsMonthly: number | null;
-  savingsPercent: number | null;
-};
-
-export type MembershipConfig = {
-  // Available plans from config
-  plans: MembershipPlan[];
-  // Active member fields
-  membershipId?: string;
-  planType?: 'MONTHLY' | 'BIANNUAL' | string;
-  planName: string;
-  fee: number;                  // amountPaid from /me or selected plan amount
-  status?: "PENDING" | "ACTIVE" | "REJECTED" | "EXPIRED" | "CANCELLED" | string;
-  couponDiscount: number;
-  couponCode?: string;
-  amountPayable?: number;
-  validityLabel: string;
-  daysRemaining?: number;
-  memberSince?: string;
-  validTill?: string;
-  savedThisYear?: number;
-  // Plan comparison content from /membership/config
-  freePlanTitle: string;
-  freePlanSubtitle: string;
-  membershipTitle: string;
-  membershipSubtitle: string;
-  freeBenefits: string[];
-  membershipBenefits: string[];
-  membershipValidityDays: number;
-  payment?: {
-    provider?: string;
-    keyId?: string;
-    // Legacy UPI fields kept for type compatibility
-    upiId?: string;
-    qrUrl?: string;
-    beneficiaryName?: string;
-    instructions?: string;
-  };
-  remarks?: string;
-};
-
-export type CouponValidation = {
-  valid: boolean;
-  couponCode: string;
-  discountAmount: number;
-};
-
 export type RecoveryPreview = {
   principal: number;
   interest: number;
@@ -252,7 +213,7 @@ export type RecoveryPreview = {
   total: number;
   youReceive: number;
   interestDays: number;
-  interestRate?: number;   // annual % from backend
+  interestRate?: number; // annual % from backend
   recoveryDate: string;
   payrollDate?: number;
   payrollCutoffDate?: number;
@@ -275,8 +236,6 @@ export type AppState = {
   dashboard: EmployeeDashboard | null;
   documents: KycDocument[];
   bankAccount: BankAccount | null;
-  membershipActive: boolean;
-  membershipConfig: MembershipConfig;
   platformFeeConfig: PlatformFeeConfig | null;
   requests: AdvanceRequest[];
   notifications: string[];

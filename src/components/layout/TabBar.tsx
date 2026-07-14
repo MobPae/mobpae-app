@@ -37,7 +37,7 @@ export function TabBar({ activeView, onChange, theme = "dark" }: TabBarProps) {
   const isActive = (id: View) =>
     activeView === id ||
     (id === "profile" &&
-      ["profile-kyc", "profile-bank", "profile-membership"].includes(activeView));
+      ["profile-kyc", "profile-bank"].includes(activeView));
 
   return (
     <nav
@@ -86,7 +86,7 @@ export function TabBar({ activeView, onChange, theme = "dark" }: TabBarProps) {
           >
             {/* Icon with active pill */}
             <span
-              className="tabbar-icon-pill"
+              className={active ? "tabbar-icon-pill tabbar-icon-pill--active" : "tabbar-icon-pill"}
               style={{
                 width: 40,
                 height: 26,

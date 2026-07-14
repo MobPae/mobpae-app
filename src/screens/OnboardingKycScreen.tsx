@@ -416,7 +416,7 @@ export function OnboardingKycScreen({
           </button>
           {ctaError && <p className="kycv2-cta-error">{ctaError}</p>}
           <div className="kycv2-secure">
-            <ShieldCheck size={12} />
+            <ShieldCheck size={13} strokeWidth={1.8} />
             Documents are encrypted and stored securely
           </div>
         </div>

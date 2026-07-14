@@ -165,7 +165,7 @@ function advancePalette(theme: "light" | "dark") {
     muted: "#8A8892",
     dim: "#7C7C85",
     faint: "#5C5C64",
-    border: "#26262B",
+    border: "#29292F",
     panel: "#151519",
     panelSoft: "#17171B",
     panelMuted: "#2A2A30",
@@ -458,9 +458,7 @@ export function AdvanceScreen({
     const shouldShowPlatformFeeGate =
       !feeCleared &&
       (rawStatus === "AWAITING_PLATFORM_FEE_PAYMENT" ||
-        rawStatus === "AWAITING_MEMBERSHIP_PAYMENT" ||
         currentRequest.status === "Awaiting Platform Fee" ||
-        currentRequest.status === "Awaiting Membership" ||
         currentRequest.nextAction === "PAY_PLATFORM_FEE" ||
         (currentRequest.status === "Employer Approved" &&
           platformFeeRequiredAfterEmployerApproval));
@@ -481,10 +479,7 @@ export function AdvanceScreen({
       const accentBorder =
         theme === "light" ? "rgba(49,94,255,0.14)" : "rgba(49,94,255,0.22)";
 
-      const benefits = [
-        "Zero processing fees",
-        "Auto-recovery on payday",
-      ];
+      const benefits = ["Zero processing fees", "Auto-recovery on payday"];
 
       return (
         <div
@@ -498,7 +493,13 @@ export function AdvanceScreen({
           }}
         >
           {/* Status chip */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 18,
+            }}
+          >
             <span
               style={{
                 display: "inline-flex",
@@ -592,7 +593,9 @@ export function AdvanceScreen({
               }}
             >
               <span>Amount approved</span>
-              <strong style={{ color: colors.text, fontSize: 14, fontWeight: 500 }}>
+              <strong
+                style={{ color: colors.text, fontSize: 14, fontWeight: 500 }}
+              >
                 {formatMoney(approvedAmount)}
               </strong>
             </div>
@@ -607,7 +610,9 @@ export function AdvanceScreen({
               }}
             >
               <span>Platform fee</span>
-              <strong style={{ color: colors.text, fontSize: 14, fontWeight: 500 }}>
+              <strong
+                style={{ color: colors.text, fontSize: 14, fontWeight: 500 }}
+              >
                 {feeAmount > 0 ? formatMoney(feeAmount) : "Not configured"}
               </strong>
             </div>
@@ -1117,45 +1122,57 @@ export function AdvanceScreen({
     return (
       <div className="adv-screen">
         <div className="screen-body adv-active-body">
-          <div className="adv-inline-hero">
-            <div className="adv-inline-top">
-              <div className="adv-inline-eyebrow">
+          {/* ── Blue gradient hero card ── */}
+          <div className="adv-hero-card">
+            <div className="adv-hero-dots" />
+            <div className="adv-hero-top">
+              <div className="adv-hero-eyebrow">
                 {currentRequest.disbursalStatus === "Disbursed"
                   ? "Credited"
                   : "Advance"}
               </div>
-              <span className={isPaid ? "chip chip-green" : "chip chip-amber"}>
+              <span
+                className={
+                  isPaid
+                    ? "adv-hero-chip adv-hero-chip--green"
+                    : "adv-hero-chip adv-hero-chip--amber"
+                }
+              >
                 {statusLabel}
               </span>
             </div>
-            <div className="adv-inline-amount">
+            <div className="adv-hero-amount">
               {principal ? formatMoney(principal) : "—"}
             </div>
-            <button
-              type="button"
-              className="adv-inline-link"
-              onClick={() => onNavigate?.("repayments")}
-            >
-              View repayment schedule <ChevronRight size={13} />
-            </button>
-            <div className="adv-inline-divider" />
-            <div className="adv-inline-stats">
-              <div className="adv-inline-stat">
-                <span>Requested</span>
-                <span>{formatReadableDate(currentRequest.requestDate)}</span>
+            <div className="adv-hero-stats">
+              <div className="adv-hero-stat">
+                <span className="adv-hero-stat-label">Requested</span>
+                <span className="adv-hero-stat-val">
+                  {formatReadableDate(currentRequest.requestDate)}
+                </span>
               </div>
-              <div className="adv-inline-stat">
-                <span>Due by</span>
-                <span>{scheduleDate}</span>
+              <div className="adv-hero-stat">
+                <span className="adv-hero-stat-label">Due by</span>
+                <span className="adv-hero-stat-val">{scheduleDate}</span>
               </div>
-              <div className="adv-inline-stat">
-                <span>Total payable</span>
-                <span className="amber">
+              <div className="adv-hero-stat">
+                <span className="adv-hero-stat-label">Total payable</span>
+                <span className="adv-hero-stat-val adv-hero-stat-val--amber">
                   {totalRepay ? formatMoney(totalRepay) : "—"}
                 </span>
               </div>
             </div>
           </div>
+
+          {/* View schedule link */}
+          <button
+            type="button"
+            className="adv-inline-link adv-repay-link"
+            onClick={() => onNavigate?.("repayments")}
+          >
+            View repayment schedule <ChevronRight size={13} />
+          </button>
+
           <div className="adv-calc-head">
             <h2>How we calculate</h2>
             <span>
@@ -1166,34 +1183,32 @@ export function AdvanceScreen({
             <div className="adv-calc-row">
               <span className="adv-calc-icon">1</span>
               <div>
-                <span>Advance amount</span>
+                <strong>Advance amount</strong>
                 <small>Principal you receive</small>
               </div>
-              <span>{principal ? formatMoney(principal) : "—"}</span>
+              <b>{principal ? formatMoney(principal) : "—"}</b>
             </div>
             <div className="adv-calc-row">
               <span className="adv-calc-icon adv-calc-icon--warm">+</span>
               <div>
-                <span>Interest</span>
+                <strong>Interest</strong>
                 <small>
                   {principal ? formatMoney(principal) : "—"} ×{" "}
                   {interestRate ? `${interestRate}% p.a.` : "rate"} ×{" "}
                   {interestDays ?? "—"} days
                 </small>
               </div>
-              <span className="orange">
-                {interest ? formatMoney(interest) : "—"}
-              </span>
+              <b className="orange">{interest ? formatMoney(interest) : "—"}</b>
             </div>
             <div className="adv-calc-total">
               <span className="adv-calc-check">
                 <CheckCircle size={18} strokeWidth={2} />
               </span>
               <div>
-                <span>Total repayable</span>
+                <strong>Total repayable</strong>
                 <small>Auto-deducted on payday</small>
               </div>
-              <span>{totalRepay ? formatMoney(totalRepay) : "—"}</span>
+              <b>{totalRepay ? formatMoney(totalRepay) : "—"}</b>
             </div>
           </div>
         </div>
@@ -1559,7 +1574,8 @@ export function AdvanceScreen({
             Track in Activity <ArrowRight size={16} />
           </button>
           <div className="adv-secure-note">
-            <ShieldCheck size={12} /> We'll notify you at every step
+            <ShieldCheck size={13} strokeWidth={1.8} /> We'll notify you at
+            every step
           </div>
         </div>
       </div>
@@ -1580,20 +1596,40 @@ export function AdvanceScreen({
         }}
       >
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 22,
+          }}
+        >
           <button
             type="button"
             onClick={() => setStep("calculator")}
             style={{
-              width: 36, height: 36, borderRadius: 10,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
               border: `1px solid ${colors.border}`,
-              background: colors.panelSoft, color: colors.text,
-              display: "grid", placeItems: "center", cursor: "pointer", flexShrink: 0,
+              background: colors.panelSoft,
+              color: colors.text,
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              flexShrink: 0,
             }}
           >
             ←
           </button>
-          <span style={{ fontSize: 16, fontWeight: 450, color: colors.text, letterSpacing: "-0.025em" }}>
+          <span
+            style={{
+              fontSize: 16,
+              fontWeight: 450,
+              color: colors.text,
+              letterSpacing: "-0.025em",
+            }}
+          >
             Confirm your advance
           </span>
         </div>
@@ -1608,20 +1644,65 @@ export function AdvanceScreen({
             marginBottom: 14,
           }}
         >
-          <div style={{ fontSize: 28, fontWeight: 300, letterSpacing: "-0.04em", color: "#315eff", marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 300,
+              letterSpacing: "-0.04em",
+              color: "#315eff",
+              marginBottom: 6,
+            }}
+          >
             {preview ? formatMoney(preview.youReceive) : formatMoney(amount)}
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {preview?.recoveryDate && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: colors.panelSoft, border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 12 }}>
-                <CalendarDays size={11} /> Repay {formatShortDate(preview.recoveryDate)}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "4px 10px",
+                  borderRadius: 99,
+                  background: colors.panelSoft,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.muted,
+                  fontSize: 12,
+                }}
+              >
+                <CalendarDays size={11} /> Repay{" "}
+                {formatShortDate(preview.recoveryDate)}
               </span>
             )}
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: colors.panelSoft, border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 12 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 99,
+                background: colors.panelSoft,
+                border: `1px solid ${colors.border}`,
+                color: colors.muted,
+                fontSize: 12,
+              }}
+            >
               <Landmark size={11} /> {maskedBank}
             </span>
             {preview?.interest != null && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 99, background: colors.panelSoft, border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 12 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "4px 10px",
+                  borderRadius: 99,
+                  background: colors.panelSoft,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.muted,
+                  fontSize: 12,
+                }}
+              >
                 +{formatMoney(preview.interest)} interest
               </span>
             )}
@@ -1630,53 +1711,172 @@ export function AdvanceScreen({
 
         {/* Purpose */}
         <div style={{ marginBottom: 14 }}>
-          <span style={{ display: "block", fontSize: 11, color: colors.dim, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>
+          <span
+            style={{
+              display: "block",
+              fontSize: 11,
+              color: colors.dim,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
             Purpose · optional
           </span>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 6,
+            }}
+          >
             {PURPOSE_CHIPS.map(({ value, label }) => {
               const sel = purposeCategory === value;
               return (
-                <button key={value} type="button" onClick={() => setPurposeCategory(sel ? null : value)}
-                  style={{ padding: "7px 0", borderRadius: 10, border: sel ? "1.5px solid #315eff" : `1.5px solid ${colors.border}`, background: sel ? "rgba(49,94,255,0.08)" : colors.panelSoft, color: sel ? "#315eff" : colors.muted, fontSize: 12, fontWeight: 450, cursor: "pointer", textAlign: "center", fontFamily: "inherit" }}>
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPurposeCategory(sel ? null : value)}
+                  style={{
+                    padding: "7px 0",
+                    borderRadius: 10,
+                    border: sel
+                      ? "1.5px solid #315eff"
+                      : `1.5px solid ${colors.border}`,
+                    background: sel ? "rgba(49,94,255,0.08)" : colors.panelSoft,
+                    color: sel ? "#315eff" : colors.muted,
+                    fontSize: 12,
+                    fontWeight: 450,
+                    cursor: "pointer",
+                    textAlign: "center",
+                    fontFamily: "inherit",
+                  }}
+                >
                   {label}
                 </button>
               );
             })}
           </div>
-          <input type="text" placeholder="Add a note (optional)" value={purposeNote}
-            onChange={(e) => setPurposeNote(e.target.value)} maxLength={200}
-            style={{ marginTop: 8, width: "100%", padding: "9px 12px", borderRadius: 10, border: `1px solid ${colors.border}`, background: colors.panelSoft, color: colors.text, fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+          <input
+            type="text"
+            placeholder="Add a note (optional)"
+            value={purposeNote}
+            className="adv-note-input"
+            onChange={(e) => setPurposeNote(e.target.value)}
+            maxLength={200}
+            style={{
+              marginTop: 8,
+              width: "100%",
+              height: 44,
+              padding: "0 12px",
+              borderRadius: 12,
+              border: `1.5px solid ${colors.border}`,
+              background: colors.panelSoft,
+              color: colors.text,
+              fontSize: 13,
+              outline: "none",
+              fontFamily: "inherit",
+              boxSizing: "border-box",
+            }}
+          />
         </div>
 
         {/* Consent */}
-        <label style={{ display: "grid", gridTemplateColumns: "20px 1fr", gap: 12, color: colors.dim, fontSize: 13, lineHeight: 1.55, marginBottom: 18 }}>
-          <input type="checkbox" checked={agree1} onChange={(e) => setAgree1(e.target.checked)}
-            style={{ width: 18, height: 18, marginTop: 2, accentColor: "#315eff" }} />
+        <label
+          style={{
+            display: "grid",
+            gridTemplateColumns: "20px 1fr",
+            gap: 12,
+            color: colors.dim,
+            fontSize: 13,
+            lineHeight: 1.55,
+            marginBottom: 18,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={agree1}
+            onChange={(e) => setAgree1(e.target.checked)}
+            style={{
+              width: 18,
+              height: 18,
+              marginTop: 2,
+              accentColor: "#315eff",
+            }}
+          />
           <span>
             I authorise a one-time salary auto-debit of{" "}
-            <span style={{ color: colors.text }}>{preview ? formatMoney(preview.total) : formatMoney(amount)}</span>{" "}
+            <span style={{ color: colors.text }}>
+              {preview ? formatMoney(preview.total) : formatMoney(amount)}
+            </span>{" "}
             on my payday and accept the{" "}
-            <button type="button" onClick={() => onNavigate?.("legal")}
-              style={{ background: "none", border: "none", padding: 0, color: colors.text, textDecoration: "underline", textUnderlineOffset: 3, fontSize: "inherit", fontFamily: "inherit", cursor: "pointer" }}>
+            <button
+              type="button"
+              onClick={() => onNavigate?.("legal")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: colors.text,
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+                fontSize: "inherit",
+                fontFamily: "inherit",
+                cursor: "pointer",
+              }}
+            >
               advance terms
-            </button>.
+            </button>
+            .
           </span>
         </label>
 
         <div style={{ flex: 1 }} />
 
         {/* Confirm CTA */}
-        <button type="button" disabled={!canConfirm}
+        <button
+          type="button"
+          disabled={!canConfirm}
           onClick={async () => {
-            const requestDate = await onSubmit(purposeCategory ?? undefined, purposeNote.trim() || undefined);
-            if (requestDate !== null) { setSubmittedAt(requestDate); setStep("submitted"); }
+            const requestDate = await onSubmit(
+              purposeCategory ?? undefined,
+              purposeNote.trim() || undefined
+            );
+            if (requestDate !== null) {
+              setSubmittedAt(requestDate);
+              setStep("submitted");
+            }
           }}
-          style={{ width: "100%", height: 48, borderRadius: 12, background: canConfirm ? "#315eff" : colors.panelMuted, color: canConfirm ? "#fff" : colors.faint, border: 0, fontSize: 15, fontWeight: 500, opacity: canConfirm ? 1 : 0.5, cursor: canConfirm ? "pointer" : "not-allowed", letterSpacing: "-0.01em", boxShadow: canConfirm ? "0 6px 20px rgba(49,94,255,0.30)" : "none" }}>
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 12,
+            background: canConfirm ? "#315eff" : colors.panelMuted,
+            color: canConfirm ? "#fff" : colors.faint,
+            border: 0,
+            fontSize: 15,
+            fontWeight: 500,
+            opacity: canConfirm ? 1 : 0.5,
+            cursor: canConfirm ? "pointer" : "not-allowed",
+            letterSpacing: "-0.01em",
+            boxShadow: canConfirm ? "0 6px 20px rgba(49,94,255,0.30)" : "none",
+          }}
+        >
           {submitting ? "Confirming…" : `Confirm & get ${formatMoney(amount)}`}
         </button>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 10, color: colors.dim, fontSize: 12 }}>
-          <ShieldCheck size={13} strokeWidth={1.8} /> Employer-verified · repaid from salary
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            marginTop: 10,
+            color: colors.dim,
+            fontSize: 12,
+          }}
+        >
+          <ShieldCheck size={13} strokeWidth={1.8} /> Employer-verified · repaid
+          from salary
         </div>
       </div>
     );
@@ -2148,8 +2348,6 @@ export function AdvanceScreen({
           </div>
         </div>
       </div>
-
     </div>
   );
-
 }

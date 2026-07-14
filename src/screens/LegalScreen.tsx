@@ -7,9 +7,9 @@ type LegalScreenProps = {
 };
 
 const DARK = "#0C0C0E";
-const BORDER = "#26262B";
+const BORDER = "#29292F";
 const TEXT = "#F2F0EA";
-const MUTED = "#7C7C85";
+const MUTED = "#8A8892";
 const DIM = "#5C5C64";
 const PANEL = "#141418";
 const WARM = "#B4591F";
@@ -137,7 +137,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
             flexShrink: 0,
           }}
         >
-          <ChevronLeft size={22} strokeWidth={2.2} />
+          <ChevronLeft size={20} strokeWidth={2.2} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
@@ -243,7 +243,7 @@ export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
                     style={{
                       margin: 0,
                       color: colors.muted,
-                      fontSize: 13.5,
+                      fontSize: 14,
                       fontWeight: 500,
                       lineHeight: 1.65,
                     }}
