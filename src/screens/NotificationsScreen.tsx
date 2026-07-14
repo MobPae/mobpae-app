@@ -1,13 +1,11 @@
 import { ArrowLeft, Banknote, Bell, Check, CheckCheck, CreditCard, Info, Landmark, ShieldCheck } from "lucide-react";
 import type { AppNotification } from "../services/api";
-import type { Theme } from "../hooks/useTheme";
 
 type Props = {
   notifications: AppNotification[];
   onBack: () => void;
   onMarkRead: (id: string) => Promise<void>;
   onMarkAllRead: () => Promise<void>;
-  theme?: Theme;
 };
 
 function timeAgo(iso: string): string {
@@ -53,7 +51,7 @@ function groupByDate(notifications: AppNotification[]) {
   return map;
 }
 
-export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkAllRead, theme = "dark" }: Props) {
+export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkAllRead }: Props) {
   const sorted = [...notifications].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -61,7 +59,7 @@ export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkA
   const grouped = groupByDate(sorted);
 
   return (
-    <div className={`notif-screen notif-screen--${theme}`}>
+    <div className="notif-screen notif-screen--light">
       <header className="notif-topbar">
         <button type="button" className="notif-back" onClick={onBack} aria-label="Back">
           <ArrowLeft size={20} strokeWidth={2.25} />

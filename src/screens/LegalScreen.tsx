@@ -1,45 +1,23 @@
 import { ChevronLeft, FileText, Lock, Scale, Shield } from "lucide-react";
-import type { Theme } from "../hooks/useTheme";
 
 type LegalScreenProps = {
   onBack: () => void;
-  theme?: Theme;
 };
 
-const DARK = "#0C0C0E";
-const BORDER = "#29292F";
-const TEXT = "#F2F0EA";
-const MUTED = "#8A8892";
-const DIM = "#5C5C64";
-const PANEL = "#141418";
 const WARM = "#B4591F";
 
-function legalPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      bg: "#FFFFFF",
-      panel: "#FFFFFF",
-      panelSoft: "#F5F3FB",
-      border: "#E9E6F1",
-      text: "#17151F",
-      muted: "#6B6878",
-      dim: "#9A97A8",
-      rule: "#F1EEF7",
-      warm: WARM,
-      headerBg: "#FFFFFF",
-    };
-  }
+function legalPalette() {
   return {
-    bg: DARK,
-    panel: PANEL,
-    panelSoft: "#17171B",
-    border: BORDER,
-    text: TEXT,
-    muted: MUTED,
-    dim: DIM,
-    rule: "#1C1C20",
+    bg: "#FFFFFF",
+    panel: "#FFFFFF",
+    panelSoft: "#F5F3FB",
+    border: "#E9E6F1",
+    text: "#17151F",
+    muted: "#6B6878",
+    dim: "#9A97A8",
+    rule: "#F1EEF7",
     warm: WARM,
-    headerBg: DARK,
+    headerBg: "#FFFFFF",
   };
 }
 
@@ -98,8 +76,8 @@ const SECTIONS: DocSection[] = [
   },
 ];
 
-export function LegalScreen({ onBack, theme = "dark" }: LegalScreenProps) {
-  const colors = legalPalette(theme);
+export function LegalScreen({ onBack }: LegalScreenProps) {
+  const colors = legalPalette();
 
   return (
     <div

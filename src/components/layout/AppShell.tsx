@@ -3,7 +3,6 @@ import { Bell, Camera, ChevronLeft, ChevronRight, RefreshCw, User } from "lucide
 import { TabBar } from "./TabBar";
 import type { EmployeeProfile, View } from "../../types/app";
 import { useSignedUrl } from "../../hooks/useSignedUrl";
-import type { Theme } from "../../hooks/useTheme";
 
 type AppShellProps = {
   activeView: View;
@@ -15,7 +14,6 @@ type AppShellProps = {
   onNavigate: (view: View) => void;
   onBack?: () => void;
   uploadProfilePhoto?: (file: File) => void;
-  theme?: Theme;
 };
 
 const TAB_VIEWS: View[] = ["home", "advance", "repayments", "activity", "profile"];
@@ -28,31 +26,18 @@ const FULLSCREEN_DARK_VIEWS: View[] = [
   "legal",
 ];
 const HEADER_VIEWS: View[] = [...TAB_VIEWS, ...ONBOARDING_VIEWS];
-const DARK_SURFACE = "#0C0C0E";
 const LIGHT_SURFACE = "#FFFFFF";
 
-const themePalette = {
-  dark: {
-    bg: DARK_SURFACE,
-    text: "#F2F0EA",
-    muted: "#8A8892",
-    dim: "#7C7C85",
-    border: "#26262B",
-    iconBg: DARK_SURFACE,
-    avatarBorder: "#3A3A40",
-    unread: "#B4591F",
-  },
-  light: {
-    bg: LIGHT_SURFACE,
-    text: "#17151F",
-    muted: "#6B6878",
-    dim: "#9A97A8",
-    border: "#E9E6F1",
-    iconBg: LIGHT_SURFACE,
-    avatarBorder: "#E2DEEE",
-    unread: "#B4591F",
-  },
-} satisfies Record<Theme, Record<string, string>>;
+const palette = {
+  bg: LIGHT_SURFACE,
+  text: "#17151F",
+  muted: "#6B6878",
+  dim: "#9A97A8",
+  border: "#E9E6F1",
+  iconBg: LIGHT_SURFACE,
+  avatarBorder: "#E2DEEE",
+  unread: "#B4591F",
+};
 
 function getInitials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]?.toUpperCase() ?? "").join("");
@@ -76,7 +61,7 @@ function getHeaderTitle(view: View) {
 
 // Bare icon button — no background, no border pill.
 // Matches the ChangePasswordScreen icon button style for consistency.
-function iconButtonStyle(palette: (typeof themePalette)[Theme]): CSSProperties {
+function iconButtonStyle(palette: { text: string }): CSSProperties {
   return {
     background: "transparent",
     border: 0,
@@ -91,21 +76,151 @@ function iconButtonStyle(palette: (typeof themePalette)[Theme]): CSSProperties {
 
 export function AppShell({
   activeView, children, profile, unreadCount, refreshing, onRefresh, onNavigate, onBack, uploadProfilePhoto,
-  theme = "dark",
 }: AppShellProps) {
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const profilePhotoUrl = useSignedUrl(profile.profilePhotoUrl);
 
+  // ── Pull-to-refresh ──────────────────────────────────────────────────────
+  const PULL_THRESHOLD = 64;
+  const PULL_MAX = 90;
+  const [pullDistance, setPullDistance] = useState(0);
+  const [pullActive, setPullActive] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const pullDistanceRef = useRef(0);
+  const pullActiveRef = useRef(false);
+
+  useEffect(() => {
+    pullActiveRef.current = pullActive;
+  }, [pullActive]);
+
+  useEffect(() => {
+    if (!refreshing && pullActive) {
+      setPullActive(false);
+      setPullDistance(0);
+      pullDistanceRef.current = 0;
+    }
+  }, [refreshing, pullActive]);
+
+  // ── Edge-swipe to go back (iOS-style: drag in from the left edge) ──────────
+  const SWIPE_EDGE_ZONE = 28;
+  const SWIPE_THRESHOLD = 70;
+  const SWIPE_MAX = 110;
+  const [swipeX, setSwipeX] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const gestureDir = useRef<"none" | "vertical" | "horizontal">("none");
+  // Tracks live values independent of React's state batching, so the native
+  // (non-passive) listeners below always read up-to-the-moment numbers
+  // instead of a stale value captured in an earlier render's closure.
+  const swipeXRef = useRef(0);
+
+  const goBack = () => (onBack ?? (() => onNavigate("home")))();
+
+  // Attached as native, non-passive listeners (not React's onTouch* props,
+  // which React marks passive by default) so preventDefault() actually stops
+  // the browser's own vertical rubber-band/scroll from fighting the drag —
+  // that fight is what made the gesture feel diagonal/jumpy instead of a
+  // clean, straight horizontal slide.
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+    const canSwipeBack = activeView !== "home";
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      gestureDir.current = "none";
+      touchStartY.current = body.scrollTop === 0 && !pullActiveRef.current ? touch.clientY : null;
+      touchStartX.current = canSwipeBack && touch.clientX <= SWIPE_EDGE_ZONE ? touch.clientX : null;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+
+      if (gestureDir.current === "none") {
+        const dx = touchStartX.current != null ? touch.clientX - touchStartX.current : 0;
+        const dy = touchStartY.current != null ? touch.clientY - touchStartY.current : 0;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+          gestureDir.current =
+            touchStartX.current != null && Math.abs(dx) > Math.abs(dy) && dx > 0 ? "horizontal" : "vertical";
+        }
+      }
+
+      if (gestureDir.current === "horizontal" && touchStartX.current != null) {
+        e.preventDefault();
+        const dx = touch.clientX - touchStartX.current;
+        if (dx > 0) {
+          const next = Math.min(SWIPE_MAX, dx);
+          swipeXRef.current = next;
+          setSwiping(true);
+          setSwipeX(next);
+        }
+        return;
+      }
+
+      if (touchStartY.current == null || pullActiveRef.current) return;
+      if (body.scrollTop > 0) {
+        touchStartY.current = null;
+        pullDistanceRef.current = 0;
+        setPullDistance(0);
+        return;
+      }
+      const delta = touch.clientY - touchStartY.current;
+      if (delta <= 0) {
+        pullDistanceRef.current = 0;
+        setPullDistance(0);
+        return;
+      }
+      e.preventDefault();
+      const next = Math.min(PULL_MAX, delta * 0.5);
+      pullDistanceRef.current = next;
+      setPullDistance(next);
+    };
+
+    const onTouchEnd = () => {
+      if (gestureDir.current === "horizontal") {
+        const committed = swipeXRef.current >= SWIPE_THRESHOLD;
+        swipeXRef.current = 0;
+        touchStartX.current = null;
+        gestureDir.current = "none";
+        setSwiping(false);
+        setSwipeX(0);
+        if (committed) goBack();
+        return;
+      }
+
+      if (touchStartY.current == null) return;
+      touchStartY.current = null;
+      if (pullDistanceRef.current >= PULL_THRESHOLD) {
+        setPullActive(true);
+        setPullDistance(PULL_THRESHOLD);
+        onRefresh();
+      } else {
+        setPullDistance(0);
+      }
+    };
+
+    body.addEventListener("touchstart", onTouchStart, { passive: true });
+    body.addEventListener("touchmove", onTouchMove, { passive: false });
+    body.addEventListener("touchend", onTouchEnd, { passive: true });
+    body.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      body.removeEventListener("touchstart", onTouchStart);
+      body.removeEventListener("touchmove", onTouchMove);
+      body.removeEventListener("touchend", onTouchEnd);
+      body.removeEventListener("touchcancel", onTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView]);
+
   const isOnboarding = ONBOARDING_VIEWS.includes(activeView);
   const isFullscreenDark = FULLSCREEN_DARK_VIEWS.includes(activeView);
   const isTabView = HEADER_VIEWS.includes(activeView);
   const isHome = activeView === "home";
-  const palette = themePalette[theme];
   const themedIconButton = iconButtonStyle(palette);
-  const rootClassName = `app-root app-root--${theme}`;
-  const shellClassName = `phone-shell phone-shell--${theme}`;
+  const rootClassName = "app-root app-root--light";
+  const shellClassName = "phone-shell phone-shell--light";
 
   useEffect(() => {
     const body = bodyRef.current;
@@ -135,19 +250,22 @@ export function AppShell({
   return (
     <div
       className={rootClassName}
-      data-theme={theme}
       style={{
         background: palette.bg,
       }}
     >
       <div
         className={shellClassName}
-        data-theme={theme}
         style={{
           background: palette.bg,
         }}
       >
 
+        {/* ── Swipe layer: header + screen body slide together as one screen ── */}
+        <div
+          className={swiping ? "shell-swipe-layer shell-swipe-layer--dragging" : "shell-swipe-layer"}
+          style={{ transform: swipeX ? `translateX(${swipeX}px)` : undefined }}
+        >
         {/* ── Shared app header ── */}
         {isTabView && (
           <div
@@ -289,11 +407,27 @@ export function AppShell({
             overscrollBehaviorY: "contain",
           }}
         >
+          <div
+            className="ptr-indicator"
+            style={{
+              height: pullDistance,
+              opacity: Math.min(1, pullDistance / PULL_THRESHOLD),
+            }}
+          >
+            <RefreshCw
+              size={18}
+              color={palette.text}
+              className={pullActive ? "spin" : ""}
+              strokeWidth={2}
+              style={pullActive ? undefined : { transform: `rotate(${pullDistance * 3}deg)` }}
+            />
+          </div>
           {children}
+        </div>
         </div>
 
         {!isOnboarding && !isFullscreenDark && (
-          <TabBar activeView={activeView} onChange={onNavigate} theme={theme} />
+          <TabBar activeView={activeView} onChange={onNavigate} />
         )}
 
         {/* ── Profile bottom sheet ── */}

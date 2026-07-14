@@ -1,63 +1,39 @@
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 
-type Theme = "dark" | "light";
-
 type Props = {
   onBack: () => void;
   onForgotPassword: (email: string) => Promise<void>;
-  theme?: Theme;
 };
 
-function recoveryPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      BACK_BG:      "rgba(0,0,0,0.06)",
-      BACK_ICON:    "#191A2E",
-      TITLE:        "#191A2E",
-      SUB:          "#62657A",
-      STRONG:       "#191A2E",
-      ICON_BG:      "rgba(49,94,255,0.10)",
-      ICON_BORDER:  "rgba(49,94,255,0.22)",
-      ICON_STROKE:  "#315eff",
-      LABEL:        "#6B6878",
-      INPUT_BG:     "#FFFFFF",
-      INPUT_COLOR:  "#191A2E",
-      INPUT_BORDER: "#E4E4EF",
-      INPUT_FOCUS:  "#315eff",
-      ACCENT:       "#315eff",
-      ACCENT_DIS:   "rgba(49,94,255,0.45)",
-      ERROR:        "#EF4444",
-      BACK_LINK:    "#315eff",
-    };
-  }
+function recoveryPalette() {
   return {
-    BACK_BG:      "rgba(255,255,255,0.08)",
-    BACK_ICON:    "#F2F0EA",
-    TITLE:        "#F2F0EA",
-    SUB:          "#7C7C85",
-    STRONG:       "#F2F0EA",
-    ICON_BG:      "rgba(49,94,255,0.14)",
-    ICON_BORDER:  "rgba(49,94,255,0.32)",
-    ICON_STROKE:  "#7B9FFF",
-    LABEL:        "#8A8892",
-    INPUT_BG:     "#141418",
-    INPUT_COLOR:  "#F2F0EA",
-    INPUT_BORDER: "#29292F",
+    BACK_BG:      "rgba(0,0,0,0.06)",
+    BACK_ICON:    "#191A2E",
+    TITLE:        "#191A2E",
+    SUB:          "#62657A",
+    STRONG:       "#191A2E",
+    ICON_BG:      "rgba(49,94,255,0.10)",
+    ICON_BORDER:  "rgba(49,94,255,0.22)",
+    ICON_STROKE:  "#315eff",
+    LABEL:        "#6B6878",
+    INPUT_BG:     "#FFFFFF",
+    INPUT_COLOR:  "#191A2E",
+    INPUT_BORDER: "#E4E4EF",
     INPUT_FOCUS:  "#315eff",
     ACCENT:       "#315eff",
     ACCENT_DIS:   "rgba(49,94,255,0.45)",
     ERROR:        "#EF4444",
-    BACK_LINK:    "#7B9FFF",
+    BACK_LINK:    "#315eff",
   };
 }
 
-export function ForgotPasswordScreen({ onBack, onForgotPassword, theme = "light" }: Props) {
+export function ForgotPasswordScreen({ onBack, onForgotPassword }: Props) {
   const [email,   setEmail]   = useState("");
   const [loading, setLoading] = useState(false);
   const [sent,    setSent]    = useState(false);
   const [error,   setError]   = useState("");
-  const p = recoveryPalette(theme);
+  const p = recoveryPalette();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

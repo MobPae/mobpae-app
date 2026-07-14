@@ -1,66 +1,32 @@
 import { CheckCircle2, CreditCard, ShieldCheck, Landmark } from "lucide-react";
 import type { AdvanceRequest, BankAccount, View } from "../types/app";
 import { formatMoney } from "../utils/format";
-import type { Theme } from "../hooks/useTheme";
 
 type RepaymentScheduleScreenProps = {
   requests: AdvanceRequest[];
   bankAccount?: BankAccount | null;
   onNavigate: (view: View) => void;
-  theme?: Theme;
 };
 
-const DARK = "#0C0C0E";
-const PANEL = "#17171B";
-const PANEL_SOFT = "#141418";
-const BORDER = "#29292F";
-const TEXT = "#F2F0EA";
-const MUTED = "#8A8892";
-const DIM = "#5C5C64";
-const WARM = "#B4591F";
-const GREEN = "#20A46A";
-
-function repaymentPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      bg: "#FFFFFF",
-      panel: "#FFFFFF",
-      panelSoft: "#F5F3FB",
-      border: "#E9E6F1",
-      text: "#17151F",
-      muted: "#6B6878",
-      dim: "#9A97A8",
-      warm: "#B4591F",
-      green: "#1F9E67",
-      rule: "#F1EEF7",
-      progressTrack: "#EEEBF6",
-      progressFill: "#315eff",
-      paperBg: "#F1EDFC",
-      paperInk: "#1E1636",
-      paperMuted: "#6E6786",
-      paperRule: "#DCD5F2",
-      shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
-    };
-  }
-
+function repaymentPalette() {
   return {
-    bg: DARK,
-    panel: PANEL,
-    panelSoft: PANEL_SOFT,
-    border: BORDER,
-    text: TEXT,
-    muted: MUTED,
-    dim: DIM,
-    warm: WARM,
-    green: GREEN,
-    rule: BORDER,
-    progressTrack: "#29292F",
-    progressFill: TEXT,
-    paperBg: "#F4F1E8",
-    paperInk: "#11100D",
-    paperMuted: "#928D82",
-    paperRule: "#D9D2C0",
-    shadow: "0 22px 52px rgba(0,0,0,0.28)",
+    bg: "#FFFFFF",
+    panel: "#FFFFFF",
+    panelSoft: "#F5F3FB",
+    border: "#E9E6F1",
+    text: "#17151F",
+    muted: "#6B6878",
+    dim: "#9A97A8",
+    warm: "#B4591F",
+    green: "#1F9E67",
+    rule: "#F1EEF7",
+    progressTrack: "#EEEBF6",
+    progressFill: "#315eff",
+    paperBg: "#F1EDFC",
+    paperInk: "#1E1636",
+    paperMuted: "#6E6786",
+    paperRule: "#DCD5F2",
+    shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
   };
 }
 
@@ -174,9 +140,8 @@ function EmptyRepayment({ colors }: { colors: ReturnType<typeof repaymentPalette
 export function RepaymentScheduleScreen({
   requests,
   bankAccount,
-  theme = "dark",
 }: RepaymentScheduleScreenProps) {
-  const colors = repaymentPalette(theme);
+  const colors = repaymentPalette();
   const DARK = colors.bg;
   const PANEL = colors.panel;
   const BORDER = colors.border;

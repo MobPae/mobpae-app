@@ -2,12 +2,10 @@ import { ArrowDownToLine, ArrowUpFromLine, Clock, Clock3, XCircle } from "lucide
 import { useMemo, useState } from "react";
 import type { AdvanceRequest, BankAccount } from "../types/app";
 import { formatMoney, formatRequestStatus } from "../utils/format";
-import type { Theme } from "../hooks/useTheme";
 
 type ActivityScreenProps = {
   requests: AdvanceRequest[];
   bankAccount?: BankAccount | null;
-  theme?: Theme;
 };
 
 type Tab = "all" | "advances" | "repayments";
@@ -26,48 +24,21 @@ type ActivityEvent = {
   status?: string;
 };
 
-const DARK = "#0C0C0E";
-const PANEL_SOFT = "#141418";
-const BORDER = "#29292F";
-const TEXT = "#F2F0EA";
-const MUTED = "#8A8892";
-const DIM = "#5C5C64";
-const GREEN = "#20A46A";
-const WARM = "#B4591F";
-
-function activityPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      bg: "#FFFFFF",
-      panel: "#FFFFFF",
-      panelSoft: "#F5F3FB",
-      border: "#E9E6F1",
-      rule: "#F1EEF7",
-      text: "#17151F",
-      muted: "#6B6878",
-      dim: "#9A97A8",
-      activeBg: "#315eff",
-      activeText: "#FFFFFF",
-      green: "#1F9E67",
-      warm: "#B4591F",
-      shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
-    };
-  }
-
+function activityPalette() {
   return {
-    bg: DARK,
-    panel: "rgba(20,20,24,0.72)",
-    panelSoft: PANEL_SOFT,
-    border: BORDER,
-    rule: "#1D1D21",
-    text: TEXT,
-    muted: MUTED,
-    dim: DIM,
-    activeBg: "#F4F1E8",
-    activeText: "#11100D",
-    green: GREEN,
-    warm: WARM,
-    shadow: "none",
+    bg: "#FFFFFF",
+    panel: "#FFFFFF",
+    panelSoft: "#F5F3FB",
+    border: "#E9E6F1",
+    rule: "#F1EEF7",
+    text: "#17151F",
+    muted: "#6B6878",
+    dim: "#9A97A8",
+    activeBg: "#315eff",
+    activeText: "#FFFFFF",
+    green: "#1F9E67",
+    warm: "#B4591F",
+    shadow: "0 30px 80px -30px rgba(30,22,54,0.14)",
   };
 }
 
@@ -262,9 +233,9 @@ function ActivityIcon({
   );
 }
 
-export function ActivityScreen({ requests, bankAccount, theme = "dark" }: ActivityScreenProps) {
+export function ActivityScreen({ requests, bankAccount }: ActivityScreenProps) {
   const [tab, setTab] = useState<Tab>("all");
-  const colors = activityPalette(theme);
+  const colors = activityPalette();
 
   const allEvents = useMemo(
     () =>

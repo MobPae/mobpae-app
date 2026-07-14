@@ -1,27 +1,17 @@
 import { Archive, Clock3, CreditCard, Home, UserRound } from "lucide-react";
 import type { View } from "../../types/app";
-import type { Theme } from "../../hooks/useTheme";
 
 type TabBarProps = {
   activeView: View;
   onChange: (view: View) => void;
-  theme?: Theme;
 };
 
-const palette = {
-  dark: {
-    bg: "#0C0C0E",
-    topLine: "#1E1E22",
-    active: "#315eff",
-    inactive: "#FFFFFF",
-  },
-  light: {
-    bg: "#FFFFFF",
-    topLine: "#E8E6F0",
-    active: "#315eff",
-    inactive: "#111111",
-  },
-} satisfies Record<Theme, Record<string, string>>;
+const colors = {
+  bg: "#FFFFFF",
+  topLine: "#E8E6F0",
+  active: "#315eff",
+  inactive: "#111111",
+};
 
 const tabs: Array<{ id: View; label: string; icon: typeof Home }> = [
   { id: "home",       label: "Home",     icon: Home       },
@@ -31,8 +21,7 @@ const tabs: Array<{ id: View; label: string; icon: typeof Home }> = [
   { id: "profile",    label: "Profile",  icon: UserRound  },
 ];
 
-export function TabBar({ activeView, onChange, theme = "dark" }: TabBarProps) {
-  const colors = palette[theme];
+export function TabBar({ activeView, onChange }: TabBarProps) {
 
   const isActive = (id: View) =>
     activeView === id ||

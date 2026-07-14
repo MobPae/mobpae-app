@@ -41,7 +41,6 @@ import type {
   RecoveryPreview,
   View,
 } from "../types/app";
-import type { Theme } from "../hooks/useTheme";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -121,7 +120,6 @@ type AdvanceScreenProps = {
   blockerActionLabel: string;
   onResolveBlocker: () => void;
   onNavigate?: (view: View) => void;
-  theme?: Theme;
 };
 
 type AdvanceStep = "ready" | "calculator" | "review" | "submitted";
@@ -136,46 +134,26 @@ function compactBankLabel(bankAccount?: BankAccount | null) {
   } ···· ${bankAccount.accountNumber.slice(-4)}`;
 }
 
-// ── Theme palette ─────────────────────────────────────────────────────────────
+// ── Palette ────────────────────────────────────────────────────────────────────
 
-function advancePalette(theme: "light" | "dark") {
-  if (theme === "light") {
-    return {
-      bg: "#FFFFFF",
-      text: "#17151F",
-      muted: "#6B6878",
-      dim: "#9A97A8",
-      faint: "#B6B3C2",
-      border: "#E9E6F1",
-      panel: "#FFFFFF",
-      panelSoft: "#F7F5FC",
-      panelMuted: "#EEEBF6",
-      receiptBg: "#EEF2FF",
-      receiptInk: "#0F1740",
-      receiptMuted: "#5A6BAA",
-      receiptSubtle: "#8294C4",
-      receiptDash: "#C4D0F5",
-      warm: "#B4591F",
-      green: "#1F9E67",
-    };
-  }
+function advancePalette() {
   return {
-    bg: "#0C0C0E",
-    text: "#F2F0EA",
-    muted: "#8A8892",
-    dim: "#7C7C85",
-    faint: "#5C5C64",
-    border: "#29292F",
-    panel: "#151519",
-    panelSoft: "#17171B",
-    panelMuted: "#2A2A30",
-    receiptBg: "#F4F1E8",
-    receiptInk: "#17150F",
-    receiptMuted: "#8A8676",
-    receiptSubtle: "#4A473C",
-    receiptDash: "#D8D3C2",
+    bg: "#FFFFFF",
+    text: "#17151F",
+    muted: "#6B6878",
+    dim: "#9A97A8",
+    faint: "#B6B3C2",
+    border: "#E9E6F1",
+    panel: "#FFFFFF",
+    panelSoft: "#F7F5FC",
+    panelMuted: "#EEEBF6",
+    receiptBg: "#EEF2FF",
+    receiptInk: "#0F1740",
+    receiptMuted: "#5A6BAA",
+    receiptSubtle: "#8294C4",
+    receiptDash: "#C4D0F5",
     warm: "#B4591F",
-    green: "#20A46A",
+    green: "#1F9E67",
   };
 }
 
@@ -360,7 +338,6 @@ export function AdvanceScreen({
   onCancelRequest,
   cancellingRequest,
   onNavigate,
-  theme = "dark",
 }: AdvanceScreenProps) {
   const [step, setStep] = useState<AdvanceStep>("ready");
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
@@ -370,7 +347,7 @@ export function AdvanceScreen({
   const [editingAmount, setEditingAmount] = useState(false);
   const [rawInput, setRawInput] = useState("");
   const amountInputRef = useRef<HTMLInputElement>(null);
-  const colors = advancePalette(theme);
+  const colors = advancePalette();
 
   const startAmountEdit = () => {
     setRawInput(String(amount));
@@ -474,10 +451,8 @@ export function AdvanceScreen({
       const canPay =
         feeAmount > 0 && Boolean(onPayPlatformFee) && !payingPlatformFee;
       const accent = "#315eff";
-      const accentSoft =
-        theme === "light" ? "rgba(49,94,255,0.06)" : "rgba(49,94,255,0.1)";
-      const accentBorder =
-        theme === "light" ? "rgba(49,94,255,0.14)" : "rgba(49,94,255,0.22)";
+      const accentSoft = "rgba(49,94,255,0.06)";
+      const accentBorder = "rgba(49,94,255,0.14)";
 
       const benefits = ["Zero processing fees", "Auto-recovery on payday"];
 
@@ -669,10 +644,7 @@ export function AdvanceScreen({
                 fontFamily: "inherit",
                 cursor: canPay ? "pointer" : "not-allowed",
                 letterSpacing: "-0.01em",
-                boxShadow:
-                  canPay && theme === "light"
-                    ? "0 6px 20px rgba(49,94,255,0.28)"
-                    : "none",
+                boxShadow: canPay ? "0 6px 20px rgba(49,94,255,0.28)" : "none",
               }}
             >
               {payingPlatformFee

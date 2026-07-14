@@ -228,8 +228,6 @@ type BackendEmployeeMe = EmployeeDashboard & {
   payrollDate?: number; // backend field name (maps to payrollDay)
   kycStatus?: string; // e.g. "NOT_SUBMITTED", "SUBMITTED", "VERIFIED"
   bankAccountStatus?: string; // e.g. "NOT_ADDED", "PENDING", "VERIFIED"
-  selfieStatus?: string; // "PENDING" | "VERIFIED" | "REJECTED"
-  selfieUrl?: string;
   profilePhotoUrl?: string;
   dashboard?: EmployeeDashboard;
   employee?: Partial<BackendEmployeeMe>;
@@ -720,14 +718,6 @@ const normalizeEmployeeMe = (employeeMe: BackendEmployeeMe) => {
     kycStatus: employeeMe.kycStatus,
     bankAccountStatus: employeeMe.bankAccountStatus,
     appActivated: employeeMe.appActivated,
-    selfieStatus: (employeeMe.selfieStatus ??
-      (employee as BackendEmployeeMe).selfieStatus) as
-      | "PENDING"
-      | "VERIFIED"
-      | "REJECTED"
-      | undefined,
-    selfieUrl:
-      employeeMe.selfieUrl ?? (employee as BackendEmployeeMe).selfieUrl,
     profilePhotoUrl:
       employeeMe.profilePhotoUrl ??
       (employee as BackendEmployeeMe).profilePhotoUrl,
@@ -891,8 +881,6 @@ export const employeeApi = {
         kycStatus,
         bankAccountStatus,
         appActivated,
-        selfieStatus,
-        selfieUrl,
         profilePhotoUrl,
       } = normalizeEmployeeMe(employeeMe);
 
@@ -1025,8 +1013,6 @@ export const employeeApi = {
           // appActivated is the definitive "account is live" flag from the new API shape
           accountActive: appActivated ?? employee.accountActive ?? false,
           salaryLimit,
-          selfieStatus,
-          selfieUrl,
           profilePhotoUrl,
         },
         dashboard: dashboardData,
@@ -1214,52 +1200,6 @@ export const employeeApi = {
       );
 
     return filePath;
-  },
-
-  async uploadSelfie(file: File): Promise<{
-    selfieUrl?: string;
-    selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED";
-  }> {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    let res: Response;
-    try {
-      res = await fetchWithAuth("/employees/selfie", {
-        method: "POST",
-        body: formData,
-      });
-    } catch {
-      throw new ApiError(
-        "Could not reach the server. Please check your connection."
-      );
-    }
-
-    if (!res.ok) {
-      let msg = `Selfie upload failed (${res.status}).`;
-      try {
-        const body = (await res.json()) as { message?: string | string[] };
-        if (Array.isArray(body.message)) msg = body.message.join(" ");
-        else if (body.message) msg = body.message;
-      } catch {
-        /* ignore */
-      }
-      if (res.status === 413)
-        msg =
-          "Selfie is too large. Please capture again or choose a smaller image.";
-      if (res.status === 415)
-        msg = "Unsupported file type. Please upload a JPG, PNG or WebP image.";
-      if (res.status === 401) {
-        notifySessionExpired();
-        msg = "Your session has expired. Please log in again.";
-      }
-      throw new ApiError(msg, res.status);
-    }
-
-    return res.json() as Promise<{
-      selfieUrl?: string;
-      selfieStatus?: "PENDING" | "VERIFIED" | "REJECTED";
-    }>;
   },
 
   async submitSalaryAdvance(

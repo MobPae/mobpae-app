@@ -182,6 +182,33 @@ a {
   background: #fafaf8;
   animation: screenFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ── Pull-to-refresh indicator ──────────────────────────────── */
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ── Edge-swipe-to-go-back layer ──────────────────────────────── */
+.shell-swipe-layer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+  touch-action: pan-y;
+}
+.shell-swipe-layer--dragging {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell-swipe-layer {
+    transition: none;
+  }
+}
 @keyframes screenFadeIn {
   from {
     opacity: 0;
@@ -225,9 +252,6 @@ button:focus-visible {
   border-radius: 8px;
   background: rgba(20, 20, 30, 0.08);
 }
-.phone-shell--dark .skel-block {
-  background: rgba(255, 255, 255, 0.07);
-}
 .skel-block::after {
   content: "";
   position: absolute;
@@ -240,14 +264,6 @@ button:focus-visible {
     transparent
   );
   animation: skelShimmer 1.5s ease-in-out infinite;
-}
-.phone-shell--dark .skel-block::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
 }
 @keyframes skelShimmer {
   100% {
@@ -8181,338 +8197,12 @@ button,
 
 /* Dark redesign shell: keep this last so legacy light override layers cannot
    show through during iOS pull/scroll bounce. */
-.app-root.app-root--dark,
-.app-root.app-root--dark .phone-shell,
-.phone-shell.phone-shell--dark,
-.phone-shell.phone-shell--dark .screen-body,
-.phone-shell.phone-shell--dark .screen-body-onboarding,
-.phone-shell.phone-shell--dark .adv-screen,
-.phone-shell.phone-shell--dark .adv-active-body,
-.phone-shell.phone-shell--dark .adv-inprogress-body {
-  background: #0c0c0e !important;
-}
 
 /* "How we calculate" breakdown text was still hardcoded near-black via the
    "FINAL MOBILE RULEBOOK PASS" !important rules, making it unreadable against
    the dark background above. Needs !important to win over that pass. */
-.phone-shell.phone-shell--dark .adv-calc-head h2,
-.phone-shell.phone-shell--dark .adv-calc-row strong,
-.phone-shell.phone-shell--dark .adv-calc-total strong,
-.phone-shell.phone-shell--dark .adv-calc-row b,
-.phone-shell.phone-shell--dark .adv-calc-total b {
-  color: #f2f0ea !important;
-}
-.phone-shell.phone-shell--dark .adv-calc-total {
-  border-top-color: #26262b;
-}
-
-.phone-shell.phone-shell--dark .screen-body,
-.phone-shell.phone-shell--dark .screen-body-onboarding {
-  overscroll-behavior-y: contain;
-}
 
 /* Advance review confirmation sheet */
-.phone-shell.phone-shell--dark .adv-sheet--auto {
-  max-height: 92%;
-  background: #151519 !important;
-  border: 1px solid #26262b;
-  border-bottom: 0;
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -22px 60px rgba(0, 0, 0, 0.58);
-  color: #f2f0ea;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-}
-
-.phone-shell.phone-shell--dark .adv-sheet-drag {
-  padding: 12px 22px 8px;
-}
-
-.phone-shell.phone-shell--dark .adv-sheet-pill {
-  background: #3a3a40;
-}
-
-.phone-shell.phone-shell--dark .adv-sheet-x {
-  top: 10px;
-  right: 22px;
-  width: 42px;
-  height: 42px;
-  border-color: #303036;
-  background: #17171b;
-  color: #a0a0a8;
-  font-size: 22px;
-  font-weight: 400;
-}
-
-.phone-shell.phone-shell--dark .adv-sheet-kicker {
-  padding: 8px 22px 0;
-  color: #8a8892;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-}
-
-.phone-shell.phone-shell--dark .adv-sheet-hdr {
-  padding: 10px 22px 18px;
-  border-bottom: 0;
-  color: #f2f0ea;
-  font-size: 19px;
-  font-weight: 450;
-  letter-spacing: -0.03em;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt {
-  position: relative;
-  margin: 0 22px 16px;
-  padding: 22px 22px 20px;
-  border-radius: 20px;
-  background: #f4f1e8;
-  color: #17150f;
-  overflow: hidden;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt::before,
-.phone-shell.phone-shell--dark .adv-rc-receipt::after {
-  content: "";
-  position: absolute;
-  left: -12px;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: #151519;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt::before {
-  top: 124px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt::after {
-  bottom: 48px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt-head,
-.phone-shell.phone-shell--dark .adv-rc-line,
-.phone-shell.phone-shell--dark .adv-rc-total {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt-head {
-  margin-bottom: 22px;
-  color: #8a8676;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
-  font-size: 12px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-receipt-head span:first-child {
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-line {
-  font-size: 15px;
-  font-weight: 550;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-line strong,
-.phone-shell.phone-shell--dark .adv-rc-total strong {
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
-  font-weight: 450;
-  letter-spacing: -0.04em;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-line strong {
-  font-size: 16px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-warm {
-  color: #b4591f;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-dash {
-  margin: 16px 0;
-  border-top: 1px dashed #d8d3c2;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-total {
-  align-items: flex-end;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-total span {
-  display: grid;
-  gap: 4px;
-  color: #4a473c;
-  font-size: 15px;
-  font-weight: 450;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-total small {
-  color: #8a8676;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-total strong {
-  color: #17150f;
-  font-size: 22px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-rails {
-  margin: 0 22px 18px;
-  border: 1px solid #29292f;
-  border-radius: 18px;
-  overflow: hidden;
-  background: #141418;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-rail {
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid #29292f;
-  color: #f2f0ea;
-  font-size: 15px;
-  font-weight: 450;
-  line-height: 1.28;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-rail:last-child {
-  border-bottom: 0;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-rail small {
-  display: block;
-  margin-bottom: 4px;
-  color: #7c7c85;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-rail-icon {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #303036;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: #f2f0ea;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-cycle {
-  margin: -4px 22px 16px;
-  padding: 10px 12px;
-  border: 1px solid #303036;
-  border-radius: 14px;
-  background: #17171b;
-  color: #a0a0a8;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-cycle.is-next-cycle {
-  background: rgba(180, 89, 31, 0.13);
-  border-color: rgba(180, 89, 31, 0.38);
-  color: #d08b62;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-consent-row {
-  margin: 0 22px 18px;
-  display: grid;
-  grid-template-columns: 22px 1fr;
-  gap: 12px;
-  color: #a0a0a8;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.55;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-consent-row input {
-  width: 20px;
-  height: 20px;
-  margin-top: 1px;
-  accent-color: #f2f0ea;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-consent-row strong,
-.phone-shell.phone-shell--dark .adv-rc-consent-row a {
-  color: #f2f0ea;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-consent-row a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-footer {
-  padding: 0 22px 0;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-confirm {
-  width: 100%;
-  height: 60px;
-  border-radius: 18px;
-  background: #f2f0ea;
-  color: #0c0c0e;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px 0 24px;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-confirm:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.phone-shell.phone-shell--dark .adv-rc-confirm svg {
-  width: 44px;
-  height: 44px;
-  padding: 12px;
-  border-radius: 14px;
-  background: #0c0c0e;
-  color: #f2f0ea;
-}
-
-.phone-shell.phone-shell--dark .adv-sheet-backdrop {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 500 !important;
-  background: rgba(0, 0, 0, 0.72) !important;
-}
-
-.phone-shell.phone-shell--dark .adv-sheet.adv-sheet--auto {
-  position: fixed !important;
-  top: 128px !important;
-  right: auto !important;
-  bottom: 0 !important;
-  left: 50% !important;
-  width: min(390px, 100vw) !important;
-  max-height: none !important;
-  height: auto !important;
-  transform: translateX(-50%) !important;
-  animation: none !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  z-index: 501 !important;
-}
-
-@media (max-width: 480px) {
-  .phone-shell.phone-shell--dark .adv-sheet.adv-sheet--auto {
-    left: 0 !important;
-    width: 100vw !important;
-    transform: none !important;
-  }
-}
 
 @keyframes profilePhotoUploadSlide {
   0% {
@@ -8528,10 +8218,6 @@ button,
 }
 
 /* Membership payment flow v2 */
-.phone-shell.phone-shell--dark .screen-body.screen-body--fullscreen {
-  padding-bottom: 0 !important;
-  background: #0c0c0e !important;
-}
 
 .memv2-status-row strong.is-warning {
   color: #e28b45;
@@ -10104,42 +9790,9 @@ button,
 }
 
 /* Dark redesign fixes: keep redesigned subpages out of the legacy light shell. */
-.phone-shell--dark,
-.phone-shell--dark .screen-body,
-.phone-shell--dark .screen-body--fullscreen,
-.phone-shell--dark .prof-screen--full-dark {
-  background: #0c0c0e !important;
-}
-
-.phone-shell--dark .prof-screen--full-dark .kycv2-screen {
-  min-height: auto;
-  padding-top: 14px;
-  background: radial-gradient(
-      circle at 50% 4%,
-      rgba(255, 255, 255, 0.035),
-      transparent 32%
-    ),
-    #0c0c0e !important;
-}
 
 .kycv2-screen--profile {
   padding-bottom: 34px;
-}
-
-.profile-v2-theme-chip {
-  min-height: 28px;
-  min-width: 54px;
-  border: 1px solid #29292f;
-  border-radius: 999px;
-  background: rgba(20, 20, 24, 0.86);
-  color: #f2f0ea;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
 }
 
 .profile-v2-row:last-child {
@@ -10168,10 +9821,6 @@ html[data-theme="light"] body {
 
 .app-root--light .boot-screen {
   background: #ffffff !important;
-}
-
-.app-root--dark .boot-screen {
-  background: #0c0c0e !important;
 }
 
 .phone-shell--light .screen-body,
@@ -10510,101 +10159,15 @@ html[data-theme="light"] body {
 /* ============================================================
    DARK THEME — psheet (profile bottom sheet)
    ============================================================ */
-.phone-shell--dark .psheet {
-  background: #151517 !important;
-}
-.phone-shell--dark .psheet-handle {
-  background: #2e2e34 !important;
-}
-.phone-shell--dark .psheet-name {
-  color: #f2f0ea !important;
-}
-.phone-shell--dark .psheet-meta {
-  color: #7c7c85 !important;
-}
-.phone-shell--dark .psheet-avatar-hint {
-  color: #5c5c64 !important;
-}
-.phone-shell--dark .psheet-actions {
-  background: #1a1a1e !important;
-  border-color: #26262b !important;
-}
-.phone-shell--dark .psheet-action-row {
-  border-bottom-color: #26262b !important;
-}
-.phone-shell--dark .psheet-action-row:active {
-  background: #222228 !important;
-}
-.phone-shell--dark .psheet-action-icon {
-  background: #26262b !important;
-  color: #c8c5d0 !important;
-}
-.phone-shell--dark .psheet-action-label {
-  color: #f2f0ea !important;
-}
-.phone-shell--dark .psheet-action-chevron {
-  color: #5c5c64 !important;
-}
-.phone-shell--dark .psheet-dismiss {
-  background: #1c1c20 !important;
-  color: #7c7c85 !important;
-}
-.phone-shell--dark .psheet-dismiss:active {
-  background: #26262b !important;
-}
 
 /* ============================================================
    DARK THEME — Notifications
    ============================================================ */
-.phone-shell--dark .notif-card {
-  background: #111113 !important;
-  border-color: #1c1c20 !important;
-  box-shadow: none !important;
-}
-.phone-shell--dark .notif-row {
-  border-bottom-color: #1c1c20 !important;
-}
-.phone-shell--dark .notif-row.unread {
-  background: #141418 !important;
-}
-.phone-shell--dark .notif-title {
-  color: #f2f0ea !important;
-}
-.phone-shell--dark .notif-sub,
-.phone-shell--dark .notif-time,
-.phone-shell--dark .notif-date-label {
-  color: #7c7c85 !important;
-}
-.phone-shell--dark .notif-date-pill {
-  background: rgba(107, 69, 244, 0.15) !important;
-  color: #a08df5 !important;
-  border: 1px solid rgba(107, 69, 244, 0.25) !important;
-}
-.phone-shell--dark .notif-row-divider {
-  background: #1c1c20 !important;
-}
-.phone-shell--dark .notif-unread-bar {
-  background: #6b45f4 !important;
-}
-.phone-shell--dark .notif-icon {
-  background: #1e1e24 !important;
-  color: #a08df5 !important;
-}
 /* Notification empty state */
-.phone-shell--dark .notif-screen [class*="empty"],
-.phone-shell--dark .notif-screen svg[stroke="#D1D5DB"] {
-  color: #3a3a40 !important;
-  stroke: #3a3a40 !important;
-}
 
 /* ============================================================
    DARK THEME — Help screen: topic cards & FAQ
    ============================================================ */
-.phone-shell--dark .help-topic-card {
-  background: #141418 !important;
-  border-color: #26262b !important;
-  box-shadow: none !important;
-}
 .help-topic-card--active {
   border-color: #b4591f !important;
   background: rgba(180, 89, 31, 0.08) !important;
@@ -10612,35 +10175,6 @@ html[data-theme="light"] body {
 .phone-shell--light .help-topic-card--active {
   border-color: #315eff !important;
   background: rgba(49, 94, 255, 0.06) !important;
-}
-.phone-shell--dark .help-topic-icon {
-  background: rgba(107, 69, 244, 0.15) !important;
-  color: #9a7df5 !important;
-}
-.phone-shell--dark .help-topic-title {
-  color: #f2f0ea !important;
-}
-.phone-shell--dark .help-topic-desc {
-  color: #7c7c85 !important;
-}
-.phone-shell--dark .help-section-label {
-  color: #5c5c64 !important;
-}
-.phone-shell--dark .help-faq-card {
-  background: #111113 !important;
-  border-color: #1c1c20 !important;
-}
-.phone-shell--dark .help-faq-row {
-  border-bottom-color: #1c1c20 !important;
-}
-.phone-shell--dark .help-faq-q-text {
-  color: #f2f0ea !important;
-}
-.phone-shell--dark .help-faq-arrow {
-  color: #5c5c64 !important;
-}
-.phone-shell--dark .help-faq-answer {
-  color: #7c7c85 !important;
 }
 
 /* ============================================================
@@ -11559,11 +11093,6 @@ html[data-theme="light"] body {
   color: #8d899c !important;
 }
 
-.phone-shell--dark .bankv2-input-wrap input::selection,
-.phone-shell--dark .kycv2-doc-card ::selection {
-  background: rgba(244, 241, 232, 0.18);
-}
-
 .phone-shell--light .bankv2-input-wrap input::selection,
 .phone-shell--light .kycv2-doc-card ::selection {
   background: rgba(49, 94, 255, 0.16);
@@ -11717,26 +11246,10 @@ html[data-theme="light"] body {
 .help-faq-item {
   border-bottom: 1px solid #f3f1ff;
 }
-.phone-shell--dark .help-faq-item {
-  border-bottom-color: #1c1c20 !important;
-}
 
 /* ============================================================
    Help: Security card — dark mode overrides
    ============================================================ */
-.phone-shell--dark .help-security-card {
-  background: rgba(31, 158, 103, 0.08) !important;
-  border-color: rgba(31, 158, 103, 0.18) !important;
-}
-.phone-shell--dark .help-security-title {
-  color: #3fbf84 !important;
-}
-.phone-shell--dark .help-security-sub {
-  color: #2d9966 !important;
-}
-.phone-shell--dark .help-security-icon {
-  color: #3fbf84 !important;
-}
 
 /* ============================================================
    Bank card: tighter pbv2-line margin inside card

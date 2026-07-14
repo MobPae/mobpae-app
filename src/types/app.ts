@@ -40,8 +40,6 @@ export type RequestStatus =
   | "Cancelled"
   | "Expired";
 
-export type SelfieStatus = "PENDING" | "VERIFIED" | "REJECTED";
-
 export type EmployeeProfile = {
   id: string;
   name: string;
@@ -52,8 +50,6 @@ export type EmployeeProfile = {
   employerEmail?: string;
   accountActive: boolean;
   salaryLimit: number;
-  selfieStatus?: SelfieStatus;
-  selfieUrl?: string;
   profilePhotoUrl?: string;
 };
 

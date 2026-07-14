@@ -17,18 +17,16 @@ import { NotificationsScreen } from "./NotificationsScreen";
 import { HelpScreen } from "./HelpScreen";
 import { LegalScreen } from "./LegalScreen";
 import { useEmployeeApp } from "../hooks/useEmployeeApp";
-import { useTheme } from "../hooks/useTheme";
 import { DashboardSkeleton } from "../components/ui/DashboardSkeleton";
+
+const rootClassName = "app-root app-root--light";
+const shellClassName = "phone-shell phone-shell--light";
 
 export function EmployeeApp() {
   const app = useEmployeeApp();
-  const theme = useTheme();
   const notifBackRef = useRef<View>("home");
   const legalBackRef = useRef<View>("profile");
   const onboardingBackRef = useRef<View>("advance");
-  const profileBankBackRef = useRef<View>("profile");
-  const rootClassName = `app-root app-root--${theme.theme}`;
-  const shellClassName = `phone-shell phone-shell--${theme.theme}`;
 
   const openOnboarding = (view: "onboarding-kyc" | "onboarding-bank", backTo: View = "advance") => {
     onboardingBackRef.current = backTo;
@@ -58,7 +56,6 @@ export function EmployeeApp() {
             <ForgotPasswordScreen
               onBack={() => app.setActiveView("home")}
               onForgotPassword={app.forgotPassword}
-              theme={theme.theme}
             />
           </div>
         </div>
@@ -77,7 +74,6 @@ export function EmployeeApp() {
               token={token}
               onBack={() => app.setActiveView("home")}
               onResetPassword={app.resetPassword}
-              theme={theme.theme}
             />
           </div>
         </div>
@@ -91,7 +87,6 @@ export function EmployeeApp() {
             loading={app.loadState === "loading"}
             onLogin={app.login}
             onForgotPassword={() => app.setActiveView("forgot-password")}
-            theme={theme.theme}
           />
         </div>
       </div>
@@ -113,7 +108,6 @@ export function EmployeeApp() {
             onClearError={() => app.setChangePasswordError("")}
             onBack={app.logout}
             forced
-            theme={theme.theme}
           />
         </div>
       </div>
@@ -135,7 +129,6 @@ export function EmployeeApp() {
   const navigate = (view: View) => {
     if (view === "notifications") notifBackRef.current = app.activeView as View;
     if (view === "legal") legalBackRef.current = app.activeView as View;
-    if (view === "profile-bank") profileBankBackRef.current = app.activeView as View;
     if (app.activeView === "advance" && (view === "onboarding-kyc" || view === "onboarding-bank")) {
       onboardingBackRef.current = "advance";
     }
@@ -158,7 +151,11 @@ export function EmployeeApp() {
     if (app.activeView === "onboarding-done") return app.setActiveView("advance");
     if (app.activeView === "legal") return app.setActiveView(legalBackRef.current);
     if (app.activeView === "help") return app.setActiveView("profile");
-    if (app.activeView === "profile-bank") return app.setActiveView(profileBankBackRef.current);
+    if (app.activeView === "change-password") return app.setActiveView("profile");
+    if (app.activeView === "profile-kyc") return app.setActiveView("profile");
+    if (app.activeView === "profile-bank") {
+      return app.editingBank ? app.cancelBankEdit() : app.setActiveView("profile");
+    }
     return app.setActiveView("home");
   };
 
@@ -172,7 +169,6 @@ export function EmployeeApp() {
       onNavigate={navigate}
       onBack={handleShellBack}
       uploadProfilePhoto={app.uploadProfilePhoto}
-      theme={theme.theme}
     >
 
       {/* ── Onboarding flow ─────────────────────────────────── */}
@@ -217,7 +213,6 @@ export function EmployeeApp() {
           appState={app.appState}
           notice={app.notice}
           onNavigate={navigate}
-          theme={theme.theme}
         />
       )}
 
@@ -252,7 +247,6 @@ export function EmployeeApp() {
           blockerActionLabel={advanceBlockerActionLabel}
           onResolveBlocker={resolveAdvanceBlocker}
           onNavigate={navigate}
-          theme={theme.theme}
         />
       )}
 
@@ -261,7 +255,6 @@ export function EmployeeApp() {
           requests={app.appState.requests}
           bankAccount={app.appState.bankAccount}
           onNavigate={navigate}
-          theme={theme.theme}
         />
       )}
 
@@ -269,7 +262,6 @@ export function EmployeeApp() {
         <ActivityScreen
           requests={app.appState.requests}
           bankAccount={app.appState.bankAccount}
-          theme={theme.theme}
         />
       )}
 
@@ -283,7 +275,6 @@ export function EmployeeApp() {
           onNotifications={() => navigate("notifications")}
           onRefresh={app.refresh}
           refreshing={app.refreshing}
-          theme={theme.theme}
         />
       )}
 
@@ -293,7 +284,6 @@ export function EmployeeApp() {
           onBack={() => app.setActiveView(notifBackRef.current)}
           onMarkRead={app.markNotificationRead}
           onMarkAllRead={app.markAllNotificationsRead}
-          theme={theme.theme}
         />
       )}
 
@@ -306,7 +296,6 @@ export function EmployeeApp() {
       {app.activeView === "legal" && (
         <LegalScreen
           onBack={() => app.setActiveView(legalBackRef.current)}
-          theme={theme.theme}
         />
       )}
 
@@ -330,8 +319,6 @@ export function EmployeeApp() {
           onUpdateUpiId={app.updateUpiId}
           onRefresh={app.refresh}
           refreshing={app.refreshing}
-          theme={theme.theme}
-          onThemeChange={theme.setTheme}
           onBankFormChange={(field, value) =>
             app.setBankForm((prev) => ({ ...prev, [field]: value }))
           }

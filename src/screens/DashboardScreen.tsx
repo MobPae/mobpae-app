@@ -13,7 +13,6 @@ import {
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AdvanceRequest, AppState, View } from "../types/app";
 import { formatMoney, formatRequestStatus, formatShortDate } from "../utils/format";
-import type { Theme } from "../hooks/useTheme";
 import { useCountUp } from "../hooks/useCountUp";
 
 // ── Payday countdown ring — display-only date math on a backend-provided
@@ -67,10 +66,9 @@ type DashboardScreenProps = {
   appState: AppState;
   notice: string;
   onNavigate: (view: View) => void;
-  theme?: Theme;
 };
 
-// ── Hero card constants (blue gradient, same in both themes) ──────────────────
+// ── Hero card constants (blue gradient) ────────────────────────────────────────
 
 const HERO_BG         = "linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%)";
 const HERO_TEXT       = "#FFFFFF";
@@ -79,40 +77,23 @@ const HERO_BORDER     = "rgba(255,255,255,0.16)";
 const HERO_TILE_BG    = "rgba(255,255,255,0.13)";
 const HERO_METRIC_USED = "#FFD4A0";   // amber — draws attention to amount drawn
 
-// ── Theme palette ─────────────────────────────────────────────────────────────
+// ── Palette ────────────────────────────────────────────────────────────────────
 
-function dashboardPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      bg:          "#FFFFFF",
-      panel2:      "#FFFFFF",
-      border:      "#E9E6F1",
-      text:        "#17151F",
-      muted:       "#6B6878",
-      dim:         "#9A97A8",
-      warm:        "#B4591F",
-      green:       "#1F9E67",
-      divider:     "#F1EEF7",
-      emptyBorder: "#E2DEEE",
-      emptyBg:     "#FFFFFF",
-      iconTile:    "#F5F3FB",
-      shadow:      "0 8px 32px -8px rgba(30,22,54,0.12), 0 1px 0 rgba(30,22,54,0.04)",
-    };
-  }
+function dashboardPalette() {
   return {
-    bg:          "#0C0C0E",
-    panel2:      "#141418",
-    border:      "#29292F",
-    text:        "#F2F0EA",
-    muted:       "#8A8892",
-    dim:         "#5C5C64",
+    bg:          "#FFFFFF",
+    panel2:      "#FFFFFF",
+    border:      "#E9E6F1",
+    text:        "#17151F",
+    muted:       "#6B6878",
+    dim:         "#9A97A8",
     warm:        "#B4591F",
-    green:       "#20A46A",
-    divider:     "#1C1C20",
-    emptyBorder: "#303036",
-    emptyBg:     "rgba(20,20,24,0.32)",
-    iconTile:    "#141418",
-    shadow:      "0 4px 24px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.03)",
+    green:       "#1F9E67",
+    divider:     "#F1EEF7",
+    emptyBorder: "#E2DEEE",
+    emptyBg:     "#FFFFFF",
+    iconTile:    "#F5F3FB",
+    shadow:      "0 8px 32px -8px rgba(30,22,54,0.12), 0 1px 0 rgba(30,22,54,0.04)",
   };
 }
 
@@ -195,9 +176,9 @@ function SectionLabel({
 
 // ── DashboardScreen ───────────────────────────────────────────────────────────
 
-export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }: DashboardScreenProps) {
+export function DashboardScreen({ appState, notice, onNavigate }: DashboardScreenProps) {
   const { profile, dashboard, requests, bankAccount, peerActivity } = appState;
-  const colors = dashboardPalette(theme);
+  const colors = dashboardPalette();
 
   // ── Data — straight from backend; no derived arithmetic ───────────────────
   const salary       = dashboard?.salaryInHand ?? 0;
@@ -219,11 +200,11 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
   const peerCount    = peerActivity?.activeUsers ?? 0;
 
   const PEER_PALETTES = [
-    { bg: "rgba(49,94,255,0.18)",  fg: theme === "light" ? "#2549DA" : "#7B9FFF" },
-    { bg: "rgba(31,158,103,0.18)", fg: theme === "light" ? "#1A7A52" : "#3FBF84" },
-    { bg: "rgba(245,166,35,0.18)", fg: theme === "light" ? "#A06800" : "#F5A623" },
-    { bg: "rgba(207,78,255,0.15)", fg: theme === "light" ? "#8B20B5" : "#CF4EFF" },
-    { bg: "rgba(255,94,78,0.15)",  fg: theme === "light" ? "#C02A18" : "#FF6B5B" },
+    { bg: "rgba(49,94,255,0.18)",  fg: "#2549DA" },
+    { bg: "rgba(31,158,103,0.18)", fg: "#1A7A52" },
+    { bg: "rgba(245,166,35,0.18)", fg: "#A06800" },
+    { bg: "rgba(207,78,255,0.15)", fg: "#8B20B5" },
+    { bg: "rgba(255,94,78,0.15)",  fg: "#C02A18" },
   ];
 
   const shellStyle: CSSProperties = {
@@ -543,7 +524,7 @@ export function DashboardScreen({ appState, notice, onNavigate, theme = "dark" }
                         borderRadius: 999,
                         marginLeft: i ? -10 : 0,
                         background: p.bg,
-                        border: `2px solid ${theme === "light" ? "#FFFFFF" : "#0C0C0E"}`,
+                        border: "2px solid #FFFFFF",
                         color: p.fg,
                         display: "grid",
                         placeItems: "center",

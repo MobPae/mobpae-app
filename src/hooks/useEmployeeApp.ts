@@ -100,7 +100,6 @@ export function useEmployeeApp() {
   // While true, the app renders only the ChangePasswordScreen — no other view is accessible.
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingSelfie, setUploadingSelfie] = useState(false);
   const [eligibility, setEligibility] = useState<EligibilityResult | null>(null);
   const [cancellingAdvance, setCancellingAdvance] = useState(false);
   const suppressNextSessionExpiredRef = useRef(false);
@@ -412,32 +411,6 @@ export function useEmployeeApp() {
     }
   };
 
-  const uploadSelfie = async (file: File) => {
-    const validationError = validateUpload(file, false);
-    if (validationError) {
-      setNotice(validationError);
-      return;
-    }
-    setUploadingSelfie(true);
-    try {
-      const employee = await employeeApi.uploadSelfie(file);
-      setAppState((current) => ({
-        ...current,
-        profile: {
-          ...current.profile,
-          selfieUrl: employee.selfieUrl ?? current.profile.selfieUrl,
-          selfieStatus: employee.selfieStatus ?? "PENDING",
-        },
-      }));
-      setNotice("Selfie uploaded successfully. Pending admin verification.");
-      await loadEmployee();
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Unable to upload selfie. Please try again.");
-    } finally {
-      setUploadingSelfie(false);
-    }
-  };
-
   const uploadKycDocument = async (documentType: KycDocumentType, file: File) => {
     const validationError = validateUpload(file, true);
     if (validationError) {
@@ -630,9 +603,7 @@ export function useEmployeeApp() {
     setChangePasswordError,
     mustChangePassword,
     uploadProfilePhoto,
-    uploadSelfie,
     uploadingPhoto,
-    uploadingSelfie,
     markNotificationRead: async (id: string) => {
       try {
         await employeeApi.markNotificationRead(id);

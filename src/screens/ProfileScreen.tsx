@@ -11,16 +11,15 @@ import {
   KeyRound,
   Landmark,
   LogOut,
-  Moon,
+  Mail,
+  Phone,
   Plus,
   RefreshCw,
   ShieldCheck,
-  Sun,
 } from "lucide-react";
 import { useSignedUrl } from "../hooks/useSignedUrl";
 import { APP_VERSION } from "../config";
 import type { AppState, BankAccount, KycDocumentType, View } from "../types/app";
-import type { Theme } from "../hooks/useTheme";
 import { maskAccountNumber } from "../utils/format";
 import { OnboardingKycScreen } from "./OnboardingKycScreen";
 import { OnboardingBankScreen } from "./OnboardingBankScreen";
@@ -44,18 +43,8 @@ type ProfileScreenProps = {
   refreshing?: boolean;
   onBankFormChange: (field: keyof BankAccount, value: string) => void;
   initialSection?: "kyc" | "bank";
-  theme?: Theme;
-  onThemeChange?: (theme: Theme) => void;
 };
 
-const DARK = "#0C0C0E";
-const PANEL = "#141418";
-const PANEL_SOFT = "#17171B";
-const BORDER = "#29292F";
-const TEXT = "#F2F0EA";
-const MUTED = "#8A8892";
-const DIM = "#5C5C64";
-const GREEN = "#20A46A";
 const WARM = "#B4591F";
 
 function getInitials(name: string) {
@@ -276,8 +265,6 @@ export function ProfileScreen({
   refreshing,
   onBankFormChange,
   initialSection,
-  theme = "dark",
-  onThemeChange,
 }: ProfileScreenProps) {
   const { profile } = appState;
   const photoRef = useRef<HTMLInputElement>(null);
@@ -291,23 +278,22 @@ export function ProfileScreen({
   const maskedBank = bankLinked
     ? `${appState.bankAccount!.bankName || "Bank"} · ${maskAccountNumber(appState.bankAccount!.accountNumber)}`
     : "Add your salary account";
-  const oppositeTheme: Theme = theme === "dark" ? "light" : "dark";
   const profileThemeVars = {
-    "--profile-bg": theme === "light" ? "#FFFFFF" : DARK,
-    "--profile-panel": theme === "light" ? "#FFFFFF" : "rgba(20,20,24,0.62)",
-    "--profile-panel-soft": theme === "light" ? "#F4F4F6" : PANEL_SOFT,
-    "--profile-border": theme === "light" ? "#EBEBEB" : BORDER,
-    "--profile-rule": theme === "light" ? "#F0F0F0" : BORDER,
-    "--profile-text": theme === "light" ? "#17151F" : TEXT,
-    "--profile-muted": theme === "light" ? "#6B6878" : MUTED,
-    "--profile-dim": theme === "light" ? "#9A97A8" : DIM,
-    "--profile-icon": theme === "light" ? "#315eff" : "#C9C7D0",
-    "--profile-green": theme === "light" ? "#1F9E67" : GREEN,
+    "--profile-bg": "#FFFFFF",
+    "--profile-panel": "#FFFFFF",
+    "--profile-panel-soft": "#F4F4F6",
+    "--profile-border": "#EBEBEB",
+    "--profile-rule": "#F0F0F0",
+    "--profile-text": "#17151F",
+    "--profile-muted": "#6B6878",
+    "--profile-dim": "#9A97A8",
+    "--profile-icon": "#315eff",
+    "--profile-green": "#1F9E67",
     "--profile-warm": WARM,
-    "--profile-chip-bg": theme === "light" ? "rgba(49,94,255,0.08)" : "rgba(20,20,24,0.86)",
-    "--profile-avatar-border": theme === "light" ? "#E0E0E0" : "#2E2E34",
-    "--profile-camera-bg": theme === "light" ? "#315eff" : "#F4F1E8",
-    "--profile-camera-text": theme === "light" ? "#FFFFFF" : "#11100D",
+    "--profile-chip-bg": "rgba(49,94,255,0.08)",
+    "--profile-avatar-border": "#E0E0E0",
+    "--profile-camera-bg": "#315eff",
+    "--profile-camera-text": "#FFFFFF",
   } as CSSProperties;
 
   if (initialSection === "kyc") {
@@ -628,6 +614,20 @@ export function ProfileScreen({
         </div>
       </div>
 
+      <SectionLabel>Contact</SectionLabel>
+      <RowGroup>
+        <ProfileRow
+          icon={<Mail size={18} />}
+          title="Email"
+          subtitle={profile.email || "Not available"}
+        />
+        <ProfileRow
+          icon={<Phone size={18} />}
+          title="Mobile Number"
+          subtitle={profile.phone || "Not available"}
+        />
+      </RowGroup>
+
       <SectionLabel>Account</SectionLabel>
       <RowGroup>
         <ProfileRow
@@ -655,20 +655,9 @@ export function ProfileScreen({
         />
         <ProfileRow
           icon={<KeyRound size={18} />}
-          title="Security & PIN"
-          subtitle="Change password"
+          title="Change password"
+          subtitle="Update your account password"
           onClick={() => onNavigate("change-password")}
-        />
-        <ProfileRow
-          icon={theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
-          title="Appearance"
-          subtitle={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-          onClick={() => onThemeChange?.(oppositeTheme)}
-          trailing={
-            <span className="profile-v2-theme-chip">
-              {theme === "dark" ? "Dark" : "Light"}
-            </span>
-          }
         />
       </RowGroup>
 

@@ -1,11 +1,10 @@
 // ── ChangePasswordScreen.tsx ──────────────────────────────────────────────────
 // Allows authenticated users to update their password.
-// Theme tokens are applied via CSS custom properties on the root element
+// Tokens are applied via CSS custom properties on the root element
 // so child components (PasswordField) can reference them without prop-drilling.
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { Bell, Check, ChevronLeft, Eye, EyeOff, Lock, RefreshCw, ShieldCheck } from "lucide-react";
-import type { Theme } from "../hooks/useTheme";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,7 +17,6 @@ type Props = {
   onNotifications?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
-  theme?: Theme;
   // When true, the user MUST change their password before accessing the app.
   // The back button becomes "Log out" and optional header icons are hidden.
   forced?: boolean;
@@ -39,32 +37,19 @@ const GREEN  = "var(--cp-green,  #1F9E67)";
 const WARN   = "var(--cp-warn,   #D97706)";
 const TRACK  = "var(--cp-track,  #EEEBF6)";
 
-// ── Theme maps ────────────────────────────────────────────────────────────────
+// ── Tokens ────────────────────────────────────────────────────────────────────
 
-function changePasswordVars(theme: Theme): CSSProperties {
-  if (theme === "light") {
-    return {
-      "--cp-surface": "#FFFFFF",
-      "--cp-panel":   "#F8F8FA",
-      "--cp-border":  "#E9E6F1",
-      "--cp-text":    "#17151F",
-      "--cp-muted":   "#6B6878",
-      "--cp-dim":     "#9A97A8",
-      "--cp-green":   "#1F9E67",
-      "--cp-warn":    "#D97706",
-      "--cp-track":   "#EEEBF6",
-    } as CSSProperties;
-  }
+function changePasswordVars(): CSSProperties {
   return {
-    "--cp-surface": "#0C0C0E",
-    "--cp-panel":   "#141418",
-    "--cp-border":  "#29292F",
-    "--cp-text":    "#F2F0EA",
-    "--cp-muted":   "#8A8892",
-    "--cp-dim":     "#5C5C64",
-    "--cp-green":   "#20A46A",
+    "--cp-surface": "#FFFFFF",
+    "--cp-panel":   "#F8F8FA",
+    "--cp-border":  "#E9E6F1",
+    "--cp-text":    "#17151F",
+    "--cp-muted":   "#6B6878",
+    "--cp-dim":     "#9A97A8",
+    "--cp-green":   "#1F9E67",
     "--cp-warn":    "#D97706",
-    "--cp-track":   "#28282D",
+    "--cp-track":   "#EEEBF6",
   } as CSSProperties;
 }
 
@@ -79,7 +64,6 @@ export function ChangePasswordScreen({
   onNotifications,
   onRefresh,
   refreshing,
-  theme = "light",
   forced = false,
 }: Props) {
   const [current, setCurrent] = useState("");
@@ -142,7 +126,7 @@ export function ChangePasswordScreen({
   return (
     <div
       style={{
-        ...changePasswordVars(theme),
+        ...changePasswordVars(),
         minHeight: "100%",
         flex: 1,
         background: "var(--cp-surface, #FFFFFF)",

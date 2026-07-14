@@ -1,5 +1,5 @@
 // ── LoginScreen.tsx ──────────────────────────────────────────────────────────
-// Sign-in form. Supports light/dark themes via loginPalette().
+// Sign-in form.
 // Props:
 //   error   — API-level error or success message surfaced by the parent hook
 //   loading — true while onLogin() is in-flight
@@ -11,14 +11,11 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Theme = "dark" | "light";
-
 type LoginScreenProps = {
   error: string;
   loading: boolean;
   onLogin: (email: string, password: string) => Promise<void>;
   onForgotPassword?: () => void;
-  theme?: Theme;
 };
 
 // ── Palette ───────────────────────────────────────────────────────────────────
@@ -28,36 +25,20 @@ type LoginScreenProps = {
 
 const HERO_BG = "linear-gradient(160deg, #3A65FF 0%, #315eff 55%, #2549DA 100%)";
 
-function loginPalette(theme: Theme) {
-  if (theme === "light") {
-    return {
-      PAGE_BG:    "#F5F6FA",
-      CARD_BG:    "#FFFFFF",
-      PANEL:      "#F8F8FA",
-      BORDER:     "#E9E6F1",
-      BORDER_FOC: "#315eff",
-      BORDER_ERR: "#EF4444",
-      TEXT:       "#17151F",
-      MUTED:      "#6B6878",
-      DIM:        "#9A97A8",
-      ERR_TEXT:   "#DC2626",
-      GREEN:      "#1F9E67",
-      DIVIDER:    "linear-gradient(90deg, transparent, #DDD9F0, transparent)",
-    };
-  }
+function loginPalette() {
   return {
-    PAGE_BG:    "#0C0C0E",
-    CARD_BG:    "#141418",
-    PANEL:      "#1A1A1F",
-    BORDER:     "#29292F",
+    PAGE_BG:    "#F5F6FA",
+    CARD_BG:    "#FFFFFF",
+    PANEL:      "#F8F8FA",
+    BORDER:     "#E9E6F1",
     BORDER_FOC: "#315eff",
     BORDER_ERR: "#EF4444",
-    TEXT:       "#F2F0EA",
-    MUTED:      "#8A8892",
-    DIM:        "#5C5C64",
-    ERR_TEXT:   "#F87171",
-    GREEN:      "#20A46A",
-    DIVIDER:    "linear-gradient(90deg, transparent, #1E1E22, transparent)",
+    TEXT:       "#17151F",
+    MUTED:      "#6B6878",
+    DIM:        "#9A97A8",
+    ERR_TEXT:   "#DC2626",
+    GREEN:      "#1F9E67",
+    DIVIDER:    "linear-gradient(90deg, transparent, #DDD9F0, transparent)",
   };
 }
 
@@ -166,7 +147,6 @@ export function LoginScreen({
   loading,
   onLogin,
   onForgotPassword,
-  theme = "dark",
 }: LoginScreenProps) {
   const [email, setEmail]               = useState("");
   const [password, setPassword]         = useState("");
@@ -175,7 +155,7 @@ export function LoginScreen({
   // Field-level errors — set on empty submit, cleared on each keystroke.
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
 
-  const p = loginPalette(theme);
+  const p = loginPalette();
 
   // API error from parent can also be a success message (e.g. after reset).
   const isSuccessMessage = error.toLowerCase().includes("successfully");
@@ -286,9 +266,7 @@ export function LoginScreen({
           marginTop: -20,
           position: "relative",
           padding: "40px 24px 28px",
-          boxShadow: theme === "light"
-            ? "0 -8px 32px rgba(30,22,54,0.06)"
-            : "0 -8px 32px rgba(0,0,0,0.24)",
+          boxShadow: "0 -8px 32px rgba(30,22,54,0.06)",
         }}
       >
         <form onSubmit={submit}>
