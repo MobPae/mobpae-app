@@ -114,6 +114,36 @@ export function EmployeeApp() {
     );
   }
 
+  if (app.loadState === "error") {
+    return (
+      <div className={rootClassName}>
+        <div className={shellClassName}>
+          <div className="boot-screen" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "0 32px", textAlign: "center" }}>
+            <div style={{ fontSize: 36 }}>⚠️</div>
+            <p style={{ fontSize: 15, color: "#1A1D2E", fontWeight: 500, margin: 0 }}>Something went wrong</p>
+            <p style={{ fontSize: 13, color: "#767B9C", margin: 0 }}>We couldn't load your account. Please check your connection and try again.</p>
+            <button
+              onClick={() => app.loadEmployee(true)}
+              style={{
+                marginTop: 8,
+                padding: "10px 24px",
+                borderRadius: 12,
+                background: "#315EFF",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 500,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (app.loadState === "idle" || app.loadState === "loading") {
     return (
       <div className={rootClassName}>
@@ -213,6 +243,24 @@ export function EmployeeApp() {
           appState={app.appState}
           notice={app.notice}
           onNavigate={navigate}
+          setupBlocker={
+            !app.appState.profile.accountActive
+              ? "Employer approval is pending."
+              : !app.kycComplete
+              ? (app.kycSubmitted ? "KYC submitted. Pending admin verification." : "Complete KYC verification.")
+              : !app.bankComplete
+              ? (!app.appState.bankAccount ? "Add your bank account." : "Bank account pending verification.")
+              : ""
+          }
+          onSetupAction={
+            !app.appState.profile.accountActive
+              ? undefined
+              : !app.kycComplete && !app.kycSubmitted
+              ? () => navigate("onboarding-kyc")
+              : !app.appState.bankAccount || (!app.bankComplete && app.kycComplete)
+              ? () => navigate("onboarding-bank")
+              : undefined
+          }
         />
       )}
 

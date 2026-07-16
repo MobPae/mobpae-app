@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { emptyBankAccount, emptyState } from "../data/emptyState";
 import { employeeApi } from "../services/api";
 import type { AppState, BankAccount, EligibilityResult, KycDocumentType, RecoveryPreview, View } from "../types/app";
+import { initPushNotifications, removePushToken } from "../services/pushNotifications";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 type RazorpayCheckoutResponse = {
@@ -200,6 +201,8 @@ export function useEmployeeApp() {
         setLoadState("ready");
       } else {
         await loadEmployee(true);
+        // Initialise push notifications after first successful login
+        void initPushNotifications((view) => setActiveView(view));
       }
     } catch (error) {
       setLoadState("error");
@@ -218,6 +221,7 @@ export function useEmployeeApp() {
         // Clear the gate and load the employee profile directly, skipping re-login.
         setMustChangePassword(false);
         await loadEmployee(true);
+        void initPushNotifications((view) => setActiveView(view));
       } else {
         // Voluntary change — backend invalidated all sessions; clear state and show login.
         suppressNextSessionExpiredRef.current = true;
@@ -241,6 +245,7 @@ export function useEmployeeApp() {
   };
 
   const logout = () => {
+    void removePushToken();
     employeeApi.logout();
     clearStoredActiveView();
     setMustChangePassword(false);

@@ -2,9 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import pkg from "./package.json";
 
-import { reticle } from '@reticlehq/vite-plugin';
+// Reticle (@reticlehq/vite-plugin) is a browser phone-frame preview tool.
+// Disabled here so production builds and Capacitor device runs are full-screen.
+// Re-enable locally by wrapping react() with reticle({ port: 3000 }) if needed.
 export default defineConfig({
-  plugins: [reticle({ port: 3000 }), react()],
+  plugins: [
+    react(),
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

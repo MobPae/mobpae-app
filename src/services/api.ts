@@ -1387,4 +1387,23 @@ export const employeeApi = {
       body: JSON.stringify({}),
     });
   },
+
+  /** Register a Capacitor FCM/APNs device token with the backend. */
+  async registerDeviceToken(
+    token: string,
+    platform: "ios" | "android" | "web"
+  ): Promise<void> {
+    await request("/notifications/register-token", {
+      method: "POST",
+      body: JSON.stringify({ token, platform }),
+    });
+  },
+
+  /** Remove a device token from the backend (call on logout). */
+  async removeDeviceToken(token: string): Promise<void> {
+    await request("/notifications/remove-token", {
+      method: "DELETE",
+      body: JSON.stringify({ token }),
+    });
+  },
 };

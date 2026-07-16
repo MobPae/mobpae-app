@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "912334845663",
+    "project_id": "mobpae",
+    "storage_bucket": "mobpae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912334845663:android:4c222a2c1eae353278db6a",
+        "android_client_info": {
+          "package_name": "com.mobpae.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBsmcgv3k56r0sARWcUijLW3mSeEjkeWo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

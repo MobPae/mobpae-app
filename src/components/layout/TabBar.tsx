@@ -42,7 +42,7 @@ export function TabBar({ activeView, onChange }: TabBarProps) {
         borderTop: `1px solid ${colors.topLine}`,
         zIndex: 60,
         margin: 0,
-        padding: `0 0 env(safe-area-inset-bottom, 0px)`,
+        padding: `0 0 env(safe-area-inset-bottom, 52px)`,
         borderRadius: 0,
         boxShadow: "none",
       }}

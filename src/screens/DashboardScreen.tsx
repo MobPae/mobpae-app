@@ -66,6 +66,8 @@ type DashboardScreenProps = {
   appState: AppState;
   notice: string;
   onNavigate: (view: View) => void;
+  setupBlocker?: string;
+  onSetupAction?: () => void;
 };
 
 // ── Hero card constants (blue gradient) ────────────────────────────────────────
@@ -176,7 +178,7 @@ function SectionLabel({
 
 // ── DashboardScreen ───────────────────────────────────────────────────────────
 
-export function DashboardScreen({ appState, notice, onNavigate }: DashboardScreenProps) {
+export function DashboardScreen({ appState, notice, onNavigate, setupBlocker, onSetupAction }: DashboardScreenProps) {
   const { profile, dashboard, requests, bankAccount, peerActivity } = appState;
   const colors = dashboardPalette();
 
@@ -232,6 +234,46 @@ export function DashboardScreen({ appState, notice, onNavigate }: DashboardScree
           }}
         >
           {notice}
+        </div>
+      )}
+
+      {/* ── Setup banner (shown until KYC + bank complete) ───────────────── */}
+      {setupBlocker && (
+        <div
+          style={{
+            marginBottom: 14,
+            padding: "12px 14px",
+            borderRadius: 16,
+            background: "rgba(49,94,255,0.08)",
+            border: "1px solid rgba(49,94,255,0.18)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>🔔</span>
+            <span style={{ fontSize: 12, color: "#2549DA", lineHeight: 1.4 }}>{setupBlocker}</span>
+          </div>
+          {onSetupAction && (
+            <button
+              onClick={onSetupAction}
+              style={{
+                flexShrink: 0,
+                padding: "6px 12px",
+                borderRadius: 10,
+                background: "#315EFF",
+                color: "#fff",
+                fontSize: 11,
+                fontWeight: 500,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Set up →
+            </button>
+          )}
         </div>
       )}
 
