@@ -213,7 +213,6 @@ function ActivityIcon({
 }: {
   tone: ActivityEvent["tone"];
   type: ActivityEvent["type"];
-  colors: ReturnType<typeof activityPalette>;
 }) {
   const { bg, fg } = TONE_STYLE[tone];
   const Icon =
@@ -417,7 +416,7 @@ export function ActivityScreen({ requests, bankAccount }: ActivityScreenProps) {
                   <div key={event.id}>
                     {index > 0 && <div style={{ height: 1, background: colors.rule, margin: "16px 0" }} />}
                     <div style={{ display: "grid", gridTemplateColumns: "48px 1fr auto", gap: 12, alignItems: "center" }}>
-                      <ActivityIcon tone={event.tone} type={event.type} colors={colors} />
+                      <ActivityIcon tone={event.tone} type={event.type} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ color: colors.text, fontSize: 15, fontWeight: 450, lineHeight: 1.08 }}>
                           {event.title}

@@ -7,6 +7,7 @@ import { RepaymentScheduleScreen } from "./RepaymentScheduleScreen";
 import { DashboardScreen } from "./DashboardScreen";
 import { LoginScreen } from "./LoginScreen";
 import { ChangePasswordScreen } from "./ChangePasswordScreen";
+import { TermsAcceptanceScreen } from "./TermsAcceptanceScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { OnboardingKycScreen } from "./OnboardingKycScreen";
 import { OnboardingBankScreen } from "./OnboardingBankScreen";
@@ -109,6 +110,18 @@ export function EmployeeApp() {
             onBack={app.logout}
             forced
           />
+        </div>
+      </div>
+    );
+  }
+
+  // ── T&C acceptance gate ───────────────────────────────────────────────────
+  // Shown once after first-time forced password change. Cannot be bypassed.
+  if (app.mustAcceptTerms) {
+    return (
+      <div className={rootClassName}>
+        <div className={shellClassName}>
+          <TermsAcceptanceScreen onAccept={app.acceptTerms} onLogout={app.logout} />
         </div>
       </div>
     );

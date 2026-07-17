@@ -14,6 +14,19 @@ type RazorpayConstructor = new (options: Record<string, unknown>) => { open: () 
 
 const REFRESH_COOLDOWN_MS = 5 * 60_000; // 5 min between silent background refreshes
 const ACTIVE_VIEW_KEY = "mobpae_employee_active_view";
+const MUST_CHANGE_PWD_KEY = "mobpae_must_change_pwd";
+const MUST_ACCEPT_TERMS_KEY = "mobpae_must_accept_terms";
+
+function lsGet(key: string): boolean {
+  try { return localStorage.getItem(key) === "1"; } catch { return false; }
+}
+function lsSet(key: string, val: boolean) {
+  try { val ? localStorage.setItem(key, "1") : localStorage.removeItem(key); } catch {}
+}
+function lsClearAuthFlags() {
+  lsSet(MUST_CHANGE_PWD_KEY, false);
+  lsSet(MUST_ACCEPT_TERMS_KEY, false);
+}
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const REQUIRED_KYC_TYPES: KycDocumentType[] = ["PAN", "AADHAR", "SALARY_SLIP"];
@@ -97,9 +110,14 @@ export function useEmployeeApp() {
   const [loginError, setLoginError] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [changePasswordError, setChangePasswordError] = useState("");
-  // True when backend reports passwordChanged===false on login.
-  // While true, the app renders only the ChangePasswordScreen — no other view is accessible.
-  const [mustChangePassword, setMustChangePassword] = useState(false);
+  // Persisted in localStorage so a page refresh doesn't bypass these gates.
+  // Both are cleared on logout / session expiry.
+  const [mustChangePassword, setMustChangePassword] = useState(
+    () => employeeApi.hasSession() && lsGet(MUST_CHANGE_PWD_KEY),
+  );
+  const [mustAcceptTerms, setMustAcceptTerms] = useState(
+    () => employeeApi.hasSession() && lsGet(MUST_ACCEPT_TERMS_KEY),
+  );
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [eligibility, setEligibility] = useState<EligibilityResult | null>(null);
   const [cancellingAdvance, setCancellingAdvance] = useState(false);
@@ -108,13 +126,27 @@ export function useEmployeeApp() {
 
   const loadEmployee = async (checkOnboarding = false) => {
     const hasExistingData = loadState === "ready" || Boolean(appState.profile.id);
+    // Capture gate flags before the async call so we check consistently.
+    const shouldCheckTerms = !lsGet(MUST_CHANGE_PWD_KEY) && !lsGet(MUST_ACCEPT_TERMS_KEY);
     setLoadState("loading");
     try {
-      // Load app state and eligibility in parallel; eligibility is best-effort
+      // Load app state and eligibility in parallel; eligibility is best-effort.
+      // loadAppState() fetches /employees/me once and includes termsAccepted in its
+      // result — no separate checkTermsAccepted() call needed.
       const [rawState, eligResult] = await Promise.all([
         employeeApi.loadAppState(),
         employeeApi.getEligibility().catch(() => null),
       ]);
+
+      // T&C gate — check AFTER the load so we only hit /employees/me once.
+      // Skip if must-change-password is still active (can't accept T&C yet).
+      // Default true on missing field so existing users are never accidentally locked out.
+      if (shouldCheckTerms && !rawState.termsAccepted) {
+        lsSet(MUST_ACCEPT_TERMS_KEY, true);
+        setMustAcceptTerms(true);
+        setLoadState("ready");
+        return;
+      }
 
       lastRefreshAt.current = Date.now();
 
@@ -156,8 +188,13 @@ export function useEmployeeApp() {
 
   useEffect(() => {
     if (!employeeApi.hasSession()) return;
-
     setIsLoggedIn(true);
+    // If the user must change their password first, skip loading app state —
+    // they can't access the app until that gate is cleared.
+    if (lsGet(MUST_CHANGE_PWD_KEY)) {
+      setLoadState("ready");
+      return;
+    }
     void loadEmployee(false);
   }, []);
 
@@ -178,7 +215,10 @@ export function useEmployeeApp() {
         suppressNextSessionExpiredRef.current = false;
         return;
       }
+      lsClearAuthFlags();
       clearStoredActiveView();
+      setMustChangePassword(false);
+      setMustAcceptTerms(false);
       setIsLoggedIn(false);
       setAppState(emptyState);
       setLoadState("idle");
@@ -193,15 +233,21 @@ export function useEmployeeApp() {
     setLoginError("");
     setLoadState("loading");
     try {
-      const passwordChanged = await employeeApi.login(email, password);
+      const result = await employeeApi.login(email, password);
       setIsLoggedIn(true);
-      if (passwordChanged === false) {
-        // First-time login: force the user to set a new password before accessing the app.
+      if (result.passwordChanged === false) {
+        // First-time login: force password change before anything else.
+        lsSet(MUST_CHANGE_PWD_KEY, true);
         setMustChangePassword(true);
+        setLoadState("ready");
+      } else if (result.termsAccepted === false) {
+        // Password already changed but T&C not yet accepted — gate it.
+        // DB-sourced at login time so this works on every device.
+        lsSet(MUST_ACCEPT_TERMS_KEY, true);
+        setMustAcceptTerms(true);
         setLoadState("ready");
       } else {
         await loadEmployee(true);
-        // Initialise push notifications after first successful login
         void initPushNotifications((view) => setActiveView(view));
       }
     } catch (error) {
@@ -218,13 +264,20 @@ export function useEmployeeApp() {
 
       if (result?.accessToken && result?.refreshToken) {
         // First-time forced change — backend already stored fresh tokens in localStorage via api.ts.
-        // Clear the gate and load the employee profile directly, skipping re-login.
+        // If terms not yet accepted, show T&C gate before entering the app.
+        lsSet(MUST_CHANGE_PWD_KEY, false);
         setMustChangePassword(false);
-        await loadEmployee(true);
-        void initPushNotifications((view) => setActiveView(view));
+        if (!result.termsAccepted) {
+          lsSet(MUST_ACCEPT_TERMS_KEY, true);
+          setMustAcceptTerms(true);
+        } else {
+          await loadEmployee(true);
+          void initPushNotifications((view) => setActiveView(view));
+        }
       } else {
         // Voluntary change — backend invalidated all sessions; clear state and show login.
         suppressNextSessionExpiredRef.current = true;
+        lsClearAuthFlags();
         employeeApi.logout();
         clearStoredActiveView();
         setMustChangePassword(false);
@@ -244,11 +297,21 @@ export function useEmployeeApp() {
     }
   };
 
+  const acceptTerms = async () => {
+    await employeeApi.acceptTerms();
+    lsSet(MUST_ACCEPT_TERMS_KEY, false);
+    setMustAcceptTerms(false);
+    await loadEmployee(true);
+    void initPushNotifications((view) => setActiveView(view));
+  };
+
   const logout = () => {
     void removePushToken();
+    lsClearAuthFlags();
     employeeApi.logout();
     clearStoredActiveView();
     setMustChangePassword(false);
+    setMustAcceptTerms(false);
     setIsLoggedIn(false);
     setActiveView("home");
   };
@@ -607,6 +670,8 @@ export function useEmployeeApp() {
     changePasswordError,
     setChangePasswordError,
     mustChangePassword,
+    mustAcceptTerms,
+    acceptTerms,
     uploadProfilePhoto,
     uploadingPhoto,
     markNotificationRead: async (id: string) => {

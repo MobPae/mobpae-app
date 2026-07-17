@@ -312,7 +312,7 @@ export function ChangePasswordScreen({
             transition: "opacity 0.15s ease",
           }}
         >
-          {loading ? "Updating…" : "Update password"}
+          {loading ? (forced ? "Setting…" : "Updating…") : (forced ? "Set password" : "Update password")}
         </button>
 
         {/* ── Trust note ────────────────────────────────────────────────────── */}
@@ -328,7 +328,7 @@ export function ChangePasswordScreen({
           }}
         >
           <ShieldCheck size={14} strokeWidth={1.8} />
-          <span>All active sessions will be refreshed after this change.</span>
+          <span>{forced ? "Your new password applies immediately." : "You'll be signed out of all active sessions."}</span>
         </div>
       </form>
     </div>

@@ -18,7 +18,6 @@ export const emptyState: AppState = {
   bankAccount: null,
   platformFeeConfig: null,
   requests: [],
-  notifications: [],
   rawNotifications: [],
   peerActivity: null,
 };

@@ -234,7 +234,6 @@ export type AppState = {
   bankAccount: BankAccount | null;
   platformFeeConfig: PlatformFeeConfig | null;
   requests: AdvanceRequest[];
-  notifications: string[];
   rawNotifications: AppNotification[];
   peerActivity: PeerActivity | null;
 };

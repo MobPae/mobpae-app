@@ -34,7 +34,7 @@ type LoginResponse = {
   token?: string;
   refreshToken?: string;
   passwordChanged?: boolean;
-  user?: { passwordChanged?: boolean; role?: string; [key: string]: unknown };
+  user?: { passwordChanged?: boolean; termsAccepted?: boolean; role?: string; [key: string]: unknown };
 };
 
 const EMPLOYEE_ROLE = "EMPLOYEE";
@@ -229,6 +229,7 @@ type BackendEmployeeMe = EmployeeDashboard & {
   kycStatus?: string; // e.g. "NOT_SUBMITTED", "SUBMITTED", "VERIFIED"
   bankAccountStatus?: string; // e.g. "NOT_ADDED", "PENDING", "VERIFIED"
   profilePhotoUrl?: string;
+  termsAccepted?: boolean;
   dashboard?: EmployeeDashboard;
   employee?: Partial<BackendEmployeeMe>;
 };
@@ -635,27 +636,6 @@ const normalizeRequests = (
     };
   });
 
-const buildActivity = (
-  notifications: BackendNotification[],
-  requests: AdvanceRequest[],
-  repayments: BackendRepayment[]
-) => {
-  const notificationItems = notifications
-    .map((notification) => notification.message ?? notification.title)
-    .filter(Boolean) as string[];
-  const requestItems = requests
-    .slice(0, 2)
-    .map((request) => `Request ${request.id} is ${request.status}.`);
-  const repaymentItems = repayments
-    .slice(0, 2)
-    .map(
-      (repayment) =>
-        `Payment ${
-          repayment.status?.toLowerCase() ?? "scheduled"
-        } for application ${repayment.loanApplication?.id ?? repayment.id}.`
-    );
-  return [...notificationItems, ...requestItems, ...repaymentItems].slice(0, 5);
-};
 
 const unwrapArray = <T>(
   value:
@@ -824,23 +804,28 @@ export const employeeApi = {
     }
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
-    return data.user?.passwordChanged ?? data.passwordChanged;
+    return {
+      passwordChanged: data.user?.passwordChanged ?? data.passwordChanged ?? true,
+      // Default true so pre-feature users without termsAccepted in the response aren't blocked.
+      termsAccepted: data.user?.termsAccepted ?? true,
+    };
   },
 
   logout() {
     clearStoredSession();
   },
 
-  // Returns new tokens when the backend detects a forced first-time change,
-  // so the app can establish a fresh session without re-login.
+  // Returns new tokens + termsAccepted when the backend detects a forced
+  // first-time change, so the app can establish a fresh session without re-login.
   async changePassword(
     currentPassword: string,
     newPassword: string
-  ): Promise<{ accessToken: string; refreshToken: string } | void> {
+  ): Promise<{ accessToken: string; refreshToken: string; termsAccepted: boolean } | void> {
     const data = await request<{
       success: boolean;
       accessToken?: string;
       refreshToken?: string;
+      termsAccepted?: boolean;
       message?: string;
     }>("/auth/change-password", {
       method: "POST",
@@ -851,9 +836,19 @@ export const employeeApi = {
       // First-time forced change — store the fresh session tokens.
       localStorage.setItem(TOKEN_KEY, data.accessToken);
       localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
-      return { accessToken: data.accessToken, refreshToken: data.refreshToken };
+      return {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        termsAccepted: data.termsAccepted ?? false,
+      };
     }
     // Voluntary change — caller handles logout.
+  },
+
+  async acceptTerms(): Promise<void> {
+    await request<{ success: boolean }>("/auth/accept-terms", {
+      method: "POST",
+    });
   },
 
   async forgotPassword(email: string): Promise<void> {
@@ -871,9 +866,12 @@ export const employeeApi = {
     });
   },
 
-  async loadAppState(): Promise<AppState> {
+  async loadAppState(): Promise<AppState & { termsAccepted: boolean }> {
     try {
       const employeeMe = await request<BackendEmployeeMe>("/employees/me");
+      // Extract termsAccepted here so callers don't need a separate /employees/me call.
+      // Default true so pre-feature users (null in DB) are never accidentally gated.
+      const termsAccepted = employeeMe.termsAccepted ?? true;
       const {
         employee,
         dashboard,
@@ -1002,6 +1000,7 @@ export const employeeApi = {
           : [];
 
       return {
+        termsAccepted,
         profile: {
           id: employeeId,
           name: employee.name ?? dashboardData?.employeeName ?? "",
@@ -1022,11 +1021,6 @@ export const employeeApi = {
         bankAccount:
           bankAccountStatus === "NOT_ADDED" ? null : bankAccountData ?? null,
         requests: normalizedRequests,
-        notifications: buildActivity(
-          notificationData,
-          normalizedRequests,
-          repaymentData
-        ),
         rawNotifications: notificationData.map((n) => ({
           id: n.id,
           title: n.title ?? "Notification",

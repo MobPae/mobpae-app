@@ -5,7 +5,7 @@ import { formatMoney } from "../utils/format";
 type RepaymentScheduleScreenProps = {
   requests: AdvanceRequest[];
   bankAccount?: BankAccount | null;
-  onNavigate: (view: View) => void;
+  onNavigate?: (view: View) => void;
 };
 
 function repaymentPalette() {

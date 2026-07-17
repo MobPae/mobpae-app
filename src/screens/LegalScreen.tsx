@@ -132,23 +132,6 @@ export function LegalScreen({ onBack }: LegalScreenProps) {
         </div>
       </div>
 
-      {/* Notice */}
-      <div
-        style={{
-          margin: "18px 22px 0",
-          padding: "13px 16px",
-          borderRadius: 14,
-          border: `1px solid ${colors.border}`,
-          background: colors.panel,
-          color: colors.muted,
-          fontSize: 12,
-          fontWeight: 400,
-          lineHeight: 1.55,
-        }}
-      >
-        These are placeholder documents. Final legal copy will be published before the public launch of MobPae.
-      </div>
-
       {/* Sections */}
       <div style={{ padding: "20px 22px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
         {SECTIONS.map((section) => {

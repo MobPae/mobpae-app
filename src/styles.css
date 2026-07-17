@@ -27,8 +27,7 @@ body {
   background: #0c0c0e;
 }
 body {
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium",
-    ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   color: #0f0a3c;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
@@ -8254,7 +8253,7 @@ button,
     ),
     var(--pbv-bg);
   color: var(--pbv-text);
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   padding: 22px 20px 112px;
 }
 
@@ -8361,7 +8360,7 @@ button,
 .pbv2-number {
   margin-top: 28px;
   color: #d8d5dd;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   font-size: 18px;
   font-weight: 450;
   letter-spacing: 0.26em;
@@ -8421,7 +8420,7 @@ button,
   display: block;
   margin-top: 8px;
   color: var(--pbv-text);
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   font-size: 13px;
   font-weight: 500;
 }
@@ -8526,7 +8525,7 @@ button,
     ),
     #0c0c0e;
   color: #f2f0ea;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   padding: 14px 20px 116px;
 }
 
@@ -9180,7 +9179,7 @@ button,
   background: #0c0c0e;
   padding: 20px 20px 116px;
   color: #f2f0ea;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
@@ -9348,7 +9347,7 @@ button,
   border: 1.5px solid rgba(242, 240, 234, 0.16);
   background: rgba(242, 240, 234, 0.05);
   color: #f2f0ea;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   font-size: 14px;
   font-weight: 450;
   letter-spacing: -0.01em;
@@ -9381,7 +9380,7 @@ button,
   border: 1.5px solid rgba(242, 240, 234, 0.16);
   background: rgba(242, 240, 234, 0.05);
   color: #f2f0ea;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   font-size: 14px;
   font-weight: 450;
   letter-spacing: -0.01em;
@@ -9509,7 +9508,7 @@ button,
   min-height: 100%;
   background: #0c0c0e;
   color: #f2f0ea;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
   padding: 18px 20px 116px;
 }
 
@@ -10279,7 +10278,7 @@ html[data-theme="light"] body {
     ),
     var(--notif-bg) !important;
   color: var(--notif-text) !important;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif;
+  font-family: "Manrope", ui-sans-serif, sans-serif;
 }
 
 .phone-shell--light .notif-screen {
@@ -10937,7 +10936,7 @@ html[data-theme="light"] body {
 }
 
 .phone-shell .bankv2-field > span {
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif !important;
+  font-family: "Manrope", ui-sans-serif, sans-serif !important;
   font-size: 11px !important;
   font-weight: 500 !important;
   line-height: 1 !important;
@@ -10953,7 +10952,7 @@ html[data-theme="light"] body {
 
 .phone-shell .bankv2-input-wrap input {
   height: 54px !important;
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif !important;
+  font-family: "Manrope", ui-sans-serif, sans-serif !important;
   font-size: 16px !important;
   font-weight: 450 !important;
   line-height: 1 !important;
@@ -10965,7 +10964,7 @@ html[data-theme="light"] body {
 }
 
 .phone-shell .bankv2-input-wrap input::placeholder {
-  font-family: "Tasa Orbiter Display", "TASA Orbiter Display Medium", sans-serif !important;
+  font-family: "Manrope", ui-sans-serif, sans-serif !important;
   font-size: 15px !important;
   font-weight: 400 !important;
   letter-spacing: 0 !important;
