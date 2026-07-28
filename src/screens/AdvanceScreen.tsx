@@ -1183,6 +1183,11 @@ export function AdvanceScreen({
               <b>{totalRepay ? formatMoney(totalRepay) : "—"}</b>
             </div>
           </div>
+
+          {/* ── Closing note — signals intentional end of content, not a loading gap ── */}
+          <div style={{ marginTop: 36, textAlign: "center", color: colors.dim, fontSize: 12, fontWeight: 450 }}>
+            You're all set — we'll take it from here
+          </div>
         </div>
       </div>
     );

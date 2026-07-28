@@ -435,7 +435,7 @@ export function DashboardScreen({ appState, notice, onNavigate, setupBlocker, on
 
                   {/* Title + status pill */}
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: "block", fontSize: 15, fontWeight: 450 }}>
+                    <span style={{ display: "block", fontSize: 15, fontWeight: 450, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {recentDisbursed ? "Advance credited" : "Advance requested"}
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
@@ -498,7 +498,7 @@ export function DashboardScreen({ appState, notice, onNavigate, setupBlocker, on
                   <CalendarDays size={18} />
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 15, fontWeight: 450 }}>Repayment scheduled</span>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 450, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Repayment scheduled</span>
                   <small style={{ display: "block", color: colors.muted, fontSize: 12, fontWeight: 400, marginTop: 5 }}>
                     Auto-deduct · {repaymentDate}
                   </small>
@@ -552,7 +552,15 @@ export function DashboardScreen({ appState, notice, onNavigate, setupBlocker, on
           <span style={{ display: "block", marginBottom: 16, color: colors.muted, fontSize: 12, fontWeight: 500, letterSpacing: "0.28em", textTransform: "uppercase" }}>
             Your colleagues
           </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div
+            style={{
+              display: "flex", alignItems: "center", gap: 14,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 22,
+              background: colors.panel2,
+              padding: 18,
+            }}
+          >
             {peerInitials.length > 0 && (
               <div style={{ display: "flex" }}>
                 {peerInitials.map((initials, i) => {
@@ -594,6 +602,11 @@ export function DashboardScreen({ appState, notice, onNavigate, setupBlocker, on
           </div>
         </section>
       )}
+
+      {/* ── Closing note — signals intentional end of content, not a loading gap ── */}
+      <div style={{ marginTop: 36, textAlign: "center", color: colors.dim, fontSize: 12, fontWeight: 450 }}>
+        You're all caught up
+      </div>
     </div>
   );
 }

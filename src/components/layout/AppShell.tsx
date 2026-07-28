@@ -24,6 +24,7 @@ const FULLSCREEN_DARK_VIEWS: View[] = [
   "change-password",
   "help",
   "legal",
+  "notifications",
 ];
 const HEADER_VIEWS: View[] = [...TAB_VIEWS, ...ONBOARDING_VIEWS];
 const LIGHT_SURFACE = "#FFFFFF";

@@ -211,7 +211,7 @@ export function LoginScreen({
           position: "relative",
           overflow: "hidden",
           background: HERO_BG,
-          padding: "max(72px, env(safe-area-inset-top)) 24px 64px",
+          padding: "max(72px, env(safe-area-inset-top)) 24px 88px",
           flexShrink: 0,
         }}
       >
@@ -272,7 +272,7 @@ export function LoginScreen({
         <form onSubmit={submit}>
 
           {/* Heading */}
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 32 }}>
             <h1
               style={{
                 margin: 0,
@@ -408,12 +408,12 @@ export function LoginScreen({
           </button>
 
           {/* Divider */}
-          <div style={{ marginTop: 28, height: 1, background: p.DIVIDER }} />
+          <div style={{ marginTop: 36, height: 1, background: p.DIVIDER }} />
 
           {/* Trust badge */}
           <div
             style={{
-              marginTop: 20,
+              marginTop: 24,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

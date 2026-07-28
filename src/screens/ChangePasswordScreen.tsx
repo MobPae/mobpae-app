@@ -4,7 +4,7 @@
 // so child components (PasswordField) can reference them without prop-drilling.
 
 import { useMemo, useState, type CSSProperties } from "react";
-import { Bell, Check, ChevronLeft, Eye, EyeOff, Lock, RefreshCw, ShieldCheck } from "lucide-react";
+import { Bell, Check, ChevronLeft, Circle, Eye, EyeOff, Lock, RefreshCw, ShieldCheck } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -154,9 +154,14 @@ export function ChangePasswordScreen({
             type="button"
             onClick={onBack}
             aria-label="Back"
-            style={{ border: 0, background: "transparent", color: TEXT, display: "grid", placeItems: "center", cursor: "pointer", padding: 4 }}
+            style={{
+              width: 42, height: 42, flexShrink: 0,
+              border: `1px solid ${BORDER}`, borderRadius: "50%",
+              background: "#FFFFFF", color: TEXT,
+              display: "grid", placeItems: "center", cursor: "pointer", padding: 0,
+            }}
           >
-            <ChevronLeft size={20} strokeWidth={2} />
+            <ChevronLeft size={20} strokeWidth={2.2} />
           </button>
         )}
 
@@ -254,7 +259,7 @@ export function ChangePasswordScreen({
                   transition: "all 0.2s ease",
                 }}
               >
-                <Check size={10} strokeWidth={2.5} />
+                {rule.passed ? <Check size={10} strokeWidth={2.5} /> : <Circle size={6} fill={DIM} stroke="none" />}
                 {rule.label}
               </span>
             ))}

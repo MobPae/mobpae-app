@@ -1,4 +1,4 @@
-import { ArrowLeft, Banknote, Bell, Check, CheckCheck, CreditCard, Info, Landmark, ShieldCheck } from "lucide-react";
+import { Banknote, Bell, Check, CheckCheck, ChevronLeft, CreditCard, Info, Landmark, ShieldCheck } from "lucide-react";
 import type { AppNotification } from "../services/api";
 
 type Props = {
@@ -62,7 +62,7 @@ export function NotificationsScreen({ notifications, onBack, onMarkRead, onMarkA
     <div className="notif-screen notif-screen--light">
       <header className="notif-topbar">
         <button type="button" className="notif-back" onClick={onBack} aria-label="Back">
-          <ArrowLeft size={20} strokeWidth={2.25} />
+          <ChevronLeft size={20} strokeWidth={2.2} />
         </button>
         <div className="notif-heading">
           <span>Notifications</span>

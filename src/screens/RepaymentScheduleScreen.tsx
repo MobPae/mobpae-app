@@ -318,6 +318,11 @@ export function RepaymentScheduleScreen({
         Auto-recovered from salary on payday · no action needed
       </div>
 
+      {/* ── Closing note — signals intentional end of content, not a loading gap ── */}
+      <div style={{ marginTop: 36, textAlign: "center", color: DIM, fontSize: 12, fontWeight: 450 }}>
+        Nothing else due right now
+      </div>
+
     </div>
   );
 }

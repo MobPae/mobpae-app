@@ -9,12 +9,12 @@
 
 import { useRef, useState } from "react";
 import {
-  AlertTriangle,
   ArrowRight,
   CheckCircle,
   CreditCard,
   FileText,
   IdCard,
+  Info,
   Loader2,
   RefreshCw,
   ShieldCheck,
@@ -389,7 +389,7 @@ export function OnboardingKycScreen({
 
       {/* ── Tips ── */}
       <div className="kycv2-tips">
-        <AlertTriangle size={12} strokeWidth={2} />
+        <Info size={12} strokeWidth={2} />
         Clear photos · Readable text · No cropped edges · Under 5 MB
       </div>
 

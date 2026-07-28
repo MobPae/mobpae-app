@@ -109,6 +109,12 @@ function ProfileRow({
       : tone === "warm"
         ? "var(--profile-warm, #B4591F)"
         : "var(--profile-icon, #C9C7D0)";
+  const toneTileBg =
+    tone === "green"
+      ? "rgba(31,158,103,0.1)"
+      : tone === "warm"
+        ? "rgba(180,89,31,0.1)"
+        : "var(--profile-panel-soft, #17171B)";
 
   return (
     <button
@@ -138,13 +144,13 @@ function ProfileRow({
           width: 40,
           height: 40,
           borderRadius: 14,
-          border: "1px solid var(--profile-border, #29292F)",
-          background: "var(--profile-panel-soft, #17171B)",
+          border: tone === "default" ? "1px solid var(--profile-border, #29292F)" : "none",
+          background: toneTileBg,
           color: toneColor,
           display: "grid",
           placeItems: "center",
         }}
-        className="profile-v2-row-icon"
+        className={tone === "default" ? "profile-v2-row-icon" : `profile-v2-row-icon profile-v2-row-icon--${tone}`}
       >
         {icon}
       </span>
@@ -634,6 +640,7 @@ export function ProfileScreen({
           icon={<CreditCard size={18} />}
           title="Bank Account"
           subtitle={maskedBank}
+          tone={bankVerified ? "green" : "default"}
           onClick={() => onNavigate("profile-bank")}
         />
         <ProfileRow
@@ -650,7 +657,7 @@ export function ProfileScreen({
         <ProfileRow
           icon={<Bell size={18} />}
           title="Notifications"
-          subtitle="Manage your alerts"
+          subtitle="View recent alerts"
           onClick={() => onNavigate("notifications")}
         />
         <ProfileRow

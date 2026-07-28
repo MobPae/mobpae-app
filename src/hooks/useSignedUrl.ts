@@ -8,6 +8,9 @@ const API_BASE_URL: string =
 const urlCache = new Map<string, { url: string; fetchedAt: number }>();
 /** Signed URLs are valid for 15 min; refresh after 10 min to stay ahead of expiry. */
 const CACHE_TTL_MS = 10 * 60 * 1000;
+// In-flight requests, so simultaneous mounts for the same key (e.g. the header
+// avatar and the profile hero avatar) share one fetch instead of firing twice.
+const inFlight = new Map<string, Promise<string | null>>();
 
 /**
  * Fetches a short-lived signed URL for a private R2 object key.
@@ -38,25 +41,33 @@ export function useSignedUrl(key: string | null | undefined): string | null {
 
     let cancelled = false;
 
-    fetch(
-      `${API_BASE_URL}/files/signed-url?key=${encodeURIComponent(key)}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    )
-      .then((r) => {
-        if (!r.ok) throw new Error("signed-url request failed");
-        return r.json() as Promise<{ url: string }>;
-      })
-      .then((data) => {
-        if (cancelled) return;
-        const signedUrl = data?.url ?? null;
-        if (signedUrl) {
-          urlCache.set(key, { url: signedUrl, fetchedAt: Date.now() });
-        }
-        setUrl(signedUrl);
-      })
-      .catch(() => {
-        if (!cancelled) setUrl(null);
-      });
+    let request = inFlight.get(key);
+    if (!request) {
+      request = fetch(
+        `${API_BASE_URL}/files/signed-url?key=${encodeURIComponent(key)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+        .then((r) => {
+          if (!r.ok) throw new Error("signed-url request failed");
+          return r.json() as Promise<{ url: string }>;
+        })
+        .then((data) => {
+          const signedUrl = data?.url ?? null;
+          if (signedUrl) {
+            urlCache.set(key, { url: signedUrl, fetchedAt: Date.now() });
+          }
+          return signedUrl;
+        })
+        .catch(() => null)
+        .finally(() => {
+          inFlight.delete(key);
+        });
+      inFlight.set(key, request);
+    }
+
+    request.then((signedUrl) => {
+      if (!cancelled) setUrl(signedUrl);
+    });
 
     return () => {
       cancelled = true;
